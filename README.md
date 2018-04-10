@@ -28,6 +28,6 @@ SKA can be installed using make. Simply type make within the SKA directory.
     version     Print the version and citation for ska
     weed        Weed kmers from a split kmer file
 ```
-Please read the [SKA wiki page][(https://github.com/simonrharris/SKA.wiki.git) for full usage instructions.
+Please read the [SKA wiki page](https://github.com/simonrharris/SKA.wiki.git) for full usage instructions.
 ## License
 SKA is free software, licensed under [GPLv3](https://github.com/simonrharris/SKA/blob/master/LICENSE).
