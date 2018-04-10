@@ -18,14 +18,14 @@ SKA can be installed using make. Simply type make within the SKA directory.
     ska <subcommand>
 
     Subcommands:
-    align       Reference-free alignment from split kmer files
-    compare		Compare two split kmer files
-    fasta		Create split kmer file from fasta file(s)
-    fastq		Create split kmer file from fastq file(s)
-    map		    Align split kmer file(s) against a reference fasta file
-    summary		Print split kmer file summary statistics
-    version		Print the version and citation for ska
-    weed		Weed kmers from a split kmer file
+    align       Reference-free alignment from split kmer files
+    compare     Compare two split kmer files
+    fasta       Create split kmer file from fasta file(s)
+    fastq       Create split kmer file from fastq file(s)
+    map         Align split kmer file(s) against a reference fasta file
+    summary     Print split kmer file summary statistics
+    version     Print the version and citation for ska
+    weed        Weed kmers from a split kmer file
 
 ## License
 SKA is free software, licensed under [GPLv3](https://github.com/simonrharris/SKA/blob/master/LICENSE).
