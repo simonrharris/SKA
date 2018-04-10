@@ -1,7 +1,4 @@
-# the compiler: gcc for C program, g++ for C++
 CXX = g++
-# compiler flags:
-#  -g    adds debugging information to the executable file
 CXXFLAGS = -g -std=c++0x -O2
 
 RM = rm -f
