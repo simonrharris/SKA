@@ -3,7 +3,6 @@
 ## Contents
 * [Introduction](#introduction)
 * [Installation](#installation)
-* [Temporary files](#temporary-files)
 * [Usage](#usage)
 * [License](#license)
 
