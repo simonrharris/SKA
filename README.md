@@ -8,7 +8,7 @@
 * [License](#license)
 
 ## Introduction
-SKA (Split Kmer Analysis) is a toolkit for prokaryotic (and small, haploid eukaryotic) DNA sequence analysis using split kmers. A split kmer is a pair of kmers in a DNA sequence that are separated by a single base. Split kmers allow rapid comparison and alignment of small genomes.
+SKA (Split Kmer Analysis) is a toolkit for prokaryotic (and small, haploid eukaryotic) DNA sequence analysis using split kmers. A split kmer is a pair of kmers in a DNA sequence that are separated by a single base. Split kmers allow rapid comparison and alignment of small genomes. SKA can produce split kmer files from fasta format assemblies or directly from fastq format read sequences, align them with or without a reference sequence and provide various comparison and summary statistics. Currently all testing has been carried out on high-quality Illumina read data, so results for other platforms may vary.
 
 ## Installation
 SKA can be installed by cloning this repository and running make
