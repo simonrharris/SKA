@@ -47,7 +47,7 @@ int compareKmerFiles(string queryfile, vector<string> subjectfiles)
 	}
 	fileStream.close();
 	
-	cout << "Subject\tKmers unique to Query\tKmers unique to Subject\tMatches\t% kmers matching\tSNPs\t%ID of matching kmers\tNs in A\tNs in B\tNs in both\n";
+	cout << "Subject\tKmers unique to Query\tKmers unique to Subject\tMatches\t% kmers matching\tSNPs\t%ID of matching kmers\tNs in Query\tNs in Subject\tNs in both\n";
 
 	for (int i=0; i<subjectfiles.size(); ++i){
 		int kmerjustinb=0;

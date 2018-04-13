@@ -301,12 +301,12 @@ int fastqHelp(void){
 	cout << "ska fastq [options] <fastq files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-c <float>\tCoverage cutoff. Kmers with coverage below this value will \n\t\tbe discarded. [Default = 8]\n";
-	cout << "-f <float>\tFile coverage cutoff. Kmers with coverage below this value \n\t\tin any of the fastq files will be discarded. [Default = 4]\n";
+	cout << "-c <float>\tCoverage cutoff. Kmers with coverage below this value will \n\t\tbe discarded. [Default = 4]\n";
+	cout << "-f <float>\tFile coverage cutoff. Kmers with coverage below this value \n\t\tin any of the fastq files will be discarded. [Default = 2]\n";
 	cout << "-k <float>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
 	cout << "-m <float>\tMinimum allowable minor allele frequency. Kmer alleles below \n\t\tthis frequency will be discarded [Default = 0.2]\n";
 	cout << "-o\t\tOutput file name [Default = fastq.kmers]\n";
-	cout << "-q <float>\tQuality filter for fastq files. No kmers will be created \n\t\tfrom sequence including quality scores below this cutoff. \n\t\t[Default = 30]\n\n";
+	cout << "-q <float>\tQuality filter for fastq files. No kmers will be created \n\t\tfrom sequence including quality scores below this cutoff. \n\t\t[Default = 20]\n\n";
 	return 0;
 }
 
@@ -314,10 +314,10 @@ int fastqHelp(void){
 int fastqSubcommand(int argc, char *argv[]){
 
 	string outfile="fastq.kmers";
-	long int covcutoff=8;
-	long int filecovcutoff=4;
+	long int covcutoff=4;
+	long int filecovcutoff=2;
 	long int kmersize=15;
-	long int minquality=30;
+	long int minquality=20;
 	float minmaf=0.2;
 	vector<string> args;
 
