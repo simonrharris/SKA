@@ -1,4 +1,4 @@
-[https://github.com/simonrharris/SKA/blob/master/images/ska.png]
+[[https://github.com/simonrharris/SKA/blob/master/images/ska.png|alt=SKA]]
 
 ## Contents
 * [Introduction](#introduction)
