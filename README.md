@@ -1,5 +1,4 @@
-# SKA
-Split Kmer Analysis
+[[https://github.com/simonrharris/SKA/blob/master/img/SKA.png|alt=SKA]]
 
 ## Contents
 * [Introduction](#introduction)
