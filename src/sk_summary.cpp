@@ -14,7 +14,7 @@ int summariseKmerFiles(vector<string> kmerfiles)
 
 	int numfiles=0;
 	//cout << "Summary of bases in splitkmer files:\n";
-	cout << "File\tKmer size\tTotal kmers\tAs\tCs\tGc\tTs\tNs\tOthers\tGC Content\n";
+	cout << "File\tKmer size\tTotal kmers\tAs\tCs\tGs\tTs\tNs\tOthers\tGC Content\n";
 	for (int s = 0; s < kmerfiles.size(); ++s){
 		++numfiles;
 		

@@ -127,11 +127,12 @@ int fastqToKmers(vector<string> fastqs, string outfilename, int kmerlen, int use
 		
 	}
 	cout << "Added " << numbases << " kmers from " << numseqs << " sequences\n";
-	cout << kmerMap.size() << " unique kmers in map\n";
 	cout << "Running final filtering of kmers\n";
+
+	int totalcoverage=0;
+
 	auto it = kmerMap.begin();
 	auto endIter = kmerMap.end();
-
 	for (; it!=endIter; ){
 
 		//remove kmers with file coverage lower than the user defined cutoff if there were two fastq files supplied
@@ -167,11 +168,13 @@ int fastqToKmers(vector<string> fastqs, string outfilename, int kmerlen, int use
 				kmerMap.erase(it++);
 			}
 		else{
+			totalcoverage+=basecoverage;
 			++it;
 		}
 		
 	}
 	cout << kmerMap.size() << " unique kmers in map after final filtering\n";
+	cout << "Mean kmer coverage is " << float(totalcoverage)/kmerMap.size() << "\n";
 	
 	cout << "Writing kmers to fasta file\n";
 	

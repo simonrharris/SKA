@@ -99,21 +99,25 @@ int alignKmersToReference(string reference, string outputfile, vector<string> km
 	ifstream fileStream;
 	char basebuffer[1];
 	char kmerbuffer[kmerlen*2/3];
-	string newSequence (basenum , '-');
+	
 	for (int s = 0; s < kmerfiles.size(); ++s){
 		++numfiles;
+		string newSequence (basenum , '-');
+		int mappedkmers=0;
+		int unmappedkmers=0;
+
 		string filename=splitFileName(kmerfiles[s]);
-		cout << "Aligning " << filename << "\n";
+		cout << "Aligning " << filename;
 		alignfile << ">" << filename << "\n";
 		fileStream.open(kmerfiles[s], ios::in);
 
 		if (fileStream.fail()) {
-			cout << "Failed to open" << kmerfiles[s];
+			cout << "\nFailed to open" << kmerfiles[s] << "\n\n";;
 			return 0;
 		}
 		int kmersize=readKmerHeader(fileStream);
 		if (kmersize!=kmerlen){
-			cout << "kmer size in " << filename << " is not " << kmerlen << "\n\n";
+			cout << "\nkmer size in " << filename << " is not " << kmerlen << "\n\n";
 			return 0;
 		}
 
@@ -123,7 +127,7 @@ int alignKmersToReference(string reference, string outputfile, vector<string> km
 			string kmer (kmerbuffer, kmerlen*2/3);
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
-				
+				mappedkmers++;
 				if (it->second.size()==1 || maprepeats){
 					for (auto itb = it->second.begin(); itb != it->second.end(); ++itb) {
 						auto itc = revSet.find(*itb);
@@ -145,11 +149,30 @@ int alignKmersToReference(string reference, string outputfile, vector<string> km
 						
 					}
 				}
+				else{
+					unmappedkmers++;
+				}
 			}
 				
 		
+    	}
+
+    	int mappedbases=basenum;
+    	int mappedNs=0;
+    	for (int i=0; i<basenum; ++i){
+    		if (newSequence[i]=='-'){
+    			mappedbases--;
     		}
+    		else if (newSequence[i]=='N'){
+    			mappedbases++;
+    		}
+    	}
+
 		fileStream.close();
+		//cout << mappedkmers << "/" << unmappedkmers+mappedkmers << " (" << float(mappedkmers)/(unmappedkmers+mappedkmers)*100 << "%) kmers mapped";
+		//cout << mappedbases << "/" << basenum << " (" << float(mappedbases)/(basenum)*100 << "%) reference bases mapped";
+		cout << " ... " << float(mappedkmers)/(unmappedkmers+mappedkmers)*100 << "% of kmers mapped to ";
+		cout << float(mappedbases)/(basenum)*100 << "% of reference bases\n";
 		alignfile << newSequence << "\n";
 	}
 	alignfile.close();

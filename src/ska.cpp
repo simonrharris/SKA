@@ -35,7 +35,7 @@ int MinKmer=9;
 int MaxKmer=30;
 int MinQual=0;
 int MaxQual=60;
-int MinCov=8;
+int MinCov=0;
 
 string versionNumber = "0.1";
 
@@ -145,9 +145,6 @@ int alignSubcommand(int argc, char *argv[]){
 		alignHelp();
 		return 0;
 	}
-
-	cout << minproportion << "\n";
-	cout << outfile << "\n";
 
 	cout << "\nCreating reference free alignment for ";
 	for (auto it = args.begin(); it != args.end(); ++it){
@@ -283,7 +280,7 @@ int fastaSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nCreating " << kmersize << "mers for ";
+	cout << "\nCreating split " << kmersize << "mers for ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
@@ -336,7 +333,7 @@ int fastqSubcommand(int argc, char *argv[]){
 			i++;
 			if (i<argc){
 				try {
-					kmersize = getint(argv[i]);
+					covcutoff = getint(argv[i]);
 				}
 				catch (const invalid_argument& e) {
 					cout << "\nExpecting positive integer after -c flag\n\n";
@@ -348,7 +345,7 @@ int fastqSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 			if (covcutoff < MinCov){
-				cout << "\nCoverage cutoff must be a positive integer greater than " << MinCov << "\n\n";
+				cout << "\nCoverage cutoff must be a positive integer greater than or equal to " << MinCov << "\n\n";
 				return 0;
 			}
 		}
@@ -356,7 +353,7 @@ int fastqSubcommand(int argc, char *argv[]){
 			i++;
 			if (i<argc){
 				try {
-					kmersize = getint(argv[i]);
+					filecovcutoff = getint(argv[i]);
 				}
 				catch (const invalid_argument& e) {
 					cout << "\nExpecting positive integer after -f flag\n\n";
@@ -367,8 +364,8 @@ int fastqSubcommand(int argc, char *argv[]){
 				cout << "\nExpecting positive integer after -f flag\n\n";
 				return 0;
 			}
-			if (covcutoff < MinCov){
-				cout << "\nFile coverage cutoff must be a positive integer greater than " << MinCov << "\n\n";
+			if (filecovcutoff <= MinCov){
+				cout << "\nFile coverage cutoff must be a positive integer greater than or equal to " << MinCov << "\n\n";
 				return 0;
 			}
 		}
@@ -458,7 +455,7 @@ int fastqSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nCreating " << kmersize << "mers for ";
+	cout << "\nCreating split " << kmersize << "mers for ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
@@ -571,14 +568,25 @@ int mapSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << reference << "\n";
-	cout << outfile << "\n";
-	cout << kmersize << "\n";
-
+	cout << "\nAligning ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
-	cout << "\n\n";
+	cout << "\n";
+	cout << "Using split kmer size of " << kmersize << "\n";
+	cout << "Using " << reference << " as reference\n";
+	if (includeref){
+		cout << "Reference will be included in the alignment\n";
+	}
+	else{
+		cout << "Reference will not be included in the alignment\n";
+	}
+	if (maprepeats){
+		cout << "Repeats in the reference will be mapped rather than left as gaps\n";
+	}
+	else{
+		cout << "Repeats in the reference will be output as gaps\n";
+	}
 
 	alignKmersToReference(reference, outfile, args, kmersize, includeref, maprepeats);
 
