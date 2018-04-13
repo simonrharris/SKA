@@ -11,7 +11,12 @@
 SKA (Split Kmer Analysis) is a toolkit for prokaryotic DNA sequence analysis using split kmers. A split kmer is a pair of kmers in a DNA sequence that are separated by a single base. Split kmers allow rapid comparison and alignment of small genomes.
 
 ## Installation
-SKA can be installed using make. Simply type make within the SKA directory.
+SKA can be installed by cloning this repository and running make
+```
+git clone https://github.com/simonrharris/SKA
+cd SKA
+make
+```
 
 ## Usage
 ```
