@@ -1,5 +1,5 @@
-![My image](simonrharris.github.com/SKA/images/image.jpg)
-[[https://github.com/simonrharris/SKA/blob/master/images/ska.png|alt=SKA]]
+![My image](https://github.com/simonrharris/SKA/blob/master/images/ska.png)
+[[|alt=SKA]]
 
 ## Contents
 * [Introduction](#introduction)
