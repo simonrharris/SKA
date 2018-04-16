@@ -30,6 +30,7 @@ int fastqToKmers(vector<string> fastqs, string outfilename, int kmerlen, int use
 	int substringlength=(kmerlen*2)+1;
 	int numseqs=0;
 	int numbases=0;
+	int numreadbases=0;
 	int lastnumbases=0;
 	for (int s = 0; s < fastqs.size(); ++s){ 
 		gzFile f = gzopen(fastqs[s].c_str(), "r");
@@ -45,7 +46,8 @@ int fastqToKmers(vector<string> fastqs, string outfilename, int kmerlen, int use
 			numseqs++;
 			string sequence(seq->seq.s);//convert the char * sequence to string
 			string quality(seq->qual.s);//convert the char * quality to string
-			
+			numreadbases+=sequence.length();
+
 			lowqualitytoN(sequence, quality, minquality);
 			
 			stringstream sequencestream;
@@ -126,7 +128,7 @@ int fastqToKmers(vector<string> fastqs, string outfilename, int kmerlen, int use
 		
 		
 	}
-	cout << "Added " << numbases << " kmers from " << numseqs << " sequences\n";
+	cout << "Added " << numbases << " kmers from " << numseqs << " sequences of total length " << numreadbases << "\n";
 	cout << "Running final filtering of kmers\n";
 
 	int totalcoverage=0;
