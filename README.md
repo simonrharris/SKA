@@ -23,6 +23,9 @@ make
 ```
 The executable will be compiled into a directory named bin. You can either add this bin directory to your path or move the executable into a path directory.
 
+## Dependencies
+SKA simply requires GNU make and a C++11 compatible compiler such as g++.
+
 ## Usage
 ```
     ska <subcommand>
