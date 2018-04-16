@@ -147,10 +147,17 @@ int alignKmers(float maxmissingproportion, string outputfile, vector<string> kme
 	for (int i=0; i<numfiles; ++i){
 		string filename =splitFileName(kmerfiles[i]);
 		alignfile << ">" << filename << "\n";
+		float nonns=0.0;
 		for (auto it=kmerMap.begin(); it!=kmerMap.end(); ++it){
 			alignfile << it->second[i];
+			if (it->second[i]=='A' || it->second[i]=='C' || it->second[i]=='G' || it->second[i]=='T'){
+				nonns++;
+			}
 		}
 		alignfile << "\n";
+		if ((nonns/kmerMap.size())<0.5){
+			cout << "Warning: " << filename << " only matches " << nonns/kmerMap.size()*100 << "% of kmers in the alignment\n";
+		}
 	}
 	alignfile.close();
 
