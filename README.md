@@ -14,7 +14,8 @@ SKA can be installed by cloning this repository and running make
 ```
 git clone https://github.com/simonrharris/SKA
 ```
-Or by Downloading and unpacking the latest [release](https://github.com/simonrharris/SKA/releases)
+Or by Downloading and unpacking the latest [release](https://github.com/simonrharris/SKA/releases).
+
 Then simply navigate into the SKA directory and run make
 ``
     cd SKA
