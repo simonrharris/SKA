@@ -25,7 +25,7 @@ make
 The executable will be compiled into a directory named bin. You can either add this bin directory to your path or move the executable into a path directory.
 
 ## Requirements
-SKA simply requires GNU make and a C++11 compatible compiler such as g++.
+SKA simply requires GNU make and a version of g++ which supports C++11.
 
 ## Usage
 ```
