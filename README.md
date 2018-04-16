@@ -17,9 +17,9 @@ git clone https://github.com/simonrharris/SKA
 Or by Downloading and unpacking the latest [release](https://github.com/simonrharris/SKA/releases).
 
 Then simply navigate into the SKA directory and run make
-``
-    cd SKA
-    make
+```
+cd SKA
+make
 ```
 The executable will be compiled into a directory named bin. You can either add this bin directory to your path or move the executable into a path directory.
 
