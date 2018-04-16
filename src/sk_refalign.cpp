@@ -146,6 +146,9 @@ int alignKmersToReference(string reference, string outputfile, vector<string> km
 								newSequence[i]=refseq[i];
 							}
 						}
+						if (newSequence[*itb]!=refseq[*itb]){
+							cout << *itb+1 << "\t" << refseq[*itb] << "\t" << newSequence[*itb] << "\n";
+						}
 						
 					}
 				}
