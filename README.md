@@ -12,9 +12,11 @@ SKA (Split Kmer Analysis) is a toolkit for prokaryotic (and small, haploid eukar
 ## Installation
 SKA can be installed by cloning this repository and running make
 ```
-git clone https://github.com/simonrharris/SKA
-cd SKA
-make
+Either clone this repository
+    git clone https://github.com/simonrharris/SKA
+Or Download and unpack the latest [release](https://github.com/simonrharris/SKA/releases)
+    cd SKA
+    make
 ```
 The executable will be compiled into a directory named bin. You can either add this bin directory to your path or move the executable into a path directory.
 
