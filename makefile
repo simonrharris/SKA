@@ -4,6 +4,7 @@ CXXFLAGS = -g -std=c++0x -O2
 RM = rm -f
 MKDIR = mkdir
 ECHO = echo
+CP = cp
 dir_guard=@mkdir -p $(@D)
 
 SOURCEDIR = src
@@ -28,6 +29,9 @@ $(BINARYDIR)/$(BINARY): $(OBJECTS)
 $(BUILDDIR)/%.o: $(SOURCEDIR)/%.cpp
 	$(dir_guard)
 	$(CXX) $(CXXFLAGS) -I$(HEADERDIR) -I$(SOURCEDIR) -c $< -o $@
+
+install:
+	$(CP) $(BINARYDIR)/$(BINARY) /usr/local/bin/
 
 .phony: clean
 clean:
