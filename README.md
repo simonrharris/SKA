@@ -3,6 +3,7 @@
 ## Contents
 * [Introduction](#introduction)
 * [Installation](#installation)
+* [Dependencies](#dependencies)
 * [Usage](#usage)
 * [License](#license)
 
