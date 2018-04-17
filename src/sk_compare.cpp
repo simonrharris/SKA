@@ -98,7 +98,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 	float percentmatcha=float(matches)/(kmerjustina+matches)*100;
 	float percentmatchb=float(matches)/(kmerjustinb+matches)*100;
 	float percentidofmatches=float(matches-(snps+nina+ninb+ninboth))/(matches-(nina+ninb+ninboth))*100;
-	float percentidofquery=percentidofmatches*percentmatcha;
+	float percentidofquery=(percentidofmatches*percentmatcha)/100;
 
 	string filename=splitFileName(subjectfiles[i]);
 	
