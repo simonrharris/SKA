@@ -32,7 +32,7 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile, const s
 	while (fileStream.read(basebuffer, sizeof(basebuffer))){
 		string base (basebuffer, 1);
 		fileStream.read(kmerbuffer, sizeof(kmerbuffer));
-		string kmer (kmerbuffer, 10);
+		string kmer (kmerbuffer, kmersize*2/3);
 		
 		auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 		if ( it != kmerMap.end() ){//if the kmer is in the hash
@@ -69,10 +69,10 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile, const s
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, kmersize*2/3);
 			
-			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
-			if ( it != kmerMap.end() ){//if the kmer is in the hash
+			auto it2 = kmerMap.find(kmer);//check if the kmer is in the hash
+			if ( it2 != kmerMap.end() ){//if the kmer is in the hash
 				weeded++;
-				kmerMap.erase(it);
+				kmerMap.erase(it2);
 			}
 			totalweedkmers++;
 				

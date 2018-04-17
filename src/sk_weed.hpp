@@ -1,5 +1,5 @@
-#ifndef __KMERS_HPP_INCLUDED__
-#define __KMERS_HPP__
+#ifndef __SK_WEED_HPP_INCLUDED__
+#define __SK_WEED_HPP__
 #endif
 
 #include <string> //std::string

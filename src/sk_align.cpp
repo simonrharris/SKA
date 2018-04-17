@@ -11,13 +11,13 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int alignKmers(const float & maxmissingproportion, const string & outputfile, const vector<string> & kmerfiles)
+int alignKmers(const float & minproportion, const string & outputfile, const vector<string> & kmerfiles)
 {
 
 	auto start = chrono::high_resolution_clock::now();
 	int numfiles=kmerfiles.size();
 	
-	float maxmissing=maxmissingproportion*numfiles;
+	float maxmissing=(1.0-minproportion)*numfiles;
 
 	if (maxmissing<1){
 		maxmissing=1;
