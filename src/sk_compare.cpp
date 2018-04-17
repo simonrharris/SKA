@@ -56,7 +56,6 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 		int ninb=0;
 		int ninboth=0;
 		int matches=0;
-		int kmerhitsina=0;
 		
 		fileStream.open(subjectfiles[i], ios::in);
 		if (fileStream.fail()) {
@@ -75,7 +74,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 			
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
-				kmerhitsina++;
+				matches++;
 				if (it->second[0]=='N' && base[0]=='N'){
 					ninboth++;
 				}
@@ -85,11 +84,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 				else if (base[0]=='N'){
 					ninb++;
 				}
-				else if (it->second[0]==base[0]){
-					matches++;
-				}
-				else {
-					matches++;
+				else if (it->second[0]!=base[0]){
 					snps++;
 				}
 			}
@@ -99,7 +94,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
     	}
 	fileStream.close();
 	
-	int kmerjustina=kmerMap.size()-kmerhitsina;
+	int kmerjustina=kmerMap.size()-matches;
 	float percentmatch=float(matches)/(kmerjustina+kmerjustinb+matches)*100;
 	float percentid=float(matches-(snps+nina+ninb+ninboth))/(matches-(nina+ninb+ninboth))*100;
 
