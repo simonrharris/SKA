@@ -47,7 +47,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 	}
 	fileStream.close();
 	
-	cout << "Subject\tKmers unique to Query\tKmers unique to Subject\tMatches\t% kmers in Query matching\t% kmers in Subject matching\tSNPs\t%ID of matching kmers\tNs in Query\tNs in Subject\tNs in both\n";
+	cout << "Subject\tKmers unique to Query\tKmers unique to Subject\tMatches\t% kmers in Query matching\t% kmers in Subject matching\tSNPs\t%ID of matching kmers\t%ID of Query\tNs in Query\tNs in Subject\tNs in both\n";
 
 	for (int i=0; i<subjectfiles.size(); ++i){
 		int kmerjustinb=0;
@@ -97,11 +97,12 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 	int kmerjustina=kmerMap.size()-matches;
 	float percentmatcha=float(matches)/(kmerjustina+matches)*100;
 	float percentmatchb=float(matches)/(kmerjustinb+matches)*100;
-	float percentid=float(matches-(snps+nina+ninb+ninboth))/(matches-(nina+ninb+ninboth))*100;
+	float percentidofmatches=float(matches-(snps+nina+ninb+ninboth))/(matches-(nina+ninb+ninboth))*100;
+	float percentidofquery=percentidofmatches*percentmatcha;
 
 	string filename=splitFileName(subjectfiles[i]);
 	
-	cout << filename << "\t" << kmerjustina << "\t" << kmerjustinb << "\t" << matches << "\t" << percentmatcha << "\t" << percentmatchb << "\t" << snps << "\t" << percentid << "\t" << nina << "\t" << ninb << "\t" << ninboth << "\n";
+	cout << filename << "\t" << kmerjustina << "\t" << kmerjustinb << "\t" << matches << "\t" << percentmatcha << "\t" << percentmatchb << "\t" << snps << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << nina << "\t" << ninb << "\t" << ninboth << "\n";
 	}
 
 	return 0;
