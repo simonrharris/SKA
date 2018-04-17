@@ -37,7 +37,7 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 		fileStream.open(ingroupfiles[s], ios::in);
 
 		if (fileStream.fail()) {
-			cout << "Failed to open" << ingroupfiles[s];
+			cout << "Failed to open" << ingroupfiles[s] << "\n\n";
 			return 0;
 		}
 		kmersize=readKmerHeader(fileStream);

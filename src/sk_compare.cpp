@@ -89,6 +89,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 					matches++;
 				}
 				else {
+					matches++;
 					snps++;
 				}
 			}

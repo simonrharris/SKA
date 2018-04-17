@@ -38,7 +38,7 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 		fileStream.open(kmerfiles[s], ios::in);
 
 		if (fileStream.fail()) {
-			cout << "Failed to open" << kmerfiles[s];
+			cout << "Failed to open" << kmerfiles[s] << "\n\n";
 			return 0;
 		}
 		int kmersize=readKmerHeader(fileStream);
