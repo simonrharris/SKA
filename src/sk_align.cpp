@@ -11,7 +11,7 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int alignKmers(float maxmissingproportion, string outputfile, vector<string> kmerfiles)
+int alignKmers(const float & maxmissingproportion, const string & outputfile, const vector<string> & kmerfiles)
 {
 
 	auto start = chrono::high_resolution_clock::now();

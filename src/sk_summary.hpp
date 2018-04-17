@@ -7,4 +7,4 @@
 
 using namespace std;
 
-int summariseKmerFiles(vector<string> kmerfiles);
+int summariseKmerFiles(const vector<string> & kmerfiles);

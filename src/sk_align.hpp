@@ -9,4 +9,4 @@ using namespace std;
 
 
 
-int alignKmers(float maxmissingproportion, string outputfile, vector<string> kmerfiles);
+int alignKmers(const float & maxmissingproportion, const string & outputfile, const vector<string> & kmerfiles);

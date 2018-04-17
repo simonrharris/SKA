@@ -7,4 +7,4 @@
 
 using namespace std;
 
-int fastqToKmers(vector<string> fastqs, string outfilename, int kmerlen, int userminquality, int userfilecutoff, int usercovcutoff, float userminmaf);
+int fastqToKmers(const vector<string> & fastqs, const string & outfilename, const int & kmerlen, const int & userminquality, const int & userfilecutoff, const int & usercovcutoff, const float & userminmaf);

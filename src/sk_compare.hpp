@@ -7,4 +7,4 @@
 
 using namespace std;
 
-int compareKmerFiles(string queryfile, vector<string> subjectfiles);
+int compareKmerFiles(const string & queryfile, const vector<string> & subjectfiles);

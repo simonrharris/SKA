@@ -11,7 +11,7 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int compareKmerFiles(string queryfile, vector<string> subjectfiles)
+int compareKmerFiles(const string & queryfile, const vector<string> & subjectfiles)
 {
 
 	// Create the kmer map

@@ -3,6 +3,7 @@
 #include <iostream> //std::cout
 #include <fstream> //std::ofstream
 #include <string> //std::string
+#include <vector> //std::vector
 #include <chrono> //timing
 #include "kmers.hpp"
 
@@ -11,7 +12,7 @@ using namespace std;
 //bin/sk_weed outputfile 
 
 //int main(int argc, char *argv[])
-int weedKmers(string kmerfile, string weedfile, string outputfile)
+int weedKmers(const vector<string> & weedfiles, const string & kmerfile, const string & outputfile)
 {
 
 	auto start = chrono::high_resolution_clock::now();
@@ -49,42 +50,44 @@ int weedKmers(string kmerfile, string weedfile, string outputfile)
 	int weeded=0;
 	int totalweedkmers=0;
 	
-	cout << "Weeding kmers from " << weedfile << "\n";
-	
-	fileStream.open(weedfile, ios::in);
-	if (fileStream.fail()) {
-		cout << "Failed to open " << weedfile << "\n\n";
-		return 0;
-	}
-	int weedkmersize=readKmerHeader(fileStream);
-	if (weedkmersize!=kmersize){
-		cout << "Files have different kmer sizes\n";
-		return 0;
-	}
-
-	while (fileStream.read(basebuffer, sizeof(basebuffer))){
-		string base (basebuffer, 1);
-		fileStream.read(kmerbuffer, sizeof(kmerbuffer));
-		string kmer (kmerbuffer, kmersize*2/3);
+	for (auto it = weedfiles.begin(); it != weedfiles.end(); ++it){
+		cout << "Weeding kmers from " << *it << "\n";
 		
-		auto it = kmerMap.find(kmer);//check if the kmer is in the hash
-		if ( it != kmerMap.end() ){//if the kmer is in the hash
-			weeded++;
-			kmerMap.erase(it);
+		fileStream.open(*it, ios::in);
+		if (fileStream.fail()) {
+			cout << "Failed to open " << *it << "\n\n";
+			return 0;
 		}
-		totalweedkmers++;
+		int weedkmersize=readKmerHeader(fileStream);
+		if (weedkmersize!=kmersize){
+			cout << "Files have different kmer sizes\n";
+			return 0;
+		}
+
+		while (fileStream.read(basebuffer, sizeof(basebuffer))){
+			string base (basebuffer, 1);
+			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
+			string kmer (kmerbuffer, kmersize*2/3);
 			
-	
-    }
-	fileStream.close();
-	cout << totalweedkmers << " read from " << weedfile << "\n";
+			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
+			if ( it != kmerMap.end() ){//if the kmer is in the hash
+				weeded++;
+				kmerMap.erase(it);
+			}
+			totalweedkmers++;
+				
+		
+    	}
+		fileStream.close();
+	}
+	cout << totalweedkmers << " read from " << weedfiles.size() << " files\n";
 	cout << "Weeded " << weeded << " kmers from " << kmerfile << "\n";
 	cout << kmerMap.size() << " kmers remaining in map\n";
 	
 	cout << "Writing kmers to " << outputfile << "\n";
 	
 	ofstream weededfile(outputfile);
-	weededfile << "#" << weedkmersize << "\n";
+	weededfile << "#" << kmersize << "\n";
 	
 	for (auto it=kmerMap.begin(); it!=kmerMap.end(); ++it){
 		

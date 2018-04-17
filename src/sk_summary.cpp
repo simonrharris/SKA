@@ -9,7 +9,7 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int summariseKmerFiles(vector<string> kmerfiles)
+int summariseKmerFiles(const vector<string> & kmerfiles)
 {
 
 	int numfiles=0;

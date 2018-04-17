@@ -20,7 +20,7 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int alignKmersToReference(string reference, string outputfile, vector<string> kmerfiles, int kmerlen, bool includeref, bool maprepeats)
+int alignKmersToReference(const string & reference, const string & outputfile, const vector<string> & kmerfiles, const int & kmerlen, const bool & includeref, const bool & maprepeats)
 {
 
 	auto start = chrono::high_resolution_clock::now();

@@ -17,7 +17,7 @@ KSEQ_INIT(gzFile, gzread)
 using namespace std;
 
 //int main(int argc, char *argv[])
-int fastqToKmers(vector<string> fastqs, string outfilename, int kmerlen, int userminquality, int userfilecutoff, int usercovcutoff, float userminmaf)
+int fastqToKmers(const vector<string> & fastqs, const string & outfilename, const int & kmerlen, const int & userminquality, const int & userfilecutoff, const int & usercovcutoff, const float & userminmaf)
 {
 
 	auto start = chrono::high_resolution_clock::now();

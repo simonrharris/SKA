@@ -15,7 +15,7 @@
 KSEQ_INIT(gzFile, gzread)
 using namespace std;
 
-int fastaToKmers(vector<string> fastas, string outfilename, int kmerlen)
+int fastaToKmers(const vector<string> & fastas, const string & outfilename, const long & kmerlen)
 {
 
 
