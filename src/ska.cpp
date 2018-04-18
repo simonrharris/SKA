@@ -97,6 +97,7 @@ int skaHelp(void){
 	cout << "unique\t\tOutput kmers unique to a set of split kmer files\n";
 	cout << "version\t\tPrint the version and citation for ska\n";
 	cout << "weed\t\tWeed kmers from a split kmer file\n\n";
+	//	123456789012345678901234567890123456789012345678901234567890
 	return 0;
 }
 
@@ -112,7 +113,7 @@ int alignHelp(void){
 	cout << "ska align [options] <split kmer files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or used as \n\t\tan alternative input to the list provided on the command line.\n";
+	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-o\t\tOutput file name [Default = reference_free.aln]\n";
 	cout << "-p <float>\tMinimum proportion of isolates required to possess a split \n\t\tkmer for that kmer to be included in the alignment. \n\t\t[Default = 0.9]\n\n";
 	return 0;
@@ -202,7 +203,7 @@ int compareHelp(void){
 	cout << "ska compare [options] <subject split kmer files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or used as \n\t\tan alternative input to the list provided on the command line.\n";
+	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-q\t\tQuery split kmer file\n\n";
 	return 0;
 }
@@ -268,7 +269,7 @@ int fastaHelp(void){
 	cout << "ska fasta [options] <fasta files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or used as \n\t\tan alternative input to the list provided on the command line.\n";
+	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-k <float>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
 	cout << "-o\t\tOutput file name [Default = fasta.kmers]\n\n";
 	return 0;
@@ -539,7 +540,7 @@ int mapHelp(void){
 	cout << "ska map [options] <split kmer files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or used as \n\t\tan alternative input to the list provided on the command line.\n";
+	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-k <float>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\tMust be the same value used to create the kmer files [Default = 15]\n";
 	cout << "-i\t\tInclude reference sequence in alignment\n";
 	cout << "-m\t\tMap bases to repeats rather than making them N\n";
@@ -668,7 +669,7 @@ int summaryHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska summary [options] <split kmer files>\n\n";
 	cout << "Options:\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or used as \n\t\tan alternative input to the list provided on the command line.\n";
+	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-h\t\tPrint this help\n\n";
 	return 0;
 }
@@ -716,11 +717,11 @@ int uniqueHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska unique [options]\n\n";
 	cout << "Options:\n";
-	cout << "-f\t\tFile of outgroup split kmer file names. Kmers from these files will be \n\t\tremoved from the set found in the ingroup files.\n";
+	cout << "-f\t\tFile of outgroup split kmer file names. Kmers from these \n\t\tfiles will be removed from the set found in the ingroup files.\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-i\t\tFile of ingroup split kmer file names. Unique kmers found in these files \n\t\twill be retained.\n";
+	cout << "-i\t\tFile of ingroup split kmer file names. Unique kmers found \n\t\tin these files will be retained.\n";
 	cout << "-o\t\tOutput file name [Default = unique.kmers]\n";
-	cout << "-p <float>\tMinimum proportion of ingroup isolates required to possess a split \n\t\tkmer for that kmer to be retained. \n\t\t[Default = 0.9]\n\n";
+	cout << "-p <float>\tMinimum proportion of ingroup isolates required to possess a \n\t\tsplit kmer for that kmer to be retained. [Default = 0.9]\n\n";
 	return 0;
 }
 
