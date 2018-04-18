@@ -146,9 +146,9 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 								newSequence[i]=refseq[i];
 							}
 						}
-						if (newSequence[*itb]!=refseq[*itb]){
+						/*if (newSequence[*itb]!=refseq[*itb]){
 							cout << *itb+1 << "\t" << refseq[*itb] << "\t" << newSequence[*itb] << "\n";
-						}
+						}*/
 						
 					}
 				}
