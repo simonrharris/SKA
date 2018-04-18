@@ -831,7 +831,7 @@ int weedHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska weed [options] <split kmer files>\n\n";
 	cout << "Options:\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or used as \n\t\tan alternative input to the list provided on the command line.\n";
+	cout << "-f\t\tFile of outgroup split kmer file names. Kmers from these \n\t\tfiles will be removed from the set found in the ingroup files.\n";
 	cout << "-h\t\tPrint this help\n";
 	cout << "-i\t\tName of kmer file from which kmers will be removed [Required]\n";
 	cout << "-o\t\tOutput file name [Default = weeded.kmers]\n\n";
