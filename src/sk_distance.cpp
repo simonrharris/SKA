@@ -28,7 +28,7 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 		fileStream.open(kmerfiles[s], ios::in);
 
 		if (fileStream.fail()) {
-			cout << "Failed to open" << kmerfiles[s] << "\n\n";
+			cout << "Failed to open " << kmerfiles[s] << "\n\n";
 			return 0;
 		}
 		int kmersize=readKmerHeader(fileStream);
@@ -75,6 +75,10 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 	pairwiseSNPs.resize( numfiles , vector<int>( numfiles , 0 ) );
 	vector< vector<int> > pairwiseMatches;
 	pairwiseMatches.resize( numfiles , vector<int>( numfiles , 0 ) );
+	vector< vector<int> > pairwiseMismatches;
+	pairwiseMismatches.resize( numfiles , vector<int>( numfiles , 0 ) );
+	vector< vector<int> > pairwiseNs;
+	pairwiseNs.resize( numfiles , vector<int>( numfiles , 0 ) );
 
 	for (; it!=endIter; ){
 		int a = 0;
@@ -86,12 +90,12 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 		int gfound = 0;
 		int tfound = 0;
 		for (int i=0; i<numfiles; ++i){
-			if (it->second[i]=='N' || it->second[i]=='-'){
-				continue;
-			}
 			for (int j=i+1; j<numfiles; ++j){
-				if (it->second[j]=='N' || it->second[j]=='-'){
-					continue;
+				if (it->second[i]=='N' || it->second[j]=='N'){
+					pairwiseNs[i][j]++;
+				}
+				else if ((it->second[i]=='-' && it->second[j]!='-') || (it->second[i]!='-' && it->second[j]=='-')){
+					pairwiseMismatches[i][j]++;
 				}
 				else if (it->second[i]==it->second[j]){
 					pairwiseMatches[i][j]++;
@@ -107,10 +111,10 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 	cout << "Printing distances to " << outputfile << "\n";
 	
 	ofstream distancefile(outputfile);
-
+	distancefile << "File 1\tFile 2\tMatches\tMismatches\tSNPs\tNs\n";
 	for (int i=0; i<numfiles; ++i){
 		for (int j=i+1; j<numfiles; ++j){
-			distancefile << kmerfiles[i] << "\t" << kmerfiles[j] << "\t" << pairwiseMatches[i][j] << "\t" << pairwiseSNPs[i][j] << "\n";;
+			distancefile << kmerfiles[i] << "\t" << kmerfiles[j] << "\t" << pairwiseMatches[i][j] << "\t" << pairwiseMismatches[i][j] << "\t" << pairwiseSNPs[i][j] << "\t" << pairwiseNs[i][j] << "\n";
 		}
 	}
 	distancefile.close();
