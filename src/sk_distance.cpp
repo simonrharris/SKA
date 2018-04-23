@@ -63,11 +63,7 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 	}
 	cout << kmerMap.size() << " kmers read from " << numfiles << " files\n";
 	
-	int consta = 0;
-	int constc = 0;
-	int constg = 0;
-	int constt = 0;
-	bool variantonly=true;
+	cout << "Calculating distances\n";
 
 	auto it = kmerMap.begin();
 	auto endIter = kmerMap.end();
@@ -91,7 +87,10 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 		int tfound = 0;
 		for (int i=0; i<numfiles; ++i){
 			for (int j=i+1; j<numfiles; ++j){
-				if (it->second[i]=='N' || it->second[j]=='N'){
+				if (it->second[i]=='-'|| it->second[j]=='-'){
+					continue;
+				}
+				else if (it->second[i]=='N' || it->second[j]=='N'){
 					pairwiseNs[i][j]++;
 				}
 				else if ((it->second[i]=='-' && it->second[j]!='-') || (it->second[i]!='-' && it->second[j]=='-')){
