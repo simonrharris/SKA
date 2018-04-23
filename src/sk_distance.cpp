@@ -86,8 +86,11 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 		int gfound = 0;
 		int tfound = 0;
 		for (int i=0; i<numfiles; ++i){
+			if (it->second[i]=='N' || it->second[i]=='-'){
+				continue;
+			}
 			for (int j=i+1; j<numfiles; ++j){
-				if (it->second[i]=='N' || it->second[j]=='N'){
+				if (it->second[j]=='N' || it->second[j]=='-'){
 					continue;
 				}
 				else if (it->second[i]==it->second[j]){
