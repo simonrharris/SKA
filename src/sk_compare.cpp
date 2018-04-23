@@ -97,9 +97,9 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 	fileStream.close();
 	
 	int kmerjustina=kmerMap.size()-matches;
-	float percentmatcha=float(matches)/(kmerjustina+matches)*100;
-	float percentmatchb=float(matches)/(kmerjustinb+matches)*100;
-	float percentidofmatches=float(matches-(snps+nina+ninb+ninboth))/(matches-(nina+ninb+ninboth))*100;
+	float percentmatcha=float(matches+snps+nina+ninboth)/(kmerjustina+matches+snps+nina+ninboth)*100;
+	float percentmatchb=float(matches+snps+ninb+ninboth)/(kmerjustinb+matches+snps+ninb+ninboth)*100;
+	float percentidofmatches=float(matches)/(matches+snps)*100;
 	float percentidofquery=(percentidofmatches*percentmatcha)/100;
 	float percentidofsubject=(percentidofmatches*percentmatchb)/100;
 

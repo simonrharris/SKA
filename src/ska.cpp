@@ -282,6 +282,8 @@ int distanceSubcommand(int argc, char *argv[]){
 
 	string outfile="distances.tsv";
 	float minproportion=0.9;
+	int maxsnps=50;
+	bool cluster = false;
 	vector<string> args;
 
 	for (int i=2; i<argc; ++i){
@@ -291,6 +293,9 @@ int distanceSubcommand(int argc, char *argv[]){
 		if (arg=="-h" || arg=="--help"){
 			distanceHelp();
 			return 0;
+		}
+		else if (arg=="-c"){
+			cluster=true;
 		}
 		else if (arg == "-o"){
 			i++;
@@ -312,6 +317,46 @@ int distanceSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
+		else if (arg == "-p"){
+			i++;
+			if (i<argc){
+				try {
+					minproportion = getfloat(argv[i]);
+				}
+				catch (const invalid_argument& e) {
+					cout << "\nExpecting float between 0 and 1 after -p flag\n\n";
+					return 0;
+				}
+			}
+			else {
+				cout << "\nExpecting float between 0 and 1 after -p flag\n\n";
+				return 0;
+			}
+			if (minproportion < 0 || minproportion > 1){
+				cout << "\nMinimum proportion must be between 0 and 1\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-s"){
+			i++;
+			if (i<argc){
+				try {
+					maxsnps = getint(argv[i]);
+				}
+				catch (const invalid_argument& e) {
+					cout << "\nExpecting positive integer after -s flag\n\n";
+					return 0;
+				}
+			}
+			else {
+				cout << "\nExpecting positive integer after-p flag\n\n";
+				return 0;
+			}
+			if (maxsnps < 0){
+				cout << "\nMaximum number of SNPs must be 0 or greater\n\n";
+				return 0;
+			}
+		}
 		else {
 			args.push_back(arg);
 		}
@@ -330,7 +375,7 @@ int distanceSubcommand(int argc, char *argv[]){
 	cout << "\n";
 	cout << "Output will be written to " << outfile << "\n\n";
 
-	kmerDistance(outfile, args);
+	kmerDistance(outfile, args, cluster, maxsnps, minproportion);
 
 	return 0;
 }

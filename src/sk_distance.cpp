@@ -11,7 +11,7 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
+int kmerDistance(const string & outputfile, const vector<string> & kmerfiles, const bool & cluster, const int & maxSNPS, const float & minMatched)
 {
 
 	auto start = chrono::high_resolution_clock::now();
@@ -20,10 +20,12 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 	// Create the kmer map
 	unordered_map<string, string> kmerMap;
 	string emptySequence (numfiles , '-');
+	vector< int > kmerCounts;
 	int oldkmersize=0;
 
 	ifstream fileStream;
 	for (int s = 0; s < kmerfiles.size(); ++s){
+		int kmercount=0;
 		cout << "Reading " << kmerfiles[s] << "\n";
 		fileStream.open(kmerfiles[s], ios::in);
 
@@ -48,6 +50,7 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 			string base (basebuffer, 1);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, kmersize*2/3);
+			kmercount++;
 			
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
@@ -60,6 +63,7 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 			}
     	}
 		fileStream.close();
+		kmerCounts.push_back(kmercount);
 	}
 	cout << kmerMap.size() << " kmers read from " << numfiles << " files\n";
 	
@@ -77,14 +81,6 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 	pairwiseNs.resize( numfiles , vector<int>( numfiles , 0 ) );
 
 	for (; it!=endIter; ){
-		int a = 0;
-		int c = 0;
-		int g = 0;
-		int t = 0;
-		int afound = 0;
-		int cfound = 0;
-		int gfound = 0;
-		int tfound = 0;
 		for (int i=0; i<numfiles; ++i){
 			for (int j=i+1; j<numfiles; ++j){
 				if (it->second[i]=='-' && it->second[j]=='-'){
@@ -105,6 +101,26 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 			}
 		}
 		++it;
+	}
+
+	if (cluster){
+		cout << "Finding clusters\n";
+		for (int i=0; i<numfiles; ++i){
+			vector< int > matches;
+			for (int j=i+1; j<numfiles; ++j){
+				float kmercount=min(kmerCounts[i], kmerCounts[j]);
+				float percentmatched = float(pairwiseMatches[i][j]+pairwiseSNPs[i][j])/kmercount;
+				cout << pairwiseSNPs[i][j] << " " << percentmatched << "\n";
+				if (pairwiseSNPs[i][j]<maxSNPS && percentmatched>minMatched){
+					matches.push_back(j);
+				}
+			}
+			cout << i <<": ";
+			for (auto it=matches.begin(); it<matches.end(); ++it){
+				cout << *it << " ";
+			}
+			cout <<"\n";
+		}
 	}
 	
 	cout << "Printing distances to " << outputfile << "\n";
