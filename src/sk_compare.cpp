@@ -74,7 +74,6 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 			
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
-				matches++;
 				if (it->second[0]=='N' && base[0]=='N'){
 					ninboth++;
 				}
@@ -84,7 +83,10 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 				else if (base[0]=='N'){
 					ninb++;
 				}
-				else if (it->second[0]!=base[0]){
+				else if (it->second[0]==base[0]){
+					matches++;
+				}
+				else {
 					snps++;
 				}
 			}

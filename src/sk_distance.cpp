@@ -90,11 +90,11 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles)
 				if (it->second[i]=='-' && it->second[j]=='-'){
 					continue;
 				}
+				else if (it->second[i]=='-' || it->second[j]=='-'){
+					pairwiseMismatches[i][j]++;
+				}
 				else if (it->second[i]=='N' || it->second[j]=='N'){
 					pairwiseNs[i][j]++;
-				}
-				else if ((it->second[i]=='-' && it->second[j]!='-') || (it->second[i]!='-' && it->second[j]=='-')){
-					pairwiseMismatches[i][j]++;
 				}
 				else if (it->second[i]==it->second[j]){
 					pairwiseMatches[i][j]++;
