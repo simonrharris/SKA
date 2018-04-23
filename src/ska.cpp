@@ -7,6 +7,7 @@
 #include <stdexcept>      // std::invalid_argument
 #include "sk_align.hpp"
 #include "sk_compare.hpp"
+#include "sk_distance.hpp"
 #include "sk_fasta.hpp"
 #include "sk_fastq.hpp"
 #include "sk_refalign.hpp"
@@ -25,6 +26,8 @@ int alignHelp(void);
 int alignSubcommand(int argc, char *argv[]);
 int compareHelp(void);
 int compareSubcommand(int argc, char *argv[]);
+int distanceHelp(void);
+int distanceSubcommand(int argc, char *argv[]);
 int fastaHelp(void);
 int fastaSubcommand(int argc, char *argv[]);
 int fastqHelp(void);
@@ -260,6 +263,74 @@ int compareSubcommand(int argc, char *argv[]){
 	}
 
 	compareKmerFiles(queryfile, args);
+
+	return 0;
+}
+
+int distanceHelp(void){
+	cout << "\nUsage:\n";
+	cout << "ska distance [options] <split kmer files>\n\n";
+	cout << "Options:\n";
+	cout << "-h\t\tPrint this help\n";
+	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-o\t\tOutput file name [Default = reference_free.aln]\n\n";
+	return 0;
+}
+
+
+int distanceSubcommand(int argc, char *argv[]){
+
+	string outfile="distances.tsv";
+	float minproportion=0.9;
+	vector<string> args;
+
+	for (int i=2; i<argc; ++i){
+
+		string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			distanceHelp();
+			return 0;
+		}
+		else if (arg == "-o"){
+			i++;
+			if (i<argc){
+				outfile = argv[i];
+			}
+			else {
+				cout << "\nExpecting file name after -o flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				filetToVector(argv[i], args);
+			}
+			else {
+				cout << "\nExpecting file name after -f flag\n\n";
+				return 0;
+			}
+		}
+		else {
+			args.push_back(arg);
+		}
+	}
+	
+	if (args.size()<2){
+		cout << "\nToo few arguments\n";
+		distanceHelp();
+		return 0;
+	}
+
+	cout << "\nCalculating pairwise distances for ";
+	for (auto it = args.begin(); it != args.end(); ++it){
+		cout << *it << " ";
+	}
+	cout << "\n";
+	cout << "Output will be written to " << outfile << "\n\n";
+
+	kmerDistance(outfile, args);
 
 	return 0;
 }
@@ -931,6 +1002,9 @@ int main(int argc, char *argv[])
 		}
 	else if (subcommand == "compare"){
 			compareSubcommand(argc, argv);
+		}
+	else if (subcommand == "distance"){
+			distanceSubcommand(argc, argv);
 		}
 	else if (subcommand == "fasta"){
 			fastaSubcommand(argc, argv);
