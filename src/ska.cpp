@@ -100,7 +100,7 @@ int skaHelp(void){
 	cout << "unique\t\tOutput kmers unique to a set of split kmer files\n";
 	cout << "version\t\tPrint the version and citation for ska\n";
 	cout << "weed\t\tWeed kmers from a split kmer file\n\n";
-	//	123456789012345678901234567890123456789012345678901234567890
+	
 	return 0;
 }
 
@@ -177,6 +177,10 @@ int alignSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
 		else {
 			args.push_back(arg);
 		}
@@ -245,6 +249,10 @@ int compareSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
 		else {
 			args.push_back(arg);
 		}
@@ -271,19 +279,23 @@ int distanceHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska distance [options] <split kmer files>\n\n";
 	cout << "Options:\n";
+	cout << "-c\t\tClusters output file name (tsv format).\n";
+	cout << "-d\t\tDistances output file name (tsv format).\n";
 	cout << "-h\t\tPrint this help\n";
 	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-o\t\tOutput file name [Default = reference_free.aln]\n\n";
+	cout << "-m\t\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
+	cout << "-s\t\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \\n\t\tpass the identity cutoff\n\n";
+	     //123456789012345678901234567890123456789012345678901234567890
 	return 0;
 }
 
 
 int distanceSubcommand(int argc, char *argv[]){
 
-	string outfile="distances.tsv";
+	string distancefile="";
+	string clusterfile="";
 	float minproportion=0.9;
 	int maxsnps=50;
-	bool cluster = false;
 	vector<string> args;
 
 	for (int i=2; i<argc; ++i){
@@ -295,15 +307,22 @@ int distanceSubcommand(int argc, char *argv[]){
 			return 0;
 		}
 		else if (arg=="-c"){
-			cluster=true;
-		}
-		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = argv[i];
+				clusterfile = argv[i];
 			}
 			else {
-				cout << "\nExpecting file name after -o flag\n\n";
+				cout << "\nExpecting file name after -c flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-d"){
+			i++;
+			if (i<argc){
+				distancefile = argv[i];
+			}
+			else {
+				cout << "\nExpecting file name after -d flag\n\n";
 				return 0;
 			}
 		}
@@ -349,13 +368,17 @@ int distanceSubcommand(int argc, char *argv[]){
 				}
 			}
 			else {
-				cout << "\nExpecting positive integer after-p flag\n\n";
+				cout << "\nExpecting positive integer after -p flag\n\n";
 				return 0;
 			}
 			if (maxsnps < 0){
 				cout << "\nMaximum number of SNPs must be 0 or greater\n\n";
 				return 0;
 			}
+		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
 		}
 		else {
 			args.push_back(arg);
@@ -373,9 +396,23 @@ int distanceSubcommand(int argc, char *argv[]){
 		cout << *it << " ";
 	}
 	cout << "\n";
-	cout << "Output will be written to " << outfile << "\n\n";
 
-	kmerDistance(outfile, args, cluster, maxsnps, minproportion);
+
+	cout << "Clusters will be created for isolates that are within " << maxsnps << " SNPs of one another and share at least " << minproportion*100 << "% of the split kmers of the isolate with fewer kmers\n";
+
+	if (distancefile!=""){
+		cout << "Distances will be written to " << distancefile << "\n";
+	}
+	if (clusterfile!=""){
+		cout << "Distances will be written to " << distancefile << "\n";
+	}
+	if (distancefile=="" && clusterfile==""){
+		cout << "At least one output file (-d or -c) is required.";
+		return 0;
+	}
+	cout << "\n";
+
+	kmerDistance(distancefile, clusterfile, args, maxsnps, minproportion);
 
 	return 0;
 }
@@ -445,6 +482,10 @@ int fastaSubcommand(int argc, char *argv[]){
 				cout << "\nExpecting file name after -f flag\n\n";
 				return 0;
 			}
+		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
 		}
 		else {
 			args.push_back(arg);
@@ -616,6 +657,10 @@ int fastqSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
 		else {
 			args.push_back(arg);
 		}
@@ -739,6 +784,10 @@ int mapSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
 		else {
 			args.push_back(arg);
 		}
@@ -812,6 +861,10 @@ int summarySubcommand(int argc, char *argv[]){
 				cout << "\nExpecting file name after -f flag\n\n";
 				return 0;
 			}
+		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
 		}
 		else {
 			args.push_back(arg);
@@ -1000,6 +1053,10 @@ int weedSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
 		else {
 			args.push_back(arg);
 		}
@@ -1074,6 +1131,10 @@ int main(int argc, char *argv[])
 		}
 	else if (subcommand == "-h" || subcommand == "--help"){
 			skaHelp();
+		}
+	else if (subcommand[0]=='-'){
+			cout << "\nUnrecognised flag " << subcommand << "\n\n";
+			return 0;
 		}
 	else {
 		cout << "\nUnrecognised subcommand\n\n";

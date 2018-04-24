@@ -1,5 +1,6 @@
 //g++ -O3 -std=c++0x splitkmer.cpp -lz -o splitkmer
 #include <unordered_map>
+#include <map>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -11,7 +12,7 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int kmerDistance(const string & outputfile, const vector<string> & kmerfiles, const bool & cluster, const int & maxSNPS, const float & minMatched)
+int kmerDistance(const string & distancefile, const string & clusterfile, const vector<string> & kmerfiles, const int & maxSNPS, const float & minMatched)
 {
 
 	auto start = chrono::high_resolution_clock::now();
@@ -75,19 +76,17 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles, co
 	pairwiseSNPs.resize( numfiles , vector<int>( numfiles , 0 ) );
 	vector< vector<int> > pairwiseMatches;
 	pairwiseMatches.resize( numfiles , vector<int>( numfiles , 0 ) );
-	vector< vector<int> > pairwiseMismatches;
-	pairwiseMismatches.resize( numfiles , vector<int>( numfiles , 0 ) );
 	vector< vector<int> > pairwiseNs;
 	pairwiseNs.resize( numfiles , vector<int>( numfiles , 0 ) );
 
 	for (; it!=endIter; ){
 		for (int i=0; i<numfiles; ++i){
+			if (it->second[i]=='-'){
+				continue;
+			}
 			for (int j=i+1; j<numfiles; ++j){
-				if (it->second[i]=='-' && it->second[j]=='-'){
+				if (it->second[j]=='-'){
 					continue;
-				}
-				else if (it->second[i]=='-' || it->second[j]=='-'){
-					pairwiseMismatches[i][j]++;
 				}
 				else if (it->second[i]=='N' || it->second[j]=='N'){
 					pairwiseNs[i][j]++;
@@ -102,37 +101,73 @@ int kmerDistance(const string & outputfile, const vector<string> & kmerfiles, co
 		}
 		++it;
 	}
+	kmerMap.clear();
 
-	if (cluster){
-		cout << "Finding clusters\n";
+	if (clusterfile!=""){
+		ofstream clusterout(clusterfile);
+		map <int, int> clusterMap;
+		vector < vector <int> > clusters;
+		cout << "Printing clusters to " << clusterfile << "\n";
 		for (int i=0; i<numfiles; ++i){
 			vector< int > matches;
+			matches.push_back(i);
 			for (int j=i+1; j<numfiles; ++j){
 				float kmercount=min(kmerCounts[i], kmerCounts[j]);
 				float percentmatched = float(pairwiseMatches[i][j]+pairwiseSNPs[i][j])/kmercount;
-				cout << pairwiseSNPs[i][j] << " " << percentmatched << "\n";
-				if (pairwiseSNPs[i][j]<maxSNPS && percentmatched>minMatched){
+				if (pairwiseSNPs[i][j]<=maxSNPS && percentmatched>minMatched){
 					matches.push_back(j);
 				}
 			}
-			cout << i <<": ";
-			for (auto it=matches.begin(); it<matches.end(); ++it){
-				cout << *it << " ";
+
+			int clusternum=clusters.size();
+			for ( auto it=matches.begin(); it!=matches.end(); ++it){
+				auto it2 = clusterMap.find(*it);//check if the match is in the hash
+				if ( it2 != clusterMap.end() ){//if the match is in the hash
+					if (it2->second<clusternum){
+						clusternum=it2->second;
+					}
+				}
 			}
-			cout <<"\n";
+
+			if (clusternum==clusters.size()){
+				clusters.push_back(vector <int>());
+			}
+
+			for ( auto it=matches.begin(); it!=matches.end(); ++it){
+				auto it2 = clusterMap.find(*it);//check if the match is in the hash
+				if ( it2 != clusterMap.end() ){//if the match is in the hash
+					if (it2->second!=clusternum){
+						for ( auto it3=clusters[it2->second].begin(); it3!=clusters[it2->second].end(); ++it3){
+							clusterMap[*it3]=clusternum;
+							clusters[clusternum].push_back(*it3);
+						}
+						clusters.erase(clusters.begin()+it2->second);
+					}
+				}
+				else{
+					clusterMap.insert(make_pair(*it, clusternum));
+					clusters[clusternum].push_back(*it);
+				}
+			}
 		}
+		for ( auto it=clusterMap.begin(); it!=clusterMap.end(); ++it){
+			clusterout << kmerfiles[it->first] << "\t" << it->second << "\n";
+		}
+		clusterout.close();
 	}
 	
-	cout << "Printing distances to " << outputfile << "\n";
-	
-	ofstream distancefile(outputfile);
-	distancefile << "File 1\tFile 2\tMatches\tMismatches\tSNPs\tNs\n";
-	for (int i=0; i<numfiles; ++i){
-		for (int j=i+1; j<numfiles; ++j){
-			distancefile << kmerfiles[i] << "\t" << kmerfiles[j] << "\t" << pairwiseMatches[i][j] << "\t" << pairwiseMismatches[i][j] << "\t" << pairwiseSNPs[i][j] << "\t" << pairwiseNs[i][j] << "\n";
+	if (distancefile!=""){
+		cout << "Printing distances to " << distancefile << "\n";
+		
+		ofstream distanceout(distancefile);
+		distanceout << "File 1\tFile 2\tMatches\tMismatches\tSNPs\tNs\n";
+		for (int i=0; i<numfiles; ++i){
+			for (int j=i+1; j<numfiles; ++j){
+				distanceout << kmerfiles[i] << "\t" << kmerfiles[j] << "\t" << pairwiseMatches[i][j] << "\t" << (kmerCounts[i]-(pairwiseMatches[i][j]+pairwiseSNPs[i][j]+pairwiseNs[i][j]))+(kmerCounts[j]-(pairwiseMatches[i][j]+pairwiseSNPs[i][j]+pairwiseNs[i][j])) << "\t" << pairwiseSNPs[i][j] << "\t" << pairwiseNs[i][j] << "\n";
+			}
 		}
+		distanceout.close();
 	}
-	distancefile.close();
 
 	auto finish = std::chrono::high_resolution_clock::now();
 	chrono::duration<double> elapsed = finish - start;

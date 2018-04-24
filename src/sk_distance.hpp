@@ -9,4 +9,4 @@ using namespace std;
 
 
 
-int kmerDistance(const string & outputfile, const vector<string> & kmerfiles, const bool & cluster, const int & maxSNPS, const float & minMatched);
+int kmerDistance(const string & distancefile, const string & clusterfile, const vector<string> & kmerfiles, const int & maxSNPS, const float & minMatched);
