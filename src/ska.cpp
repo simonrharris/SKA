@@ -91,8 +91,8 @@ int skaHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska <subcommand>\n\n";
 	cout << "Subcommands:\n";
-	cout << "align\t\tReference-free alignment from split kmer files\n";
-	cout << "compare\t\tCompare split kmer files to a query\n";
+	cout << "align\t\tReference-free alignment from a set of split kmer files\n";
+	cout << "compare\t\tPrint comparison statistics for a query split kmer  \n\t\tfile against a set of subject split kmer files\n";
 	cout << "distance\tPairwise distance calculation and clustering from split kmer \n\t\tfiles\n";
 	cout << "fasta\t\tCreate split kmer file from fasta file(s)\n";
 	cout << "fastq\t\tCreate split kmer file from fastq file(s)\n";
@@ -284,7 +284,7 @@ int distanceHelp(void){
 	cout << "-d\t\tDistances output file name (tsv format).\n";
 	cout << "-h\t\tPrint this help\n";
 	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-m\t\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
+	cout << "-i\t\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
 	cout << "-s\t\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \\n\t\tpass the identity cutoff\n\n";
 	return 0;
 }
@@ -294,7 +294,7 @@ int distanceSubcommand(int argc, char *argv[]){
 
 	string distancefile="";
 	string clusterfile="";
-	float minproportion=0.9;
+	float minid=0.9;
 	int maxsnps=50;
 	vector<string> args;
 
@@ -336,23 +336,23 @@ int distanceSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
-		else if (arg == "-p"){
+		else if (arg == "-i"){
 			i++;
 			if (i<argc){
 				try {
-					minproportion = getfloat(argv[i]);
+					minid = getfloat(argv[i]);
 				}
 				catch (const invalid_argument& e) {
-					cout << "\nExpecting float between 0 and 1 after -p flag\n\n";
+					cout << "\nExpecting float between 0 and 1 after -i flag\n\n";
 					return 0;
 				}
 			}
 			else {
-				cout << "\nExpecting float between 0 and 1 after -p flag\n\n";
+				cout << "\nExpecting float between 0 and 1 after -i flag\n\n";
 				return 0;
 			}
-			if (minproportion < 0 || minproportion > 1){
-				cout << "\nMinimum proportion must be between 0 and 1\n\n";
+			if (minid < 0 || minid > 1){
+				cout << "\nMinimum identity must be between 0 and 1\n\n";
 				return 0;
 			}
 		}
@@ -368,7 +368,7 @@ int distanceSubcommand(int argc, char *argv[]){
 				}
 			}
 			else {
-				cout << "\nExpecting positive integer after -p flag\n\n";
+				cout << "\nExpecting positive integer after -s flag\n\n";
 				return 0;
 			}
 			if (maxsnps < 0){
@@ -398,7 +398,7 @@ int distanceSubcommand(int argc, char *argv[]){
 	cout << "\n";
 
 
-	cout << "Clusters will be created for isolates that are within " << maxsnps << " SNPs of one another and share at least " << minproportion*100 << "% of the split kmers of the isolate with fewer kmers\n";
+	cout << "Clusters will be created for isolates that are within " << maxsnps << " SNPs of one another and share at least " << minid*100 << "% of the split kmers of the isolate with fewer kmers\n";
 
 	if (distancefile!=""){
 		cout << "Distances will be written to " << distancefile << "\n";
@@ -412,7 +412,7 @@ int distanceSubcommand(int argc, char *argv[]){
 	}
 	cout << "\n";
 
-	kmerDistance(distancefile, clusterfile, args, maxsnps, minproportion);
+	kmerDistance(distancefile, clusterfile, args, maxsnps, minid);
 
 	return 0;
 }
