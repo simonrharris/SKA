@@ -48,6 +48,7 @@ int MaxQual=60;
 int MinCov=0;
 
 string versionNumber = "0.1";
+string citation = "TBA";
 
 long int getint(char * arg){
 	long int i;
@@ -87,8 +88,8 @@ int filetToVector(const string & filename, vector<string> & fileargs){
 
 
 int skaHelp(void){
-	cout << "\nSKA: Split Kmer Analysis\n";
-	cout << "\nUsage:\n";
+	skaVersion();
+	cout << "Usage:\n";
 	cout << "ska <subcommand>\n\n";
 	cout << "Subcommands:\n";
 	cout << "align\t\tReference-free alignment from a set of split kmer files\n";
@@ -108,7 +109,7 @@ int skaHelp(void){
 int skaVersion(void){
 	cout << "\nSKA: Split Kmer Analysis\n";
 	cout << "Version: " << versionNumber << "\n";
-	cout << "Citation: TBA\n\n";
+	cout << "Citation: " << citation << "\n\n";
 	return 0;
 }
 
@@ -117,8 +118,8 @@ int alignHelp(void){
 	cout << "ska align [options] <split kmer files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-o\t\tOutput file name [Default = reference_free.aln]\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-o <file>\tOutput file name [Default = reference_free.aln]\n";
 	cout << "-p <float>\tMinimum proportion of isolates required to possess a split \n\t\tkmer for that kmer to be included in the alignment. \n\t\t[Default = 0.9]\n\n";
 	return 0;
 }
@@ -193,7 +194,9 @@ int alignSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nCreating reference free alignment for ";
+	skaVersion();
+
+	cout << "Creating reference free alignment for ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
@@ -211,8 +214,8 @@ int compareHelp(void){
 	cout << "ska compare [options] <subject split kmer files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-q\t\tQuery split kmer file\n\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-q <file>\tQuery split kmer file\n\n";
 	return 0;
 }
 
@@ -280,10 +283,10 @@ int distanceHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska distance [options] <split kmer files>\n\n";
 	cout << "Options:\n";
-	cout << "-c\t\tClusters output file name (tsv format).\n";
-	cout << "-d\t\tDistances output file name (tsv format).\n";
+	cout << "-c <file>\tClusters output file name (tsv format).\n";
+	cout << "-d <file>\tDistances output file name (tsv format).\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-i <float>\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
 	cout << "-s <int>\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff\n\n";
 	return 0;
@@ -391,7 +394,9 @@ int distanceSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nCalculating pairwise distances for ";
+	skaVersion();
+
+	cout << "Calculating pairwise distances for ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
@@ -422,9 +427,9 @@ int fastaHelp(void){
 	cout << "ska fasta [options] <fasta files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
-	cout << "-o\t\tOutput file name [Default = fasta.kmers]\n\n";
+	cout << "-o <file>\tOutput file name [Default = fasta.kmers]\n\n";
 	return 0;
 }
 
@@ -498,7 +503,9 @@ int fastaSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nCreating split " << kmersize << "mers for ";
+	skaVersion();
+
+	cout << "Creating split " << kmersize << "mers for ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
@@ -523,7 +530,7 @@ int fastqHelp(void){
 	cout << "-C <int>\tFile coverage cutoff. Kmers with coverage below this value \n\t\tin any of the fastq files will be discarded. [Default = 2]\n";
 	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
 	cout << "-m <float>\tMinimum allowable minor allele frequency. Kmer alleles below \n\t\tthis frequency will be discarded [Default = 0.2]\n";
-	cout << "-o\t\tOutput file name [Default = fastq.kmers]\n";
+	cout << "-o <file>\tOutput file name [Default = fastq.kmers]\n";
 	cout << "-q <int>\tQuality filter for fastq files. No kmers will be created \n\t\tfrom sequence including quality scores below this cutoff. \n\t\t[Default = 20]\n\n";
 	return 0;
 }
@@ -677,7 +684,9 @@ int fastqSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nCreating split " << kmersize << "mers for ";
+	skaVersion();
+
+	cout << "Creating split " << kmersize << "mers for ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
@@ -701,12 +710,12 @@ int mapHelp(void){
 	cout << "ska map [options] <split kmer files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\tMust be the same value used to create the kmer files [Default = 15]\n";
 	cout << "-i\t\tInclude reference sequence in alignment\n";
 	cout << "-m\t\tMap bases to repeats rather than making them N\n";
-	cout << "-o\t\tOutput file name [Default = mappedkmers.aln]\n";
-	cout << "-r\t\tReference fasta file name [Required]\n\n";
+	cout << "-o <file>\tOutput file name [Default = mappedkmers.aln]\n";
+	cout << "-r <file>\tReference fasta file name [Required]\n\n";
 	return 0;
 }
 
@@ -805,7 +814,9 @@ int mapSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nAligning ";
+	skaVersion();
+
+	cout << "Aligning ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
@@ -834,7 +845,7 @@ int summaryHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska summary [options] <split kmer files>\n\n";
 	cout << "Options:\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-h\t\tPrint this help\n\n";
 	return 0;
 }
@@ -886,10 +897,10 @@ int uniqueHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska unique [options]\n\n";
 	cout << "Options:\n";
-	cout << "-f\t\tFile of outgroup split kmer file names. Kmers from these \n\t\tfiles will be removed from the set found in the ingroup files.\n";
+	cout << "-f <file>\tFile of outgroup split kmer file names. Kmers from these \n\t\tfiles will be removed from the set found in the ingroup files.\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-i\t\tFile of ingroup split kmer file names. Unique kmers found \n\t\tin these files will be retained.\n";
-	cout << "-o\t\tOutput file name [Default = unique.kmers]\n";
+	cout << "-i <file>\tFile of ingroup split kmer file names. Unique kmers found \n\t\tin these files will be retained.\n";
+	cout << "-o <file>\tOutput file name [Default = unique.kmers]\n";
 	cout << "-p <float>\tMinimum proportion of ingroup isolates required to possess a \n\t\tsplit kmer for that kmer to be retained. [Default = 0.9]\n\n";
 	return 0;
 }
@@ -979,7 +990,9 @@ int uniqueSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nFinding kmers in at least " << minproportion*100 << "% of ";
+	skaVersion();
+
+	cout << "Finding kmers in at least " << minproportion*100 << "% of ";
 	for (auto it = ingroup.begin(); it != ingroup.end(); ++it){
 		cout << *it << " ";
 	}
@@ -1000,10 +1013,10 @@ int weedHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska weed [options] <split kmer files>\n\n";
 	cout << "Options:\n";
-	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-i\t\tName of kmer file from which kmers will be removed [Required]\n";
-	cout << "-o\t\tOutput file name [Default = weeded.kmers]\n\n";
+	cout << "-i <file>\tName of kmer file from which kmers will be removed [Required]\n";
+	cout << "-o <file>\tOutput file name [Default = weeded.kmers]\n\n";
 	return 0;
 }
 
@@ -1074,7 +1087,9 @@ int weedSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	cout << "\nWeeding kmers in ";
+	skaVersion();
+
+	cout << "Weeding kmers in ";
 	for (auto it = args.begin(); it != args.end(); ++it){
 		cout << *it << " ";
 	}
