@@ -284,8 +284,8 @@ int distanceHelp(void){
 	cout << "-d\t\tDistances output file name (tsv format).\n";
 	cout << "-h\t\tPrint this help\n";
 	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-i\t\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
-	cout << "-s\t\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff\n\n";
+	cout << "-i <float>\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
+	cout << "-s <int>\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff\n\n";
 	return 0;
 }
 
@@ -423,7 +423,7 @@ int fastaHelp(void){
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
 	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-k <float>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
+	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
 	cout << "-o\t\tOutput file name [Default = fasta.kmers]\n\n";
 	return 0;
 }
@@ -519,12 +519,12 @@ int fastqHelp(void){
 	cout << "ska fastq [options] <fastq files>\n\n";
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
-	cout << "-c <float>\tCoverage cutoff. Kmers with coverage below this value will \n\t\tbe discarded. [Default = 4]\n";
-	cout << "-C <float>\tFile coverage cutoff. Kmers with coverage below this value \n\t\tin any of the fastq files will be discarded. [Default = 2]\n";
-	cout << "-k <float>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
+	cout << "-c <int>\tCoverage cutoff. Kmers with coverage below this value will \n\t\tbe discarded. [Default = 4]\n";
+	cout << "-C <int>\tFile coverage cutoff. Kmers with coverage below this value \n\t\tin any of the fastq files will be discarded. [Default = 2]\n";
+	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
 	cout << "-m <float>\tMinimum allowable minor allele frequency. Kmer alleles below \n\t\tthis frequency will be discarded [Default = 0.2]\n";
 	cout << "-o\t\tOutput file name [Default = fastq.kmers]\n";
-	cout << "-q <float>\tQuality filter for fastq files. No kmers will be created \n\t\tfrom sequence including quality scores below this cutoff. \n\t\t[Default = 20]\n\n";
+	cout << "-q <int>\tQuality filter for fastq files. No kmers will be created \n\t\tfrom sequence including quality scores below this cutoff. \n\t\t[Default = 20]\n\n";
 	return 0;
 }
 
@@ -702,7 +702,7 @@ int mapHelp(void){
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help\n";
 	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-k <float>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\tMust be the same value used to create the kmer files [Default = 15]\n";
+	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\tMust be the same value used to create the kmer files [Default = 15]\n";
 	cout << "-i\t\tInclude reference sequence in alignment\n";
 	cout << "-m\t\tMap bases to repeats rather than making them N\n";
 	cout << "-o\t\tOutput file name [Default = mappedkmers.aln]\n";
