@@ -152,7 +152,7 @@ int kmerDistance(const string & distancefile, const string & clusterfile, const 
 			}
 		}
 		for ( auto it=clusterMap.begin(); it!=clusterMap.end(); ++it){
-			clusterout << kmerfiles[it->first] << "\t" << it->second << "\n";
+			clusterout << kmerfiles[it->first] << "\t" << it->second+1 << "\n";
 		}
 		clusterout.close();
 	}
