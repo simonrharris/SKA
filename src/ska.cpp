@@ -285,7 +285,7 @@ int distanceHelp(void){
 	cout << "-h\t\tPrint this help\n";
 	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-i\t\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
-	cout << "-s\t\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \\n\t\tpass the identity cutoff\n\n";
+	cout << "-s\t\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff\n\n";
 	return 0;
 }
 
