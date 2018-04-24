@@ -92,7 +92,8 @@ int skaHelp(void){
 	cout << "ska <subcommand>\n\n";
 	cout << "Subcommands:\n";
 	cout << "align\t\tReference-free alignment from split kmer files\n";
-	cout << "compare\t\tCompare two split kmer files\n";
+	cout << "compare\t\tCompare split kmer files to a query\n";
+	cout << "distance\tPairwise distance calculation and clustering from split kmer \n\t\tfiles\n";
 	cout << "fasta\t\tCreate split kmer file from fasta file(s)\n";
 	cout << "fastq\t\tCreate split kmer file from fastq file(s)\n";
 	cout << "map\t\tAlign split kmer file(s) against a reference fasta file\n";
@@ -100,7 +101,7 @@ int skaHelp(void){
 	cout << "unique\t\tOutput kmers unique to a set of split kmer files\n";
 	cout << "version\t\tPrint the version and citation for ska\n";
 	cout << "weed\t\tWeed kmers from a split kmer file\n\n";
-	
+	//123456789012345678901234567890123456789012345678901234567890
 	return 0;
 }
 
@@ -285,7 +286,6 @@ int distanceHelp(void){
 	cout << "-f\t\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-m\t\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tkmers ot the isolate with fewer kmers and pass the SNP \n\t\tcutoff.\n";
 	cout << "-s\t\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \\n\t\tpass the identity cutoff\n\n";
-	     //123456789012345678901234567890123456789012345678901234567890
 	return 0;
 }
 
