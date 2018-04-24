@@ -108,7 +108,7 @@ int kmerDistance(const string & distancefile, const string & clusterfile, const 
 		map <int, int> clusterMap;
 		vector < vector <int> > clusters;
 		cout << "Printing clusters to " << clusterfile << "\n";
-		clusterfile << "File\tCluster\n";
+		clusterout << "File\tCluster\n";
 		for (int i=0; i<numfiles; ++i){
 			vector< int > matches;
 			matches.push_back(i);
