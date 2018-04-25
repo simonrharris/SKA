@@ -19,9 +19,9 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 	
 	float maxmissing=(1.0-minproportion)*numfiles;
 
-	if (maxmissing<1){
+	/*if (maxmissing<1){
 		maxmissing=1;
-	}
+	}*/
 
 	float minrequired=numfiles-maxmissing;
 	
@@ -64,7 +64,7 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 				it->second[s]=base[0];//make the hash a repeat
 			}
 			else {
-				if (s+1<=maxmissing){
+				if (s<=maxmissing){
 					string newsequence = emptySequence;
 					newsequence[s] = base[0];
 					kmerMap.insert(make_pair(kmer, newsequence));

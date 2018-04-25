@@ -23,9 +23,6 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 
 	float maxmissing=(1.0-minproportion)*ingroupfiles.size();
 
-	if (maxmissing<1){
-		maxmissing=1;
-	}
 	float minrequired=ingroupfiles.size()-maxmissing;
 
 	ifstream fileStream;
@@ -48,14 +45,14 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 		char kmerbuffer[(kmersize*2/3)+1];
 		while (fileStream.read(kmerbuffer, sizeof(kmerbuffer))){
 			string kmer (kmerbuffer, (kmersize*2/3)+1);
-			
+			if (kmer[0]=='N'){continue;}
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
 				it->second++;//make the hash a repeat
 			}
 			else {
-				if (s+1<=maxmissing){
-					kmerMap.insert(make_pair(kmer, 0));
+				if (s<=maxmissing){
+					kmerMap.insert(make_pair(kmer, 1));
 				}
 			}
 			totalingroupkmers++;
@@ -75,7 +72,7 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 		}
 	}
 	
-	cout << totalingroupkmers << " read from " << ingroupfiles.size() << " files\n";
+	cout << totalingroupkmers << " kmers read from " << ingroupfiles.size() << " files\n";
 	cout << kmerMap.size() << " unique kmers in map\n";
 	
 	int weeded=0;

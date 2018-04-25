@@ -1002,6 +1002,8 @@ int uniqueSubcommand(int argc, char *argv[]){
 	for (auto it = outgroup.begin(); it != outgroup.end(); ++it){
 		cout << *it << " ";
 	}
+cout << "\n";
+
 	cout << "Output will be written to " << outfile << "\n";
 
 	cout << "\n";
