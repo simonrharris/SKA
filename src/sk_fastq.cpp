@@ -178,7 +178,7 @@ int fastqToKmers(const vector<string> & fastqs, const string & outfilename, cons
 	cout << kmerMap.size() << " unique kmers in map after final filtering\n";
 	cout << "Mean kmer coverage is " << float(totalcoverage)/kmerMap.size() << "\n";
 	
-	cout << "Writing kmers to fasta file\n";
+	cout << "Writing kmers to " << outfilename << "\n";
 	
 	printkmerfile(kmerMap, outfilename, kmerlen);
 
@@ -189,82 +189,6 @@ int fastqToKmers(const vector<string> & fastqs, const string & outfilename, cons
 	cout << "Total time required: " << elapsed.count() << "s\n";
 	
 	return 0;
-	
-	/*
-	bool gzoutput=false;
-	
-	if (gzoutput){
-	gzFile *fi = (gzFile *)gzopen(argv[1],"wb");
-	for (auto it=kmerMap.begin(); it!=kmerMap.end(); ++it){
-		
-		string kmer=it->first;
-		gzwrite(fi,">",strlen(">"));
-		if (it->second.size()>1){
-			gzwrite(fi, "N", strlen("N"));
-		}
-		else{
-			string base={it->second.begin()->first};
-			gzwrite(fi, base.c_str(), strlen(base.c_str()));
-		}
-		gzwrite(fi,"\n",strlen("\n"));
-		ascii_codons(kmer);
-		gzwrite(fi,kmer.c_str(),strlen(kmer.c_str()));
-		gzwrite(fi,"\n",strlen("\n"));
-		
-	}
-	gzclose(fi);
-	}
-	else {
-	FILE *f = fopen(argv[1],"wb");
-	for (auto it=kmerMap.begin(); it!=kmerMap.end(); ++it){
-		
-		string kmer=it->first;
-			
-		fwrite(">", sizeof(char), strlen(">"), f);
-		if (it->second.size()>1){
-			fwrite("N", sizeof(char), strlen("N"), f);//Could as IUPAC codes here?
-		}
-		else{
-			string base={it->second.begin()->first};
-			fwrite(base.c_str(), sizeof(char), strlen(base.c_str()), f);
-		}
-		fwrite("\n", sizeof(char), strlen("\n"), f);
-		ascii_codons(kmer);
-		fwrite(kmer.c_str(), sizeof(char), strlen(kmer.c_str()), f);
-		fwrite("\n", sizeof(char), strlen("\n"), f);
-		
-	}
-	fclose(f);
-	}
-	
-	ofstream kmerfile(argv[1]);
-	for (auto it=kmerMap.begin(); it!=kmerMap.end(); ++it){
-	
-		string kmer=it->first;
-		string base;
-		int nonzero=0;
-		int i=0;
-		for (auto it2=it->second.begin(); it2!=it->second.end(); ++it2, ++i){
-		
-			if (*it2>0){
-				if (nonzero>0){
-					base='N';
-					break;
-				}
-				else{
-					base=bases[i];
-				}
-			}
-		
-		}
-		kmerfile << base << " " << kmer <<"\n";
-		
-	
-	}
-	kmerfile.close();
-	
-	return 0;*/
-	
 	
 }
 
