@@ -161,7 +161,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		for ( auto it=clusters.begin(); it!=clusters.end(); ++it){
 			++i;
 			if (it->size()>1){
-				string clusterfilename=prefix+"."+to_string(i)+".fofn";
+				string clusterfilename=prefix+".cluster."+to_string(i)+".fofn";
 				ofstream clusterout(clusterfilename);
 				for ( auto it2=it->begin(); it2!=it->end(); ++it2){
 					clusterout << kmerfiles[*it2] << "\n";
