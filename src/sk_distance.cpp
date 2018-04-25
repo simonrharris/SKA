@@ -12,7 +12,7 @@ using namespace std;
 
 
 //int main(int argc, char *argv[])
-int kmerDistance(const string & distancefile, const string & clusterfile, const vector<string> & kmerfiles, const int & maxSNPS, const float & minMatched)
+int kmerDistance(const string & prefix, const bool & distancefile, const bool & clusterfile, const vector<string> & kmerfiles, const int & maxSNPS, const float & minMatched)
 {
 
 	auto start = chrono::high_resolution_clock::now();
@@ -103,11 +103,12 @@ int kmerDistance(const string & distancefile, const string & clusterfile, const 
 	}
 	kmerMap.clear();
 
-	if (clusterfile!=""){
-		ofstream clusterout(clusterfile);
+	if (clusterfile){
+		string clusterfilename=prefix+".clusters.tsv";
+		ofstream clusterout(clusterfilename);
 		map <int, int> clusterMap;
 		vector < vector <int> > clusters;
-		cout << "Printing clusters to " << clusterfile << "\n";
+		cout << "Printing clusters to " << clusterfilename << "\n";
 		clusterout << "File\tCluster\n";
 		for (int i=0; i<numfiles; ++i){
 			vector< int > matches;
@@ -155,12 +156,26 @@ int kmerDistance(const string & distancefile, const string & clusterfile, const 
 			clusterout << kmerfiles[it->first] << "\t" << it->second+1 << "\n";
 		}
 		clusterout.close();
+
+		int i=0;
+		for ( auto it=clusters.begin(); it!=clusters.end(); ++it){
+			++i;
+			if (it->size()>1){
+				string clusterfilename=prefix+"."+to_string(i)+".fofn";
+				ofstream clusterout(clusterfilename);
+				for ( auto it2=it->begin(); it2!=it->end(); ++it2){
+					clusterout << kmerfiles[*it2] << "\n";
+				}
+				clusterout.close();
+			}
+		}
 	}
 	
-	if (distancefile!=""){
-		cout << "Printing distances to " << distancefile << "\n";
+	if (distancefile){
+		string distancefilename=prefix+".distances.tsv";
+		cout << "Printing distances to " << distancefilename << "\n";
 		
-		ofstream distanceout(distancefile);
+		ofstream distanceout(distancefilename);
 		distanceout << "File 1\tFile 2\tMatches\tMismatches\tSNPs\tNs\n";
 		for (int i=0; i<numfiles; ++i){
 			for (int j=i+1; j<numfiles; ++j){

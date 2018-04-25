@@ -283,11 +283,12 @@ int distanceHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska distance [options] <split kmer files>\n\n";
 	cout << "Options:\n";
-	cout << "-c <file>\tClusters output file name (tsv format).\n";
-	cout << "-d <file>\tDistances output file name (tsv format).\n";
+	cout << "-c \t\tDo not print clusters files.\n";
+	cout << "-d \t\tDo not print distances file.\n";
 	cout << "-h\t\tPrint this help.\n";
 	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-i <float>\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tsplit kmers in the file with fewer kmers and pass the SNP \n\t\tcutoff. [Default = 0.9]\n";
+	cout << "-p <file>\tPrefix for output files.\n";
 	cout << "-s <int>\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff. [Default = 20]\n\n";
 	return 0;
 }
@@ -295,8 +296,9 @@ int distanceHelp(void){
 
 int distanceSubcommand(int argc, char *argv[]){
 
-	string distancefile="";
-	string clusterfile="";
+	bool distancefile=true;
+	bool clusterfile=true;
+	string prefix="";
 	float minid=0.9;
 	int maxsnps=20;
 	vector<string> args;
@@ -310,24 +312,10 @@ int distanceSubcommand(int argc, char *argv[]){
 			return 0;
 		}
 		else if (arg=="-c"){
-			i++;
-			if (i<argc){
-				clusterfile = argv[i];
-			}
-			else {
-				cout << "\nExpecting file name after -c flag\n\n";
-				return 0;
-			}
+			clusterfile=false;
 		}
 		else if (arg == "-d"){
-			i++;
-			if (i<argc){
-				distancefile = argv[i];
-			}
-			else {
-				cout << "\nExpecting file name after -d flag\n\n";
-				return 0;
-			}
+			distancefile=false;
 		}
 		else if (arg == "-f"){
 			i++;
@@ -356,6 +344,16 @@ int distanceSubcommand(int argc, char *argv[]){
 			}
 			if (minid < 0 || minid > 1){
 				cout << "\nMinimum identity must be between 0 and 1\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-p"){
+			i++;
+			if (i<argc){
+				prefix = argv[i];
+			}
+			else {
+				cout << "\nExpecting string after -p flag\n\n";
 				return 0;
 			}
 		}
@@ -405,19 +403,23 @@ int distanceSubcommand(int argc, char *argv[]){
 
 	cout << "Clusters will be created for isolates that are within " << maxsnps << " SNPs of one another and share at least " << minid*100 << "% of the split kmers of the isolate with fewer kmers\n";
 
-	if (distancefile!=""){
-		cout << "Distances will be written to " << distancefile << "\n";
+	if (distancefile){
+		cout << "Distances will be written to " << prefix << ".distances.tsv\n";
 	}
-	if (clusterfile!=""){
-		cout << "Clusters will be written to " << clusterfile << "\n";
+	if (clusterfile){
+		cout << "Clusters will be written to files with the prefix " << prefix << "\n";
 	}
-	if (distancefile=="" && clusterfile==""){
-		cout << "At least one output file (-d or -c) is required.";
+	if (distancefile==false && clusterfile==false){
+		cout << "\nAt least one output file is required. i.e. you cannot use the -c and -d flags together.\n\n";
+		return 0;
+	}
+	if (prefix=="false"){
+		cout << "\nAn output prefix (-p) is required.\n\n";
 		return 0;
 	}
 	cout << "\n";
 
-	kmerDistance(distancefile, clusterfile, args, maxsnps, minid);
+	kmerDistance(prefix, distancefile, clusterfile, args, maxsnps, minid);
 
 	return 0;
 }
