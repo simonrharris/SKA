@@ -41,7 +41,7 @@ int uniqueSubcommand(int argc, char *argv[]);
 int weedHelp(void);
 int weedSubcommand(int argc, char *argv[]);
 
-int MinKmer=9;
+int MinKmer=3;
 int MaxKmer=30;
 int MinQual=0;
 int MaxQual=60;
