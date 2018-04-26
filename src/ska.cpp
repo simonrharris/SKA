@@ -12,6 +12,7 @@
 #include "sk_fastq.hpp"
 #include "sk_refalign.hpp"
 #include "sk_summary.hpp"
+#include "sk_type.hpp"
 #include "sk_unique.hpp"
 #include "sk_weed.hpp"
 
@@ -36,6 +37,8 @@ int mapHelp(void);
 int mapSubcommand(int argc, char *argv[]);
 int summaryHelp(void);
 int summarySubcommand(int argc, char *argv[]);
+int typeHelp(void);
+int typeSubcommand(int argc, char *argv[]);
 int uniqueHelp(void);
 int uniqueSubcommand(int argc, char *argv[]);
 int weedHelp(void);
@@ -99,6 +102,7 @@ int skaHelp(void){
 	cout << "fastq\t\tCreate split kmer file from fastq file(s)\n";
 	cout << "map\t\tAlign split kmer file(s) against a reference fasta file\n";
 	cout << "summary\t\tPrint split kmer file summary statistics\n";
+	cout << "type\t\tType split kmer files using the output of ska unique\n";
 	cout << "unique\t\tOutput kmers unique to a set of split kmer files\n";
 	cout << "version\t\tPrint the version and citation for ska\n";
 	cout << "weed\t\tWeed kmers from a split kmer file\n\n";
@@ -895,6 +899,78 @@ int summarySubcommand(int argc, char *argv[]){
 	return 0;
 }
 
+
+int typeHelp(void){
+	cout << "\nUsage:\n";
+	cout << "ska type [options] <subject split kmer files>\n\n";
+	cout << "Options:\n";
+	cout << "-h\t\tPrint this help.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-q <file>\tQuery split kmer file produced by ska unique.\n\n";
+	return 0;
+}
+
+
+int typeSubcommand(int argc, char *argv[]){
+
+	vector<string> args;
+	string queryfile="";
+
+	for (int i=2; i<argc; ++i){
+
+		string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			typeHelp();
+			return 0;
+		}
+		else if (arg == "-q"){
+			i++;
+			if (i<argc){
+				queryfile = argv[i];
+			}
+			else {
+				cout << "\nExpecting file name after -q flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				filetToVector(argv[i], args);
+			}
+			else {
+				cout << "\nExpecting file name after -f flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
+		else {
+			args.push_back(arg);
+		}
+	}
+
+	if (args.size()<1){
+		cout << "\nToo few arguments\n";
+		typeHelp();
+		return 0;
+	}
+
+	if (queryfile==""){
+		cout << "\nQuery kmer file is required\n";
+		typeHelp();
+		return 0;
+	}
+
+	typeKmerFiles(queryfile, args);
+
+	return 0;
+}
+
+
 int uniqueHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska unique [options]\n\n";
@@ -1138,6 +1214,9 @@ int main(int argc, char *argv[])
 		}
 	else if (subcommand == "summary"){
 			summarySubcommand(argc, argv);
+		}
+	else if (subcommand == "type"){
+			typeSubcommand(argc, argv);
 		}
 	else if (subcommand == "unique"){
 			uniqueSubcommand(argc, argv);

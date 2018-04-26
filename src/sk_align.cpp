@@ -56,6 +56,7 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 
 		while (fileStream.read(basebuffer, sizeof(basebuffer))){
 			string base (basebuffer, 1);
+			base[0]=toupper(base[0]);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, kmersize*2/3);
 			

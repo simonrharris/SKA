@@ -38,6 +38,7 @@ int summariseKmerFiles(const vector<string> & kmerfiles)
 		char kmerbuffer[kmersize*2/3];
 		while (fileStream.read(basebuffer, sizeof(basebuffer))){
 			string base (basebuffer, 1);
+			base[0]=toupper(base[0]);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, kmersize*2/3);
 			

@@ -5,6 +5,7 @@
 #include <string> //std::string
 #include <vector> //std::vector
 #include <chrono> //timing
+#include <algorithm> //std::transform
 #include "kmers.hpp"
 
 using namespace std;
@@ -45,6 +46,7 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 		char kmerbuffer[(kmersize*2/3)+1];
 		while (fileStream.read(kmerbuffer, sizeof(kmerbuffer))){
 			string kmer (kmerbuffer, (kmersize*2/3)+1);
+			kmer[0]=toupper(kmer[0]);
 			if (kmer[0]=='N'){continue;}
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
@@ -73,8 +75,12 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 	}
 	
 	cout << totalingroupkmers << " kmers read from " << ingroupfiles.size() << " files\n";
-	cout << kmerMap.size() << " unique kmers in map\n";
+	cout << kmerMap.size() << " shared kmers in map\n";
+	cout << "Writing kmers to " << outputfile << "\n";
 	
+	ofstream outfile(outputfile);
+	outfile << "#" << kmersize << "\n";
+
 	int weeded=0;
 	int totaloutgroupkmers=0;
 	
@@ -99,6 +105,10 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 			auto it2 = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it2 != kmerMap.end() ){//if the kmer is in the hash
 				weeded++;
+				string kmer = it2->first;
+				//transform(it2->first.begin(), it2->first.begin()+1,it2->first.begin(), ::toupper);
+				kmer[0]=toupper(kmer[0]);
+				outfile << kmer;
 				kmerMap.erase(it2->first);
 			}
 			totaloutgroupkmers++;
@@ -107,17 +117,14 @@ int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outg
 	}
 	cout << totaloutgroupkmers << " read from " << outgroupfiles.size() << " files\n";
 	//cout << "Removed " << weeded << " kmers from " << kmerfile << "\n";
-	cout << kmerMap.size() << " kmers remaining in map\n";
+	cout << kmerMap.size() << " unique kmers remaining in map\n";
 	
-	cout << "Writing kmers to " << outputfile << "\n";
 	
-	ofstream outfile(outputfile);
-	outfile << "#" << kmersize << "\n";
 	
 	for (auto it=kmerMap.begin(); it!=kmerMap.end(); ++it){
-		
-		string kmer=it->first;
-		
+		string kmer = it->first;
+		//transform(it->first.begin(), it->first.begin()+1,it->first.begin(), ::tolower);
+		kmer[0]=tolower(kmer[0]);
 		outfile << kmer;
 		
 	}

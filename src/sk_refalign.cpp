@@ -123,6 +123,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 
 		while (fileStream.read(basebuffer, sizeof(basebuffer))){
 			string base (basebuffer, 1);
+			base[0]=toupper(base[0]);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, kmerlen*2/3);
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
