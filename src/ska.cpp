@@ -2,27 +2,32 @@
 #include <fstream> //std::fileStream
 #include <sstream> //std::getline
 #include <string> //std::string
-#include <vector> //std::string
+#include <vector> //std::vector
 #include <stdlib.h> //std::strtol
 #include <stdexcept>      // std::invalid_argument
+#include "sk_alleles.hpp"
 #include "sk_align.hpp"
 #include "sk_compare.hpp"
 #include "sk_distance.hpp"
 #include "sk_fasta.hpp"
 #include "sk_fastq.hpp"
+#include "sk_merge.hpp"
+#include "sk_info.hpp"
 #include "sk_refalign.hpp"
 #include "sk_summary.hpp"
 #include "sk_type.hpp"
 #include "sk_unique.hpp"
 #include "sk_weed.hpp"
+#include "kmers.hpp"
 
 using namespace std;
 
 long int getint(char * arg);
 float getfloat(char * arg);
-int filetToVector(const string & filename, vector<string> & fileargs);
 int skaHelp(void);
 int skaVersion(void);
+int allelesHelp(void);
+int allelesSubcommand(int argc, char *argv[]);
 int alignHelp(void);
 int alignSubcommand(int argc, char *argv[]);
 int compareHelp(void);
@@ -33,8 +38,12 @@ int fastaHelp(void);
 int fastaSubcommand(int argc, char *argv[]);
 int fastqHelp(void);
 int fastqSubcommand(int argc, char *argv[]);
+int infoHelp(void);
+int infoSubcommand(int argc, char *argv[]);
 int mapHelp(void);
 int mapSubcommand(int argc, char *argv[]);
+int mergeHelp(void);
+int mergeSubcommand(int argc, char *argv[]);
 int summaryHelp(void);
 int summarySubcommand(int argc, char *argv[]);
 int typeHelp(void);
@@ -49,6 +58,7 @@ int MaxKmer=30;
 int MinQual=0;
 int MaxQual=60;
 int MinCov=0;
+int maxNamesToPrint=10;
 
 string versionNumber = "0.1";
 string citation = "TBA";
@@ -71,24 +81,6 @@ float getfloat(char * arg){
   	return f;
 }
 
-int filetToVector(const string & filename, vector<string> & fileargs){
-	ifstream fileStream;
-	fileStream.open(filename, ios::in);
-	if (fileStream.fail()) {
-		cout << "Failed to open " << filename << "\n\n";
-		return 0;
-	}
-	string word;
-	while (fileStream >> word){
-		if (word.length()>500){
-			cout << "Filenames > 500 characters are not allowed\n";
-			return 0;
-		}
-		fileargs.push_back(word);
-	}
-	return 0;
-}
-
 
 int skaHelp(void){
 	skaVersion();
@@ -96,17 +88,21 @@ int skaHelp(void){
 	cout << "ska <subcommand>\n\n";
 	cout << "Subcommands:\n";
 	cout << "align\t\tReference-free alignment from a set of split kmer files\n";
-	cout << "compare\t\tPrint comparison statistics for a query split kmer  \n\t\tfile against a set of subject split kmer files\n";
+	cout << "alleles\t\tCreate a merged split kmer file for all sequenes in one or \n\t\tmore multifasta files\n";
+	cout << "compare\t\tPrint comparison statistics for a query split kmer file \n\t\tagainst a set of subject split kmer files\n";
 	cout << "distance\tPairwise distance calculation and clustering from split kmer \n\t\tfiles\n";
-	cout << "fasta\t\tCreate split kmer file from fasta file(s)\n";
-	cout << "fastq\t\tCreate split kmer file from fastq file(s)\n";
+	cout << "fasta\t\tCreate a split kmer file from fasta file(s)\n";
+	cout << "fastq\t\tCreate a split kmer file from fastq file(s)\n";
+	cout << "info\t\tPrint some information about one or more kmer or kmerge \n\t\tfiles\n";
+				   //123456789012345678901234567890123456789012345678901234567890
 	cout << "map\t\tAlign split kmer file(s) against a reference fasta file\n";
 	cout << "summary\t\tPrint split kmer file summary statistics\n";
-	cout << "type\t\tType split kmer files using the output of ska unique\n";
+	cout << "type\t\tType split kmer files using a set of allele files\n";
 	cout << "unique\t\tOutput kmers unique to a set of split kmer files\n";
 	cout << "version\t\tPrint the version and citation for ska\n";
 	cout << "weed\t\tWeed kmers from a split kmer file\n\n";
-	//123456789012345678901234567890123456789012345678901234567890
+
+	               
 	return 0;
 }
 
@@ -116,6 +112,96 @@ int skaVersion(void){
 	cout << "Citation: " << citation << "\n\n";
 	return 0;
 }
+int allelesHelp(void){
+	cout << "\nUsage:\n";
+	cout << "ska fasta [options] <fasta files>\n\n";
+	cout << "Options:\n";
+	cout << "-h\t\tPrint this help.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n\n";
+	return 0;
+}
+
+
+int allelesSubcommand(int argc, char *argv[]){
+
+	long int kmersize=15;
+	vector<string> args;
+
+	for (int i=2; i<argc; ++i){
+
+		string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			allelesHelp();
+			return 0;
+		}
+		else if (arg == "-k"){
+			i++;
+			if (i<argc){
+				try {
+					kmersize = getint(argv[i]);
+				}
+				catch (const invalid_argument& e) {
+					cout << "\nExpecting positive integer after -k flag\n\n";
+					return 0;
+				}
+			}
+			else {
+				cout << "\nExpecting positive integer after -k flag\n\n";
+				return 0;
+			}
+			if (kmersize < MinKmer || kmersize > MaxKmer || kmersize % 3 != 0){
+				cout << "\nKmer size must be a positive integer between " << MinKmer << " and " << MaxKmer << " and must be divisible by 3\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], args);
+			}
+			else {
+				cout << "\nExpecting file name after -f flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
+		else {
+			args.push_back(arg);
+		}
+	}
+
+	if (args.size()<1){
+		cout << "\nToo few arguments\n";
+		allelesHelp();
+		return 0;
+	}
+
+	skaVersion();
+
+	cout << "Creating split " << kmersize << "mers for ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
+	}
+	else {
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
+	}
+	cout << endl;
+
+	cout << "\n";
+
+	allelesToKmers(args, kmersize);
+
+	return 0;
+}
+
+
 
 int alignHelp(void){
 	cout << "\nUsage:\n";
@@ -123,17 +209,21 @@ int alignHelp(void){
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help.\n";
 	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-o <file>\tOutput file name. [Default = reference_free.aln]\n";
-	cout << "-p <float>\tMinimum proportion of isolates required to possess a split \n\t\tkmer for that kmer to be included in the alignment. \n\t\t[Default = 0.9]\n\n";
+	cout << "-o <file>\tPrefix for output files. [Default = reference_free]\n";
+	cout << "-p <float>\tMinimum proportion of isolates required to possess a split \n\t\tkmer for that kmer to be included in the alignment. \n\t\t[Default = 0.9]\n";
+	cout << "-s <file>\tFile of sample names to include in the alignment.\n";
+	cout << "-v\tOutput variant only alignment. [Default = all sites]\n\n";
 	return 0;
 }
 
 
 int alignSubcommand(int argc, char *argv[]){
 
-	string outfile="reference_free.aln";
+	string outprefix="reference_free";
 	float minproportion=0.9;
-	vector<string> args;
+	bool variantonly=false;
+	vector <string> args;
+	vector <string> sample;
 
 	for (int i=2; i<argc; ++i){
 
@@ -146,10 +236,10 @@ int alignSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = argv[i];
+				outprefix = string(argv[i]);
 			}
 			else {
-				cout << "\nExpecting file name after -o flag\n\n";
+				cout << "\nExpecting string after -o flag\n\n";
 				return 0;
 			}
 		}
@@ -176,12 +266,25 @@ int alignSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
 				return 0;
 			}
+		}
+		else if (arg == "-s"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], sample);
+			}
+			else {
+				cout << "\nExpecting file name after -s flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-v"){
+			variantonly = true;
 		}
 		else if (arg[0]=='-'){
 			cout << "\nUnrecognised flag " << arg << "\n\n";
@@ -191,8 +294,14 @@ int alignSubcommand(int argc, char *argv[]){
 			args.push_back(arg);
 		}
 	}
+
+	if (variantonly){
+		outprefix+="_variants";
+	}
+
+	outprefix+=".aln";
 	
-	if (args.size()<2){
+	if (args.size()<1){
 		cout << "\nToo few arguments\n";
 		alignHelp();
 		return 0;
@@ -201,14 +310,19 @@ int alignSubcommand(int argc, char *argv[]){
 	skaVersion();
 
 	cout << "Creating reference free alignment for ";
-	for (auto it = args.begin(); it != args.end(); ++it){
-		cout << *it << " ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
+	}
+	else {	
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
 	}
 	cout << "\n";
 	cout << "Variable sites present in more than " << minproportion*100 << "% of isolates will be included\n";
-	cout << "Output will be written to " << outfile << "\n\n";
+	cout << "Output will be written to " << outprefix << "\n\n";
 
-	alignKmers(minproportion, outfile, args);
+	alignKmers(minproportion, outprefix, args, variantonly, sample);
 
 	return 0;
 }
@@ -250,7 +364,7 @@ int compareSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
@@ -292,7 +406,7 @@ int distanceHelp(void){
 	cout << "-h\t\tPrint this help.\n";
 	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-i <float>\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tsplit kmers in the file with fewer kmers and pass the SNP \n\t\tcutoff. [Default = 0.9]\n";
-	cout << "-p <file>\tPrefix for output files.\n";
+	cout << "-o <file>\tPrefix for output files. [Default = distances]\n";
 	cout << "-s <int>\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff. [Default = 20]\n\n";
 	return 0;
 }
@@ -302,7 +416,7 @@ int distanceSubcommand(int argc, char *argv[]){
 
 	bool distancefile=true;
 	bool clusterfile=true;
-	string prefix="";
+	string prefix="distances";
 	float minid=0.9;
 	int maxsnps=20;
 	vector<string> args;
@@ -324,7 +438,7 @@ int distanceSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
@@ -351,13 +465,13 @@ int distanceSubcommand(int argc, char *argv[]){
 				return 0;
 			}
 		}
-		else if (arg == "-p"){
+		else if (arg == "-o"){
 			i++;
 			if (i<argc){
 				prefix = argv[i];
 			}
 			else {
-				cout << "\nExpecting string after -p flag\n\n";
+				cout << "\nExpecting string after -o flag\n\n";
 				return 0;
 			}
 		}
@@ -390,7 +504,7 @@ int distanceSubcommand(int argc, char *argv[]){
 		}
 	}
 	
-	if (args.size()<2){
+	if (args.size()<1){
 		cout << "\nToo few arguments\n";
 		distanceHelp();
 		return 0;
@@ -399,8 +513,13 @@ int distanceSubcommand(int argc, char *argv[]){
 	skaVersion();
 
 	cout << "Calculating pairwise distances for ";
-	for (auto it = args.begin(); it != args.end(); ++it){
-		cout << *it << " ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
+	}
+	else {
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
 	}
 	cout << "\n";
 
@@ -435,7 +554,7 @@ int fastaHelp(void){
 	cout << "-h\t\tPrint this help.\n";
 	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
-	cout << "-o <file>\tOutput file name. [Default = fasta.kmers]\n\n";
+	cout << "-o <file>\tOutput file prefix. [Default = fasta]\n\n";
 	return 0;
 }
 
@@ -477,7 +596,7 @@ int fastaSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = argv[i];
+				outfile = string(argv[i])+".kmers";
 			}
 			else {
 				cout << "\nExpecting file name after -o flag\n\n";
@@ -487,7 +606,7 @@ int fastaSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
@@ -512,11 +631,16 @@ int fastaSubcommand(int argc, char *argv[]){
 	skaVersion();
 
 	cout << "Creating split " << kmersize << "mers for ";
-	for (auto it = args.begin(); it != args.end(); ++it){
-		cout << *it << " ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
 	}
-	cout << "\n";
-	cout << "Output will be written to " << outfile << "\n";
+	else {
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
+	}
+	cout << endl;
+	cout << "Output will be written to " << outfile << endl;
 
 	cout << "\n";
 
@@ -536,7 +660,7 @@ int fastqHelp(void){
 	cout << "-C <int>\tFile coverage cutoff. Kmers with coverage below this value \n\t\tin any of the fastq files will be discarded. [Default = 2]\n";
 	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]\n";
 	cout << "-m <float>\tMinimum allowable minor allele frequency. Kmer alleles below \n\t\tthis frequency will be discarded. [Default = 0.2]\n";
-	cout << "-o <file>\tOutput file name. [Default = fastq.kmers]\n";
+	cout << "-o <file>\tOutput prefix. [Default = fastq]\n";
 	cout << "-q <int>\tQuality filter for fastq files. No kmers will be created \n\t\tfrom sequence including quality scores below this cutoff. \n\t\t[Default = 20]\n\n";
 	return 0;
 }
@@ -643,7 +767,7 @@ int fastqSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = argv[i];
+				outfile = string(argv[i])+".kmers";
 			}
 			else {
 				cout << "\nExpecting file name after -o flag\n\n";
@@ -693,16 +817,21 @@ int fastqSubcommand(int argc, char *argv[]){
 	skaVersion();
 
 	cout << "Creating split " << kmersize << "mers for ";
-	for (auto it = args.begin(); it != args.end(); ++it){
-		cout << *it << " ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
+	}
+	else {
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
 	}
 	cout << "\n";
 	cout << "Filters:\n";
-	cout << "\tCoverage cutoff = " << covcutoff << "\n";
-	cout << "\tPer file coverage cutoff = " << filecovcutoff << "\n";
-	cout << "\tMinimum minor allele frequency = " << minmaf << "\n";
-	cout << "\tMinimum base quality = " << minquality << "\n";
-	cout << "Output will be written to " << outfile << "\n";
+	cout << "\tCoverage cutoff = " << covcutoff << endl;
+	cout << "\tPer file coverage cutoff = " << filecovcutoff << endl;
+	cout << "\tMinimum minor allele frequency = " << minmaf << endl;
+	cout << "\tMinimum base quality = " << minquality << endl;
+	cout << "Output will be written to " << outfile << endl;
 
 	cout << "\n";
 
@@ -711,28 +840,91 @@ int fastqSubcommand(int argc, char *argv[]){
 	return 0;
 }
 
+
+int infoHelp(void){
+	cout << "\nUsage:\n";
+	cout << "ska info [options] <split kmer files>\n\n";
+	cout << "Options:\n";
+	cout << "-h\t\tPrint this help.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	return 0;
+}
+
+
+int infoSubcommand(int argc, char *argv[]){
+
+	vector<string> args;
+	bool tabulated=false;
+
+	for (int i=2; i<argc; ++i){
+
+		string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			infoHelp();
+			return 0;
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], args);
+			}
+			else {
+				cout << "\nExpecting file name after -f flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-t"){
+			tabulated=true;
+		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
+		else {
+			args.push_back(arg);
+		}
+	}
+
+	if (args.size()<1){
+		cout << "\nToo few arguments\n";
+		infoHelp();
+		return 0;
+	}
+
+	getKmerFileInfo(args, tabulated);
+
+	return 0;
+}
+
 int mapHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska map [options] <split kmer files>\n\n";
 	cout << "Options:\n";
+	cout << "-a <file>\tMap all bases of kmers (Default = just map middle base).\n";
 	cout << "-h\t\tPrint this help.\n";
 	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\tMust be the same value used to create the kmer files. \n\t\t[Default = 15]\n";
 	cout << "-i\t\tInclude reference sequence in alignment.\n";
 	cout << "-m\t\tMap bases to repeats rather than making them N.\n";
-	cout << "-o <file>\tOutput file name. [Default = mappedkmers.aln]\n";
-	cout << "-r <file>\tReference fasta file name. [Required]\n\n";
+	cout << "-o <file>\tOutput file prefix. [Default = mappedkmers]\n";
+	cout << "-r <file>\tReference fasta file name. [Required]\n";
+	cout << "-s <file>\tFile of sample names to include in the alignment.\n";
+	cout << "-v\tOutput variant only alignment. [Default = all sites]\n\n";
 	return 0;
 }
 
 
 int mapSubcommand(int argc, char *argv[]){
 
-	string outfile = "mappedkmers.aln";
+	string outprefix = "mappedkmers";
 	string reference = "";
 	long int kmersize=15;
 	bool includeref=false;
 	bool maprepeats=false;
+	bool fillall=false;
+	bool variantonly=false;
+	vector <string> sample;
 	vector<string> args;
 
 	for (int i=2; i<argc; ++i){
@@ -779,10 +971,16 @@ int mapSubcommand(int argc, char *argv[]){
 		else if (arg == "-m"){
 			maprepeats = true;
 		}
+		else if (arg == "-a"){
+			fillall = true;
+		}
+		else if (arg == "-v"){
+			variantonly = true;
+		}
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = argv[i];
+				outprefix = string(argv[i]);
 			}
 			else {
 				cout << "\nExpecting file name after -o flag\n\n";
@@ -792,10 +990,20 @@ int mapSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-s"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], sample);
+			}
+			else {
+				cout << "\nExpecting file name after -s flag\n\n";
 				return 0;
 			}
 		}
@@ -814,6 +1022,12 @@ int mapSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
+	if (variantonly){
+		outprefix+="_variants";
+	}
+
+	outprefix+=".aln";
+
 	if (reference==""){
 		cout << "\nReference file is required\n";
 		mapHelp();
@@ -823,8 +1037,13 @@ int mapSubcommand(int argc, char *argv[]){
 	skaVersion();
 
 	cout << "Aligning ";
-	for (auto it = args.begin(); it != args.end(); ++it){
-		cout << *it << " ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
+	}
+	else {
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
 	}
 	cout << "\n";
 	cout << "Using split kmer size of " << kmersize << "\n";
@@ -841,11 +1060,113 @@ int mapSubcommand(int argc, char *argv[]){
 	else{
 		cout << "Repeats in the reference will be output as gaps\n";
 	}
+	if (fillall){
+		cout << "All bases in kmers will be mapped as lower case\n";
+	}
+	cout << "Output will be written to " << outprefix << "\n\n";
 
-	alignKmersToReference(reference, outfile, args, kmersize, includeref, maprepeats);
+	alignKmersToReference(reference, outprefix, args, kmersize, includeref, maprepeats, fillall, variantonly, sample);
 
 	return 0;
 }
+
+
+int mergeHelp(void){
+	cout << "\nUsage:\n";
+	cout << "ska merge [options] <subject split kmer files>\n\n";
+	cout << "Options:\n";
+	cout << "-h\t\tPrint this help.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
+	cout << "-o <file>\tOutput file prefix. [Default = merged]\n";
+	cout << "-s <file>\tFile of sample names to include in the merged file. Can \n\t\tbe used to extract samples from a merge\n\n";
+	return 0;
+}
+
+
+int mergeSubcommand(int argc, char *argv[]){
+
+	vector<string> args;
+	vector <string> sample;
+	string outfile="merged";
+
+	for (int i=2; i<argc; ++i){
+
+		string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			mergeHelp();
+			return 0;
+		}
+		else if (arg == "-o"){
+			i++;
+			if (i<argc){
+				outfile = string(argv[i])+"";
+			}
+			else {
+				cout << "\nExpecting file name after -o flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], args);
+			}
+			else {
+				cout << "\nExpecting file name after -f flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-s"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], sample);
+			}
+			else {
+				cout << "\nExpecting file name after -s flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg[0]=='-'){
+			cout << "\nUnrecognised flag " << arg << "\n\n";
+				return 0;
+		}
+		else {
+			args.push_back(arg);
+		}
+	}
+
+	if (args.size()<1){
+		cout << "\nToo few arguments\n";
+		mergeHelp();
+		return 0;
+	}
+
+	if (outfile==""){
+		cout << "\nOutput file name is required\n";
+		mergeHelp();
+		return 0;
+	}
+
+	skaVersion();
+
+	cout << "Merging ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
+	}
+	else {
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
+	}
+	cout << "\n";
+	cout << "Output will be written to " << outfile << "\n\n";
+
+	mergeKmerFiles(outfile, args, sample);
+
+	return 0;
+}
+
 
 int summaryHelp(void){
 	cout << "\nUsage:\n";
@@ -872,7 +1193,7 @@ int summarySubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
@@ -906,7 +1227,8 @@ int typeHelp(void){
 	cout << "Options:\n";
 	cout << "-h\t\tPrint this help.\n";
 	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
-	cout << "-q <file>\tQuery split kmer file produced by ska unique.\n\n";
+	cout << "-p <file>\ttab file containing profile information.\n";
+	cout << "-q <file>\tQuery split kmer file. This can be a single kmer file or a \n\t\tkmerge.\n\n";
 	return 0;
 }
 
@@ -915,6 +1237,7 @@ int typeSubcommand(int argc, char *argv[]){
 
 	vector<string> args;
 	string queryfile="";
+	string profilefile="";
 
 	for (int i=2; i<argc; ++i){
 
@@ -937,10 +1260,20 @@ int typeSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
+				return 0;
+			}
+		}
+		else if (arg == "-p"){
+			i++;
+			if (i<argc){
+				profilefile = argv[i];
+			}
+			else {
+				cout << "\nExpecting file name after -p flag\n\n";
 				return 0;
 			}
 		}
@@ -965,7 +1298,7 @@ int typeSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	typeKmerFiles(queryfile, args);
+	typeKmerFile(queryfile, profilefile, args);
 
 	return 0;
 }
@@ -975,11 +1308,12 @@ int uniqueHelp(void){
 	cout << "\nUsage:\n";
 	cout << "ska unique [options]\n\n";
 	cout << "Options:\n";
-	cout << "-f <file>\tFile of outgroup split kmer file names. Kmers from these \n\t\tfiles will be removed from the set found in the ingroup files.\n";
+	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-h\t\tPrint this help.\n";
-	cout << "-i <file>\tFile of ingroup split kmer file names. Unique kmers found \n\t\tin these files will be retained.\n";
-	cout << "-o <file>\tOutput file name. [Default = unique.kmers]\n";
+	cout << "-i <file>\tFile of ingroup sample names. Unique kmers found \n\t\tin these files will be retained.\n";
+	cout << "-o <file>\tOutput file prefix. [Default = unique]\n";
 	cout << "-p <float>\tMinimum proportion of ingroup isolates required to possess a \n\t\tsplit kmer for that kmer to be retained. [Default = 0.9]\n\n";
+					   //123456789012345678901234567890123456789012345678901234567890
 	return 0;
 }
 
@@ -989,7 +1323,7 @@ int uniqueSubcommand(int argc, char *argv[]){
 	string outfile="unique.kmers";
 	vector<string> ingroup;
 	float minproportion=0.9;
-	vector<string> outgroup;
+	vector<string> args;
 
 	for (int i=2; i<argc; ++i){
 
@@ -1002,7 +1336,7 @@ int uniqueSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = argv[i];
+				outfile = string(argv[i])+".kmers";
 			}
 			else {
 				cout << "\nExpecting file name after -o flag\n\n";
@@ -1012,7 +1346,7 @@ int uniqueSubcommand(int argc, char *argv[]){
 		else if (arg == "-i"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], ingroup);
+				fileToVector(argv[i], ingroup);
 			}
 			else {
 				cout << "\nExpecting file name after -i flag\n\n";
@@ -1022,7 +1356,7 @@ int uniqueSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], outgroup);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
@@ -1050,9 +1384,7 @@ int uniqueSubcommand(int argc, char *argv[]){
 			}
 		}
 		else {
-			cout << "Unrecognised command "<< arg << "\n\n";
-			uniqueHelp();
-			return 0;
+			args.push_back(arg);
 		}
 	}
 
@@ -1062,29 +1394,29 @@ int uniqueSubcommand(int argc, char *argv[]){
 		return 0;
 	}
 
-	if (outgroup.size()<1){
-		cout << "\nAt least one outgroup kmer file must be specified\n";
+	if (args.size()<1){
+		cout << "\nAt least one kmer file must be specified\n";
 		uniqueHelp();
 		return 0;
 	}
 
 	skaVersion();
 
-	cout << "Finding kmers in at least " << minproportion*100 << "% of ";
+	cout << "Finding unique kmers in at least " << minproportion*100 << "% of ";
 	for (auto it = ingroup.begin(); it != ingroup.end(); ++it){
 		cout << *it << " ";
 	}
-	cout << "\nThat are not also found in ";
-	for (auto it = outgroup.begin(); it != outgroup.end(); ++it){
+	/*cout << "\nThat are not also found in ";
+	for (auto it = outgroup.begin(); it != args.end(); ++it){
 		cout << *it << " ";
-	}
-cout << "\n";
+	}*/
+	cout << "\n";
 
 	cout << "Output will be written to " << outfile << "\n";
 
 	cout << "\n";
 
-	uniqueKmers(ingroup, outgroup, minproportion, outfile);
+	uniqueKmers(ingroup, args, minproportion, outfile);
 
 	return 0;
 }
@@ -1095,15 +1427,13 @@ int weedHelp(void){
 	cout << "Options:\n";
 	cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line.\n";
 	cout << "-h\t\tPrint this help.\n";
-	cout << "-i <file>\tName of kmer file from which kmers will be removed. [Required]\n";
-	cout << "-o <file>\tOutput file name. [Default = weeded.kmers]\n\n";
+	cout << "-i <file>\tName of kmer file containing kmers to be weeded. [Required]\n";
 	return 0;
 }
 
 
 int weedSubcommand(int argc, char *argv[]){
 
-	string outfile="weeded.kmers";
 	string infile="";
 	string kmerfile="";
 	vector<string> args;
@@ -1115,16 +1445,6 @@ int weedSubcommand(int argc, char *argv[]){
 		if (arg=="-h" || arg=="--help"){
 			weedHelp();
 			return 0;
-		}
-		else if (arg == "-o"){
-			i++;
-			if (i<argc){
-				outfile = argv[i];
-			}
-			else {
-				cout << "\nExpecting file name after -o flag\n\n";
-				return 0;
-			}
 		}
 		else if (arg == "-i"){
 			i++;
@@ -1139,7 +1459,7 @@ int weedSubcommand(int argc, char *argv[]){
 		else if (arg == "-f"){
 			i++;
 			if (i<argc){
-				filetToVector(argv[i], args);
+				fileToVector(argv[i], args);
 			}
 			else {
 				cout << "\nExpecting file name after -f flag\n\n";
@@ -1169,16 +1489,20 @@ int weedSubcommand(int argc, char *argv[]){
 
 	skaVersion();
 
-	cout << "Weeding kmers in ";
-	for (auto it = args.begin(); it != args.end(); ++it){
-		cout << *it << " ";
+	cout << "Weeding kmers in " << infile << endl;
+	cout << "From ";
+	if (args.size()>maxNamesToPrint){
+		cout << args.size() << " files";
 	}
-	cout << "from " << infile << "\n";
-	cout << "Output will be written to " << outfile << "\n";
+	else {
+		for (auto it = args.begin(); it != args.end(); ++it){
+			cout << *it << " ";
+		}
+	}
 
-	cout << "\n";
+	cout << endl;
 
-	weedKmers(args, infile, outfile);
+	weedKmers(args, infile);
 
 	return 0;
 }
@@ -1194,7 +1518,10 @@ int main(int argc, char *argv[])
 
 	string subcommand=(argv[1]);
 
-	if (subcommand == "align"){
+	if (subcommand == "alleles"){
+			allelesSubcommand(argc, argv);
+		}
+	else if (subcommand == "align"){
 			alignSubcommand(argc, argv);
 		}
 	else if (subcommand == "compare"){
@@ -1209,8 +1536,14 @@ int main(int argc, char *argv[])
 	else if (subcommand == "fastq"){
 			fastqSubcommand(argc, argv);
 		}
+	else if (subcommand == "info"){
+			infoSubcommand(argc, argv);
+		}
 	else if (subcommand == "map"){
 			mapSubcommand(argc, argv);
+		}
+	else if (subcommand == "merge"){
+			mergeSubcommand(argc, argv);
 		}
 	else if (subcommand == "summary"){
 			summarySubcommand(argc, argv);

@@ -1,5 +1,5 @@
-#ifndef __SK_ALIGN_HPP_INCLUDED__
-#define __SK_ALIGN_HPP__
+#ifndef __SK_DISTANCE_HPP_INCLUDED__
+#define __SK_DISTANCE_HPP__
 #endif
 
 #include <string> //std::string

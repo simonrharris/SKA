@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <bitset>
+#include <cmath>       /* ceil */
 #include "general.hpp"
 #include "kmers.hpp"
 #include <chrono> //timing
@@ -17,16 +19,21 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 
 	auto start = chrono::high_resolution_clock::now();
 	int numfiles=kmerfiles.size();
+
+	vector < string > sampleNames;
+	if (collectSampleNames(kmerfiles, sampleNames)!=0){return 1;}
+	int numSamples=sampleNames.size();
 	
-	// Create the kmer map
-	unordered_map<string, string> kmerMap;
-	string emptySequence (numfiles , '-');
-	vector< int > kmerCounts;
+	unordered_map<string, string> kmerMap;// Create the kmer map
+	string emptySequence (numSamples , '-');
 	int oldkmersize=0;
 
+	vector < int > kmerCounts(numSamples, 0);
+
 	ifstream fileStream;
+	int sampleNum=0;
 	for (int s = 0; s < kmerfiles.size(); ++s){
-		int kmercount=0;
+		
 		cout << "Reading " << kmerfiles[s] << "\n";
 		fileStream.open(kmerfiles[s], ios::in);
 
@@ -34,7 +41,17 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 			cout << "Failed to open " << kmerfiles[s] << "\n\n";
 			return 0;
 		}
-		int kmersize=readKmerHeader(fileStream);
+		int kmersize;
+		vector < string > names;
+		
+		try {
+			int returnval = readKmerHeader(fileStream, kmersize, names);
+		}
+		catch (int e){
+			cout << "An exception occurred when reading file " << kmerfiles[s] << ". Please check the format. Exception Nr. " << e << '\n';
+			return 1;
+		}
+
 		if (s==0){
 			oldkmersize=kmersize;
 		}
@@ -44,84 +61,207 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 			return 0;
 		}
 
+
 		char basebuffer[1];
 		char kmerbuffer[kmersize*2/3];
+		char asciibuffer[int(ceil(float(names.size())/6))];
 
-		while (fileStream.read(basebuffer, sizeof(basebuffer))){
-			string base (basebuffer, 1);
-			base[0]=toupper(base[0]);
-			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
-			string kmer (kmerbuffer, kmersize*2/3);
-			kmercount++;
+		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){
+			string asciibits (asciibuffer, sizeof(asciibuffer));
+			vector < bool > mybits;
+			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a vector of bools
 			
-			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
-			if ( it != kmerMap.end() ){//if the kmer is in the hash
-				it->second[s]=base[0];//make the hash a repeat
-			}
-			else {
-				string newsequence = emptySequence;
-				newsequence[s] = base[0];
-				kmerMap.insert(make_pair(kmer, newsequence));
-			}
-    	}
-		fileStream.close();
-		kmerCounts.push_back(kmercount);
-	}
-	cout << kmerMap.size() << " kmers read from " << numfiles << " files\n";
-	
-	cout << "Calculating distances\n";
-
-	auto it = kmerMap.begin();
-	auto endIter = kmerMap.end();
-	vector< vector<int> > pairwiseSNPs;
-	pairwiseSNPs.resize( numfiles , vector<int>( numfiles , 0 ) );
-	vector< vector<int> > pairwiseMatches;
-	pairwiseMatches.resize( numfiles , vector<int>( numfiles , 0 ) );
-	vector< vector<int> > pairwiseNs;
-	pairwiseNs.resize( numfiles , vector<int>( numfiles , 0 ) );
-
-	for (; it!=endIter; ){
-		for (int i=0; i<numfiles; ++i){
-			if (it->second[i]=='-'){
-				continue;
-			}
-			for (int j=i+1; j<numfiles; ++j){
-				if (it->second[j]=='-'){
-					continue;
+			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
+				string base (basebuffer, 1);
+				base[0]=toupper(base[0]);
+				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
+				string kmer (kmerbuffer, kmersize*2/3);
+				for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
+					if (mybits[i]){
+						kmerCounts[sampleNum+i]++;
+					}
 				}
-				else if (it->second[i]=='N' || it->second[j]=='N'){
-					pairwiseNs[i][j]++;
-				}
-				else if (it->second[i]==it->second[j]){
-					pairwiseMatches[i][j]++;
+				
+				auto it = kmerMap.find(kmer);//check if the kmer is in the hash
+				if ( it != kmerMap.end() ){//if the kmer is in the hash
+					for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
+						if (mybits[i]){
+							it->second[sampleNum+i]=base[0];//add the base to the string
+						}
+					}
 				}
 				else {
-					pairwiseSNPs[i][j]++;
+					string newsequence = emptySequence;
+					for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
+						if (mybits[i]){
+							newsequence[sampleNum+i] = base[0];
+						}
+					}
+					kmerMap.insert(make_pair(kmer, newsequence));
+				}
+	    	}
+	    	fileStream.ignore(256,'\n');//skip the end ofline character
+	    }
+	    sampleNum+=int(names.size()); //add the number of samples in the file to the count of total samples
+		fileStream.close();
+	}
+	cout << kmerMap.size() << " kmers read from " << numSamples << " samples in " << numfiles << " files\n";
+
+	vector < vector < int > > pairwiseSNPs( numSamples , vector<int>( numSamples , 0 ) );
+	vector < vector < int > > pairwiseMatches( numSamples , vector<int>( numSamples , kmerMap.size() ) );
+	vector < vector < int > > pairwiseNs( numSamples , vector<int>( numSamples , 0 ) );
+	
+	
+	cout << "Calculating SNP distances" << endl;;
+
+	vector < bitset < 1000000 > >  kmerbitvector( numSamples, 0 );
+	bitset < 1000000 > mykmerbits;
+	
+
+	while (kmerMap.size()>0){
+	
+		auto it = kmerMap.begin();
+		auto endIter = kmerMap.end();
+		int j=0;
+	
+		for (; it!=endIter && j<1000000; ){
+
+			vector < int > as;
+			vector < int > cs;
+			vector < int > gs;
+			vector < int > ts;
+			int ncount=0;
+			
+			for (int i=0; i<numSamples; ++i){
+				switch (it->second[i])
+				{
+					case 'A':
+						as.push_back(i);
+						break;
+					case 'C':
+						cs.push_back(i);
+						break;
+					case 'G':
+						gs.push_back(i);
+						break;
+					case 'T':
+						ts.push_back(i);
+						break;
+					case '-':
+					case 'N':
+						kmerbitvector[i].set(j);
+						ncount++;
+						break;
 				}
 			}
+
+			if (as.size()==numSamples || cs.size()==numSamples || gs.size()==numSamples || ts.size()==numSamples){
+				kmerMap.erase(it++);
+				continue;
+			}
+	
+			int i=0;
+			for (auto it=as.begin(); it!=as.end(); ++it){
+				for (auto it2=cs.begin(); it2!=cs.end(); ++it2){
+					if (*it<*it2){
+						pairwiseSNPs[*it][*it2]++;
+					}
+					else {
+						pairwiseSNPs[*it2][*it]++;
+					}
+				}
+				for (auto it2=gs.begin(); it2!=gs.end(); ++it2){
+					if (*it<*it2){
+						pairwiseSNPs[*it][*it2]++;
+					}
+					else {
+						pairwiseSNPs[*it2][*it]++;
+					}
+				}
+				for (auto it2=ts.begin(); it2!=ts.end(); ++it2){
+					if (*it<*it2){
+						pairwiseSNPs[*it][*it2]++;
+					}
+					else {
+						pairwiseSNPs[*it2][*it]++;
+					}
+				}
+			}
+			for (auto it=cs.begin(); it!=cs.end(); ++it){
+				for (auto it2=gs.begin(); it2!=gs.end(); ++it2){
+					if (*it<*it2){
+						pairwiseSNPs[*it][*it2]++;
+					}
+					else {
+						pairwiseSNPs[*it2][*it]++;
+					}
+				}
+				for (auto it2=ts.begin(); it2!=ts.end(); ++it2){
+					if (*it<*it2){
+						pairwiseSNPs[*it][*it2]++;
+					}
+					else {
+						pairwiseSNPs[*it2][*it]++;
+					}
+				}
+			}
+			for (auto it=gs.begin(); it!=gs.end(); ++it){
+				for (auto it2=ts.begin(); it2!=ts.end(); ++it2){
+					if (*it<*it2){
+						pairwiseSNPs[*it][*it2]++;
+					}
+					else {
+						pairwiseSNPs[*it2][*it]++;
+					}
+				}
+			}
+			if (ncount>0){
+				j++;
+			}
+			kmerMap.erase(it++);
 		}
-		++it;
+		
+		for (int i=0; i<numSamples; ++i){
+			for (int j=i+1; j<numSamples; ++j){
+				mykmerbits = kmerbitvector[i] | kmerbitvector[j];
+				pairwiseMatches[i][j]-=mykmerbits.count();
+			}
+			kmerbitvector[i].reset();
+		}
 	}
-	kmerMap.clear();
+
+	string dotfilename=prefix+".dot";
+	ofstream dotout(dotfilename);
+	dotout << "graph {" << endl;
 
 	if (clusterfile){
 		string clusterfilename=prefix+".clusters.tsv";
 		ofstream clusterout(clusterfilename);
 		map <int, int> clusterMap;
 		vector < vector <int> > clusters;
-		cout << "Printing clusters to " << clusterfilename << "\n";
-		clusterout << "File\tCluster\n";
-		for (int i=0; i<numfiles; ++i){
+		cout << "Printing clusters to " << clusterfilename << endl;
+		clusterout << "ID\tCluster__autocolour\n";
+		for (int i=0; i<numSamples; ++i){
 			vector< int > matches;
 			matches.push_back(i);
-			for (int j=i+1; j<numfiles; ++j){
+			//cout << i << endl;
+			for (int j=i+1; j<numSamples; ++j){
 				float kmercount=min(kmerCounts[i], kmerCounts[j]);
-				float percentmatched = float(pairwiseMatches[i][j]+pairwiseSNPs[i][j])/kmercount;
-				if (pairwiseSNPs[i][j]<=maxSNPS && percentmatched>minMatched){
+				float percentmatched = float(pairwiseMatches[i][j])/kmercount;
+				if (pairwiseSNPs[i][j]<=maxSNPS && percentmatched>=minMatched){
+
 					matches.push_back(j);
+					float similarity;
+					if (maxSNPS>0){
+						similarity=((1.0-(float(pairwiseSNPs[i][j])/float(maxSNPS)))*3.0)+1;
+					}
+					else {
+						similarity=1.0;
+					}
+					dotout << "\t" << sampleNames[i] << " -- " << sampleNames[j] << " [weight=" << similarity << "] ;" << endl;
 				}
 			}
-
+			//dotout << "\t" << kmerfiles[i] << ";" << endl; //Need to find somewhere to put this where it does what I want
 			int clusternum=clusters.size();
 			for ( auto it=matches.begin(); it!=matches.end(); ++it){
 				auto it2 = clusterMap.find(*it);//check if the match is in the hash
@@ -131,20 +271,17 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 					}
 				}
 			}
-
 			if (clusternum==clusters.size()){
 				clusters.push_back(vector <int>());
 			}
-
 			for ( auto it=matches.begin(); it!=matches.end(); ++it){
 				auto it2 = clusterMap.find(*it);//check if the match is in the hash
 				if ( it2 != clusterMap.end() ){//if the match is in the hash
 					if (it2->second!=clusternum){
 						for ( auto it3=clusters[it2->second].begin(); it3!=clusters[it2->second].end(); ++it3){
-							clusterMap[*it3]=clusternum;
 							clusters[clusternum].push_back(*it3);
 						}
-						clusters.erase(clusters.begin()+it2->second);
+						clusters[it2->second].clear();
 					}
 				}
 				else{
@@ -152,9 +289,18 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 					clusters[clusternum].push_back(*it);
 				}
 			}
+
+
+			for ( auto it2=clusters[clusternum].begin(); it2!=clusters[clusternum].end(); ++it2){
+				auto it3 = clusterMap.find(*it2);//check if the match is in the hash
+				if ( it3 != clusterMap.end() ){
+					it3->second=clusternum;//segfault is on this line
+				}	
+			}
+
 		}
 		for ( auto it=clusterMap.begin(); it!=clusterMap.end(); ++it){
-			clusterout << kmerfiles[it->first] << "\t" << it->second+1 << "\n";
+			clusterout << sampleNames[it->first] << "\t" << it->second+1 << "\n";
 		}
 		clusterout.close();
 
@@ -162,25 +308,28 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		for ( auto it=clusters.begin(); it!=clusters.end(); ++it){
 			++i;
 			if (it->size()>1){
-				string clusterfilename=prefix+".cluster."+to_string(i)+".fofn";
+				string clusterfilename=prefix+".cluster."+to_string(i)+".txt";
 				ofstream clusterout(clusterfilename);
 				for ( auto it2=it->begin(); it2!=it->end(); ++it2){
-					clusterout << kmerfiles[*it2] << "\n";
+					clusterout << sampleNames[*it2] << "\n";
 				}
 				clusterout.close();
 			}
 		}
 	}
+
+	dotout << "}" << endl;
+	dotout.close();
 	
 	if (distancefile){
 		string distancefilename=prefix+".distances.tsv";
 		cout << "Printing distances to " << distancefilename << "\n";
 		
 		ofstream distanceout(distancefilename);
-		distanceout << "File 1\tFile 2\tMatches\tMismatches\tSNPs\tNs\n";
-		for (int i=0; i<numfiles; ++i){
-			for (int j=i+1; j<numfiles; ++j){
-				distanceout << kmerfiles[i] << "\t" << kmerfiles[j] << "\t" << pairwiseMatches[i][j] << "\t" << (kmerCounts[i]-(pairwiseMatches[i][j]+pairwiseSNPs[i][j]+pairwiseNs[i][j]))+(kmerCounts[j]-(pairwiseMatches[i][j]+pairwiseSNPs[i][j]+pairwiseNs[i][j])) << "\t" << pairwiseSNPs[i][j] << "\t" << pairwiseNs[i][j] << "\n";
+		distanceout << "File 1\tFile 2\tMatches\tMismatches\tSNPs\n";
+		for (int i=0; i<numSamples; ++i){
+			for (int j=i+1; j<numSamples; ++j){
+				distanceout << sampleNames[i] << "\t" << sampleNames[j] << "\t" << pairwiseMatches[i][j] << "\t" << (kmerCounts[i]-pairwiseMatches[i][j]+kmerCounts[j]-pairwiseMatches[i][j]) << "\t" << pairwiseSNPs[i][j] << "\n";
 			}
 		}
 		distanceout.close();

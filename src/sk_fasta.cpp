@@ -3,16 +3,14 @@
 #include <fstream> //std::ofstream
 #include <algorithm> //std::reverse std::transform
 #include <cassert> //std::assert
-#include <zlib.h> //required for kseq
-#include "kseq.h" //reading fasta/fastq
 #include <string> //std::string
 #include <sstream> //std::stringstream
 #include <vector> //std::vector
 #include <array> //std::array
 #include <chrono> //timing
 #include "kmers.hpp"
+#include "gzstream.h"
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
-KSEQ_INIT(gzFile, gzread)
 using namespace std;
 
 int fastaToKmers(const vector<string> & fastas, const string & outfilename, const long & kmerlen)
@@ -28,19 +26,26 @@ int fastaToKmers(const vector<string> & fastas, const string & outfilename, cons
 	int numseqs=0;
 	int numbases=0;
 	int lastnumbases=0;
+
+	string sequence;
+	string header;
+
 	for (int s = 0; s < fastas.size(); ++s){
-		cout << "Reading " << fastas[s] << "\n";
-		gzFile f = gzopen(fastas[s].c_str(), "r");
-		assert(f);
-		kseq_t *seq;
-		seq = kseq_init(f); // initialize seq 
-		while (kseq_read(seq) >= 0) { // read the sequence  
-       		//seq->name.s = sequence name
-        	//seq->comment.s = comment
-        	//seq->seq.s = sequence 
-        	//seq->qual.s = quality if present
-			
-			string sequence(seq->seq.s);//convert the char * sequence to string
+
+
+		
+		cout << "Reading " << fastas[s] << endl;
+		igzstream gzfileStream;
+		gzfileStream.open(fastas[s].c_str());
+
+		if (gzfileStream.get()!='>'){
+			cout << fastas[s] << " is not in the correct format. Expecting header to start with >." << endl << endl;
+		}
+
+		while (getline(gzfileStream, header)){
+			getline(gzfileStream, sequence, '>');
+			sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );
+
 			numseqs++;
 			
 			stringstream sequencestream;
@@ -83,22 +88,21 @@ int fastaToKmers(const vector<string> & fastas, const string & outfilename, cons
 					}
 				}
 		
-    			}
+    		}
 		}
-		kseq_destroy(seq);
- 		gzclose(f);
+ 		gzfileStream.close();
 	}
 	
-	cout << kmerMap.size() << " unique kmers in map\n";
+	cout << kmerMap.size() << " unique kmers in map" << endl;
 	
-	cout << "Writing kmers to " << outfilename << "\n";
+	cout << "Writing kmers to " << outfilename << endl;
 	
 	printkmerfile(kmerMap, outfilename, kmerlen);
 
 	auto finish = std::chrono::high_resolution_clock::now();
 	chrono::duration<double> elapsed = finish - start;
-	cout << "Done\n";
-	cout << "Total time required: " << elapsed.count() << "s\n\n";
+	cout << "Done" << endl;
+	cout << "Total time required: " << elapsed.count() << "s" << endl << endl;
 	
 	return 0;
 	

@@ -6,4 +6,4 @@
 
 using namespace std;
 
-int weedKmers(const vector<string> & weedfiles, const string & kmerfile, const string & outputfile);
+int weedKmers(const vector<string> & weedfiles, const string & kmerfile);

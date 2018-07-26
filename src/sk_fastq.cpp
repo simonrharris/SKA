@@ -4,16 +4,14 @@
 #include <fstream> //std::ofstream
 #include <algorithm> //std::reverse std::transform
 #include <cassert> //std::assert
-#include <zlib.h> //required for kseq
-#include "kseq.h" //reading fasta/fastq
 #include <string> //std::string
 #include <sstream> //std::stringstream
 #include <vector> //std::vector
 #include <array> //std::array
 #include <chrono> //timing
 #include "kmers.hpp"
+#include "gzstream.h"
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
-KSEQ_INIT(gzFile, gzread)
 using namespace std;
 
 //int main(int argc, char *argv[])
@@ -32,27 +30,59 @@ int fastqToKmers(const vector<string> & fastqs, const string & outfilename, cons
 	int numbases=0;
 	int numreadbases=0;
 	int lastnumbases=0;
-	for (int s = 0; s < fastqs.size(); ++s){ 
-		gzFile f = gzopen(fastqs[s].c_str(), "r");
-		assert(f);
-		kseq_t *seq;
-		seq = kseq_init(f); // initialize seq 
-		while (kseq_read(seq) >= 0) { // read the sequence  
-       		//seq->name.s = sequence name
-        	//seq->comment.s = comment
-        	//seq->seq.s = sequence 
-        	//seq->qual.s = quality if present
-			
+
+	string sequence;
+	sequence.reserve(1000);
+	string quality;
+	quality.reserve(1000);
+	string line;
+	line.reserve(1000);
+	string subsequence;
+	subsequence.reserve(1000);
+	int i;
+	string kmer;
+	kmer.reserve((kmerlen*2)+1);
+	char base;
+
+	for (int s = 0; s < fastqs.size(); ++s){
+		
+		cout << "Reading " << fastqs[s] << endl;
+		igzstream gzfileStream;
+		gzfileStream.open(fastqs[s].c_str());
+
+		int count=0;
+		while (true){
+			if (gzfileStream.peek()!='@'){
+				cout << fastqs[s] << " is not in the correct format. Expecting header line to start with @." << endl << endl;
+				return 1;
+			}
+		  	getline(gzfileStream, line);
+		  	getline(gzfileStream, sequence);
+		  	if (gzfileStream.peek()!='+'){
+				cout << fastqs[s] << " is not in the correct format. Expecting separator line to start with +." << endl << endl;
+				return 1;
+			}
+		  	getline(gzfileStream, line);
+		  	getline(gzfileStream, quality);
+		  	if (quality.length()!=sequence.length()){
+		  		cout << fastqs[s] << " is not in the correct format. Sequence and quality lines must be of equal length." << endl << endl;
+				return 1;
+		  	}
+
+	  		if (not gzfileStream.good()){
+	  			cout << fastqs[s] << " is not in the correct format. Expecting a multiple of 4 lines." << endl << endl;
+	  			return 1;
+			}
+
+
 			numseqs++;
-			string sequence(seq->seq.s);//convert the char * sequence to string
-			string quality(seq->qual.s);//convert the char * quality to string
 			numreadbases+=sequence.length();
 
 			lowqualitytoN(sequence, quality, minquality);
 			
 			stringstream sequencestream;
 			sequencestream << sequence;//convert the sequence to stringstream
-			string subsequence;
+
 			
 			while (getline(sequencestream, subsequence, 'N')){
 				
@@ -62,18 +92,18 @@ int fastqToKmers(const vector<string> & fastqs, const string & outfilename, cons
 				
 				transform(subsequence.begin(), subsequence.end(), subsequence.begin(), ::toupper);//change all letters in the string to upper case	
 				
-				int i=0;
+				i=0;
 				
 				for (auto iti = subsequence.cbegin(), end = subsequence.cend()-(substringlength-1); iti != end; ++iti, ++i){
 					numbases+=1;
-					string kmer=subsequence.substr(i,substringlength);
+					kmer=subsequence.substr(i,substringlength);
 					
 					if (reverse_is_min(kmer, kmerlen)){
 						reverse(kmer.begin(), kmer.end());
 						transform(kmer.begin(),kmer.end(),kmer.begin(),complement);
 					}
 					
-					char base=kmer[kmerlen];
+					base=kmer[kmerlen];
 					kmer.erase(kmer.begin()+kmerlen);
 					
 					auto it = kmerMap.find(kmer);//check if the kmer is in the hash
@@ -89,10 +119,13 @@ int fastqToKmers(const vector<string> & fastqs, const string & outfilename, cons
 						ret.first->second[base_score[int(base)]]=1;//increment the count of the base for the kmer
 					}
 				}
-			}		
+			}
+			if (gzfileStream.peek()==EOF){
+				break;
+			}
     	}
-		kseq_destroy(seq);
- 		gzclose(f);
+		gzfileStream.close();
+
 		
 		if (s==0 && userfilecutoff>0){
 			cout << "Added " << numbases << " kmers from " << numseqs << " sequences\n";

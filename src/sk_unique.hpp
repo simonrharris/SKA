@@ -6,4 +6,4 @@
 
 using namespace std;
 
-int uniqueKmers(const vector<string> & ingroupfiles, const vector<string> & outgroupfiles, const float & minproportion, const string & outputfile);
+int uniqueKmers(const vector<string> & ingroupsamples, const vector<string> & kmerfiles, const float & minproportion, const string & outputfile);

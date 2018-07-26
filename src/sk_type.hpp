@@ -8,4 +8,4 @@
 using namespace std;
 
 
-int typeKmerFiles(const string & queryfile, const vector<string> & subjectfiles);
+int typeKmerFile(const string & queryfile, const string & profileFile, const vector<string> & subjectfiles);
