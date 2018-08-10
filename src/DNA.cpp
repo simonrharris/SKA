@@ -3,6 +3,7 @@
 #include <string> //std::string
 #include <array> //std::array
 #include <vector> // std::vector
+#include <algorithm> //std::reverse std::transform
 #include <sstream> // std::istringstream
 #include <chrono> //timing
 #include <cassert> //std::assert
