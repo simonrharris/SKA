@@ -9,16 +9,15 @@
 #include <chrono> //timing
 #include <algorithm> //std::transform
 #include "kmers.hpp"
+#include "general.hpp"
+#include "DNA.hpp"
 
 using namespace std;
 
-//bin/sk_weed outputfile 
-
-//int main(int argc, char *argv[])
 int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & kmerfiles, const float & minproportion, const string & outputfile)
 {
 
-	auto start = chrono::high_resolution_clock::now();
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	// Create the kmer map
 	unordered_map<string, vector < bool > > kmerMap;
 	int oldkmersize=0;
@@ -64,27 +63,18 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 
 	for (int s = 0; s < kmerfiles.size(); ++s){
 
-		cout << "Reading " << kmerfiles[s] << endl;
-		fileStream.open(kmerfiles[s], ios::in);
+		if (openFileStream(kmerfiles[s], fileStream)){return 1;};
 
-		if (fileStream.fail()) {
-			cout << "Failed to open " << kmerfiles[s] << "\n" << endl;
-			return 0;
-		}
 		int newkmersize;
-		try {
-			int returnval = readKmerHeader(fileStream, newkmersize, fileSampleNames);
-		}
-		catch (int e){
-			cout << "An exception occurred when reading file " << kmerfiles[s] << ". Please check the format. Exception Nr. " << e << '\n';
-			return 1;
-		}
+		
+		readKmerHeader(fileStream, newkmersize, fileSampleNames);
+		
 		if (s==0){
 			kmersize=newkmersize;
 		}
 
 		if (newkmersize!=kmersize){
-			cout << "kmer files have different kmer sizes\n" << endl;
+			cout << "kmer files have different kmer sizes" << endl << endl;
 			return 0;
 		}
 
@@ -169,42 +159,14 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 
 	cout << uniquecount << " unique shared kmers will be written to " << outputfile << endl;
 
-	//This is identical to code in sk_merge. Move to kmers.cpp?
-
-	ofstream kmerout(outputfile); //open output file stream 
-	kmerout << kmersize << endl; // print kmer size to output file stream
+	vector < string > orderedingroupsamples;
 	for ( auto it=ingroupSamplePositions.begin(); it!=ingroupSamplePositions.end(); ++it){ //print each sample name to output file stream
-		kmerout << sampleNames[*it] << " "; 
+		orderedingroupsamples.push_back(sampleNames[*it]); 
 	}
-	kmerout << endl;
 
-	for ( auto it=revKmerMap.begin(); it!=revKmerMap.end(); ++it){
-		stringstream bitstringstream;
-		for (auto it2=it->first.begin(); it2!=it->first.end(); ++it2){
-			bitstringstream << *it2;
-		}
-		string bitstring = bitstringstream.str();
-		int myremainder=::fmod(int(bitstring.length()),6);
-		if (myremainder>0){
-			for (int i = 0; i<(6-myremainder); ++i){
-				bitstring.push_back('0');
-			}
-		}
-		ascii_bitstring(bitstring);
-		kmerout << bitstring;
-		for (auto it2=it->second.begin(); it2!=it->second.end(); ++it2){
-			kmerout << *it2;
-		}
-		kmerout << endl;
-	}
-	
-	kmerout.close();
+	if(printMergedKmerFile(revKmerMap, outputfile, orderedingroupsamples, kmersize)){return 1;}
 
-
-	auto finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done\n";
-	cout << "Total time required: " << elapsed.count() << "s\n\n";
+	printDuration(start);
 	
 	return 0;
 	

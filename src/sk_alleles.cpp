@@ -12,16 +12,14 @@
 #include "kmers.hpp"
 #include "general.hpp"
 #include "gzstream.h"
+#include "DNA.hpp"
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
 using namespace std;
 
 int allelesToKmers(const vector<string> & alleles, const long & kmerlen)
 {
 
-
-	auto start = chrono::high_resolution_clock::now();
-
-	
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
 
 	int substringlength=(kmerlen*2)+1;
 	int numseqs=0;
@@ -30,6 +28,7 @@ int allelesToKmers(const vector<string> & alleles, const long & kmerlen)
 
 	string sequence;
 	string header;
+	char base;
 
 	for (int s = 0; s < alleles.size(); ++s){
 
@@ -81,12 +80,13 @@ int allelesToKmers(const vector<string> & alleles, const long & kmerlen)
 			getline(gzfileStream, sequence, '>');
 			sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );
 
+			if(IUPACToN(sequence)){return 1;}//convert any IUPAC charaxcters to N and reject any unrecognised characters
+
 			numseqs++;
 			
 			stringstream sequencestream;
 			sequencestream << sequence;//convert the sequence to stringstream
 			string subsequence;
-			
 			
 			while (getline(sequencestream, subsequence, 'N')){
 				
@@ -95,20 +95,14 @@ int allelesToKmers(const vector<string> & alleles, const long & kmerlen)
 				}
 				
 				transform(subsequence.begin(), subsequence.end(), subsequence.begin(), ::toupper);//change all 	letters in the string to upper case
-				
-				int i=0;
 
-				for (auto iti = subsequence.cbegin(), end = subsequence.cend()-(substringlength-1); iti != end; ++iti, ++i){
+				for (int i=0; i<subsequence.length()-(substringlength-1); ++i){
 					numbases+=1;
 					string kmer=subsequence.substr(i,substringlength);
 					
-					if (reverse_is_min(kmer, kmerlen+1)){
-						reverse(kmer.begin(), kmer.end());
-						transform(kmer.begin(),kmer.end(),kmer.begin(),complement);
-					}
+					reverseComplementIfMin(kmer);
 					
-					char base=kmer[kmerlen];
-					kmer.erase(kmer.begin()+kmerlen);
+					extractMiddleBase(kmer, base);
 					
 					auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 					
@@ -130,12 +124,8 @@ int allelesToKmers(const vector<string> & alleles, const long & kmerlen)
     		}
     		alleleNumber++;
 		}
- 		gzfileStream.close();
+ 		gzfileStream.close();//close the file
 	
-	
-		//cout << alleleNumber << " alleles read into " << kmerMap.size() << " unique kmers in map" << endl;
-
-		//cout << "Merging..." << endl;
 
 		unordered_map < vector < bool >,  vector < string > > revKmerMap;
 
@@ -181,69 +171,15 @@ int allelesToKmers(const vector<string> & alleles, const long & kmerlen)
 			}
 			kmerMap.erase(it++); //remove kmer from kmerMap to save space
 		}
-		if (kmerMap.size()!=0){
-			kmerMap.clear(); //clear the kmerMap. This should already be empty.
-			cout << "Why wasn't the kmerMap empty?" << endl; 
-		}
-		//cout << kmercount << endl;
-		//cout << revKmerMap.size() << " unique taxon combinations in map\n";
 
-		string outfilename;
-
-		if (numAlleles==1){
-			outfilename=splitFileName(alleles[s])+".kmers";
-		}
-		else {
-			outfilename=splitFileName(alleles[s])+".kmerge";
-		}
-		
-		cout << " Writing allele kmers to " << outfilename << endl;
-		
-		ofstream kmerout(outfilename); //open output file stream
-		kmerout << kmerlen << endl; // print kmer size to output file stream
-		for ( auto it=alleleNames.begin(); it!=alleleNames.end(); ++it){ //print each sample name to output file stream
-			kmerout << *it << " "; 
-		}
-		kmerout << endl;
-
-		auto revKmerMapit = revKmerMap.begin();
-		auto revKmerMapendIter = revKmerMap.end();
-
-		for (; revKmerMapit!=revKmerMapendIter; ){
-			stringstream bitstringstream;
-			for (auto it2=revKmerMapit->first.begin(); it2!=revKmerMapit->first.end(); ++it2){
-				bitstringstream << *it2;
-			}
-			string bitstring = bitstringstream.str();
-			int myremainder=::fmod(int(bitstring.length()),6);
-			//cout << bitstring << " " << bitstring.length() << " " << myremainder << endl;
-			if (myremainder>0){
-				for (int i = 0; i<(6-myremainder); ++i){
-					bitstring.push_back('0');
-				}
-			}
-			//cout << bitstring << " " << bitstring.length() << endl;
-			ascii_bitstring(bitstring);
-			kmerout << bitstring;
-			for (auto it2=revKmerMapit->second.begin(); it2!=revKmerMapit->second.end(); ++it2){
-				kmerout << *it2;
-			}
-			kmerout << endl;
-			revKmerMap.erase(revKmerMapit++); //remove kmer from kmerMap to save space
-		}
-		
-		kmerout.close();
+		if(printMergedKmerFile(revKmerMap, alleles[s], alleleNames, kmerlen)){return 1;}
 
 	}
 
-	auto finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done" << endl;
-	cout << "Total time required: " << elapsed.count() << "s" << endl << endl;
+	printDuration(start);//stop the clock
 	
 	return 0;
-	
-	
+
 }
 
 

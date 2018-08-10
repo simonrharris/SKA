@@ -36,3 +36,6 @@
 
 # Binaries
 bin/
+
+# Google test
+googletest

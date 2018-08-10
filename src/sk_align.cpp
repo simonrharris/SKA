@@ -5,10 +5,12 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 #include <cmath>       /* ceil */
 #include <iterator>     // std::distance
 #include "general.hpp"
 #include "kmers.hpp"
+#include "DNA.hpp"
 #include <chrono> //timing
 #include <algorithm>    // std::count
 using namespace std;
@@ -18,7 +20,7 @@ using namespace std;
 int alignKmers(const float & minproportion, const string & outputfile, const vector<string> & kmerfiles, const bool & variantonly, const vector <string> & sample)
 {
 
-	auto start = chrono::high_resolution_clock::now();//start the clock
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
 
 
 	int numfiles=kmerfiles.size();//record the number of files
@@ -52,7 +54,7 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 	cout << "Keeping variants for which at least " << int(minrequired) << " samples include kmer matches" << endl << endl;
 	
 	// Create the kmer map
-	unordered_map<string, string> kmerMap;
+	unordered_map < string, string > kmerMap;
 	string emptySequence (numSamples , '-');
 	int oldkmersize=0;
 	int sampleNum=0;
@@ -62,22 +64,13 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 
 	ifstream fileStream;
 	for (int s = 0; s < kmerfiles.size(); ++s){//read each file and make a map of the kmers which stores the bases for each included sample
-		cout << "Reading " << kmerfiles[s] << endl;
-		fileStream.open(kmerfiles[s], ios::in);
+		
+		if (openFileStream(kmerfiles[s], fileStream)){return 1;};
 
-		if (fileStream.fail()) {
-			cout << "Failed to open " << kmerfiles[s] << "\n\n";
-			return 0;
-		}
 		int kmersize;
 		vector < string > names;
-		try {
-			int returnval = readKmerHeader(fileStream, kmersize, names);//read the header from the kmer file to get the kmer size and sample names
-		}
-		catch (int e){
-			cout << "An exception occurred when reading file " << kmerfiles[s] << ". Please check the format. Exception Nr. " << e << '\n';
-			return 1;
-		}
+		
+		readKmerHeader(fileStream, kmersize, names);//read the header from the kmer file to get the kmer size and sample names
 		
 		if (s==0){ //If it's the first file, set the oldkmersize
 			oldkmersize=kmersize;
@@ -119,7 +112,7 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmersize*2/3);
 				
-				auto it = kmerMap.find(kmer);//check if the kmer is in the map
+				unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the map
 				if ( it != kmerMap.end() ){//if the kmer is in the map
 					for (int i=0; i<fileIncludeSize; ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[fileInclude[i]]){
@@ -147,57 +140,40 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 	}
 	
 	cout << kmerMap.size() << " kmers identified from " << numSamples << " samples in " << numfiles << " files" << endl;
-	
-	int consta = 0;
-	int constc = 0;
-	int constg = 0;
-	int constt = 0;
 
-	auto it = kmerMap.begin();
-	auto endIter = kmerMap.end();
+	
+	map < char, int > constantBases { { 'A', 0 }, { 'C', 0 }, { 'G', 0 }, { 'T', 0 } };
+
+	unordered_map < string, string >::iterator it = kmerMap.begin();
+	unordered_map < string, string >::iterator endIter = kmerMap.end();
 
 	for (; it!=endIter; ){
 		int acgt=0;
-		set < char > bases;
+		map < char, int > baseMap;
 		for (int i=0; i<numSamples; ++i){
-			switch (it->second[i])
-			{
-				case 'A':
-					acgt++;
-					bases.insert('A');
-					break;
-				case 'C':
-					acgt++;
-					bases.insert('C');
-					break;
-				case 'G':
-					acgt++;
-					bases.insert('G');
-					break;
-				case 'T':
-					acgt++;
-					bases.insert('T');
-					break;
+
+			if(base_score[it->second[i]]>3){
+				continue;
+			}
+			
+			acgt++;
+
+			map < char, int >::iterator it2 = baseMap.find(it->second[i]);
+
+			if (it2!=baseMap.end()){
+				it2->second++;
+			}
+			else {
+				baseMap.insert(make_pair(it->second[i], 1));
 			}
 		}
-		if (acgt<minrequired || bases.size()==0){ // (afound+cfound+gfound+tfound)==0){
+
+		if (acgt<minrequired || acgt==0){ // (afound+cfound+gfound+tfound)==0){
 			kmerMap.erase(it++);
 		}
-		else if (bases.size()==1 && variantonly){
-			for (auto it2=bases.begin(); it2!= bases.end(); ++it2){
-				switch (*it2){
-					case 'A':
-						consta++;
-					case 'C':
-						constc++;
-						break;
-					case 'G':
-						constg++;
-						break;
-					case 'T':
-						constt++;
-						break;
-				}
+		else if (baseMap.size()==1 && variantonly){
+			for (auto it2=baseMap.begin(); it2!= baseMap.end(); ++it2){
+				constantBases[it2->first]++;
 			}
 			kmerMap.erase(it++);
 		}
@@ -212,33 +188,32 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 	cout << "Printing alignment of "<< kmerMap.size() << " sites" << endl;
 	
 	ofstream alignfile(outputfile);
-	
+
+	//map < char, int >::iterator it3;	
+
 	for (int i=0; i<numSamples; ++i){
 		string sampleName =includedSampleNames[i];
-		alignfile << ">" << sampleName << "\n";
+		alignfile << ">" << sampleName << endl;
 		float nonns=0.0;
-		for (auto it=kmerMap.begin(); it!=kmerMap.end(); ++it){
+		for (unordered_map < string, string >::iterator it=kmerMap.begin(); it!=kmerMap.end(); ++it){
 			alignfile << it->second[i];
-			if (it->second[i]=='A' || it->second[i]=='C' || it->second[i]=='G' || it->second[i]=='T'){
+			if(base_score[it->second[i]]<4){
 				nonns++;
 			}
 		}
-		alignfile << "\n";
+		alignfile << endl;
 		if ((nonns/kmerMap.size())<0.5){
-			cout << "Warning: " << sampleName << " only matches " << nonns/kmerMap.size()*100 << "% of kmers in the alignment\n";
+			cout << "Warning: " << sampleName << " only matches " << nonns/kmerMap.size()*100 << "% of kmers in the alignment" << endl;
 		}
 	}
 	alignfile.close();
 
 	if (variantonly){
 		cout << "Constant sites matching filters (a c g t):" << endl;
-		cout << consta << " " << constc << " " << constg << " " << constt << endl;
+		cout << constantBases['A'] << " " << constantBases['C']  << " " << constantBases['G']  << " " << constantBases['T']  << endl;
 	}
 
-	auto finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done\n";
-	cout << "Total time required: " << elapsed.count() << "s" << endl << endl;
+	printDuration(start);
 	
 	return 0;
 	

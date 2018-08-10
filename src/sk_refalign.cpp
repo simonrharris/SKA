@@ -15,6 +15,7 @@
 #include <cmath>       /* ceil */
 #include "kmers.hpp"
 #include "general.hpp"
+#include "DNA.hpp"
 #include <chrono> //timing
 #include "gzstream.h"
 //KSEQ_INIT(gzFile, gzread)
@@ -25,7 +26,7 @@ using namespace std;
 int alignKmersToReference(const string & reference, const string & outputfile, const vector<string> & kmerfiles, const int & kmerlen, const bool & includeref, const bool & maprepeats, const bool &fillall, const bool &variantonly, const vector <string> & sample)
 {
 
-	auto start = chrono::high_resolution_clock::now();
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	
 	ofstream alignfile(outputfile);
 	
@@ -44,6 +45,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 	string header;
 	int basenum=0;
 	string refseq;
+	char base;
 
 	igzstream gzfileStream;
 	gzfileStream.open(reference.c_str());
@@ -68,14 +70,10 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 		for (auto iti = sequence.cbegin(), end = sequence.cend()-(substringlength-1); iti != end; ++iti, ++i){
 			string kmer=sequence.substr(i,substringlength);
 			
-			if (reverse_is_min(kmer, kmerlen+1)){
-				reverse(kmer.begin(), kmer.end());
-				transform(kmer.begin(),kmer.end(),kmer.begin(),complement);
+			if (reverseComplementIfMin(kmer)){
 				revSet.insert(basenum+i+kmerlen);
 			}
-			
-			char base=kmer[kmerlen];
-			kmer.erase(kmer.begin()+kmerlen);
+			extractMiddleBase(kmer, base);
 			ascii_codons(kmer);
 			
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
@@ -128,23 +126,12 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 	for (int s = 0; s < kmerfiles.size(); ++s){
 
 		string filename=splitFileName(kmerfiles[s]);
-		cout << "Aligning " << filename << endl;
-		fileStream.open(kmerfiles[s], ios::in);
+		if (openFileStream(kmerfiles[s], fileStream)){return 1;};
 
-		if (fileStream.fail()) {
-			cout << "\nFailed to open" << kmerfiles[s] << endl << endl;
-			return 0;
-		}
 		int kmersize;
 		
+		readKmerHeader(fileStream, kmersize, names);//read the header from the kmer file to get the kmer size and sample names
 		
-		try {
-			int returnval = readKmerHeader(fileStream, kmersize, names);//read the header from the kmer file to get the kmer size and sample names
-		}
-		catch (int e){
-			cout << "An exception occurred when reading file " << kmerfiles[s] << ". Please check the format. Exception Nr. " << e << '\n';
-			return 1;
-		}
 		if (kmersize!=kmerlen){
 			cout << "\nkmer size in " << filename << " is not " << kmerlen << endl << endl;
 			return 0;
@@ -305,15 +292,10 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 			alignfile << sequences[i] << endl;
 		}
 	}
-	
-
 
 	alignfile.close();
 	
-	auto finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done" << endl;
-	cout << "Total time required: " << elapsed.count() << "s" << endl << endl;
+	printDuration(start);
 
 	return 0;
 	

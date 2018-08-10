@@ -7,6 +7,7 @@
 #include <cmath>       /* ceil */
 #include "kmers.hpp"
 #include "general.hpp"
+#include "DNA.hpp"
 
 using namespace std;
 
@@ -17,7 +18,6 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 
 	// Create the kmer map
 	unordered_map<string, string> kmerMap;
-
 
 	vector < string > sampleNames;
 	if (collectSampleNames(subjectfiles, sampleNames)!=0){return 1;}
@@ -34,21 +34,9 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 
 	for (int s = 0; s < subjectfiles.size(); ++s){
 		
-		fileStream.open(subjectfiles[s], ios::in);
-
-		if (fileStream.fail()) {
-			cout << "Failed to open " << subjectfiles[s] << "\n\n";
-			return 0;
-		}
+		if (openFileStream(subjectfiles[s], fileStream, false)){return 1;};		
 		
-		
-		try {
-			int returnval = readKmerHeader(fileStream, subjectkmersize, subjectSampleNames);
-		}
-		catch (int e){
-			cout << "An exception occurred when reading file " << subjectfiles[s] << ". Please check the format. Exception Nr. " << e << '\n';
-			return 1;
-		}
+		readKmerHeader(fileStream, subjectkmersize, subjectSampleNames);
 
 		if (s==0){
 			oldsubjectkmersize=subjectkmersize;
@@ -99,9 +87,6 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 		fileStream.close();
 	}
 	
-	
-	
-	
 	fileStream.open(queryfile, ios::in);
 	if (fileStream.fail()) {
 		cout << "Failed to open " << queryfile << "\n\n";
@@ -127,7 +112,6 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 	}
 
 	cout << "Subject\tKmers unique to Query\tKmers unique to Subject\tMatches\t% kmers in Query matching\t% kmers in Subject matching\tSNPs\t%ID of matching kmers\t%ID of Query kmers\t%ID of Subject kmers\tNs in Query\tNs in Subject\tNs in both\n";
-
 	
 	vector < int > kmerjustinb (sampleNames.size(), 0);
 	vector < int > snps (sampleNames.size(), 0);
@@ -142,15 +126,11 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 
 	while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
 		string asciibits (asciibuffer, sizeof(asciibuffer));
-		//vector < bool > mybits;
-		//vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
 		while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
 			string base (basebuffer, 1);
 			base[0]=toupper(base[0]);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, querykmersize*2/3);
-			
-			//cout << kmer << endl;
 
 			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash

@@ -7,6 +7,8 @@
 #include <chrono> //timing
 #include <cmath>       /* ceil */
 #include "kmers.hpp"
+#include "general.hpp"
+#include "DNA.hpp"
 
 using namespace std;
 
@@ -16,26 +18,19 @@ using namespace std;
 int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 {
 
-	auto start = chrono::high_resolution_clock::now();
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	// Create the kmer map
 	unordered_map<string, string> kmerMap;
 	
-	cout << "Reading " << kmerfile << endl;
 	ifstream fileStream;
-	fileStream.open(kmerfile, ios::in);
-	if (fileStream.fail()) {
-		cout << "Failed to open " << kmerfile << endl << endl;
-		return 0;
-	}
+
+	if (openFileStream(kmerfile, fileStream)){return 1;};
+
 	int kmersize;
 	vector < string > weednames;
-	try {
-		int returnval = readKmerHeader(fileStream, kmersize, weednames);
-	}
-	catch (int e){
-		cout << "An exception occurred when reading file " << kmerfile << ". Please check the format. Exception Nr. " << e << '\n';
-		return 1;
-	}
+	
+	readKmerHeader(fileStream, kmersize, weednames);
+	
 	char basebuffer[1];
 	char kmerbuffer[kmersize*2/3];
 	char asciibuffer[int(ceil(float(weednames.size())/6))];
@@ -58,23 +53,14 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 	int totalweedkmers=0;
 	
 	for (auto it = weedfiles.begin(); it != weedfiles.end(); ++it){
-		cout << "Weeding kmers from " << *it << endl;
-		
-		fileStream.open(*it, ios::in);
-		if (fileStream.fail()) {
-			cout << "Failed to open " << *it << endl << endl;
-			return 0;
-		}
+
+		if (openFileStream(*it, fileStream)){return 1;};
+
 		int weedkmersize;
 		vector < string > names;
 		
-		try {
-			int returnval = readKmerHeader(fileStream, weedkmersize, names);
-		}
-		catch (int e){
-			cout << "An exception occurred when reading file " << *it << ". Please check the format. Exception Nr. " << e << '\n';
-			return 1;
-		}
+		readKmerHeader(fileStream, weedkmersize, names);
+		
 		if (weedkmersize!=kmersize){
 			cout << "Files have different kmer sizes" << endl << endl;
 			return 0;
@@ -126,10 +112,7 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 	cout << weeded << " kmers remaining after weeding" << endl;
 	cout << totalweedkmers-weeded << " kmers weeded (Note this may be more than the number of kmers in the weed file due to mulitple variants of a kmer being in the file)" << endl;
 
-	auto finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done\n";
-	cout << "Total time required: " << elapsed.count() << "s" << endl << endl;
+	printDuration(start);
 	
 	return 0;
 	

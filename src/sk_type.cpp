@@ -9,6 +9,7 @@
 #include <sstream> //std::stringstream
 #include "kmers.hpp"
 #include "general.hpp"
+#include "DNA.hpp"
 #include "gzstream.h"
 #include "float.h"
 #include <set>
@@ -43,22 +44,14 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 	unordered_map < string, string > kmerMap;
 	
 	ifstream fileStream;
-	//cout << "Reading " << queryfile << endl << endl;
-	fileStream.open(queryfile, ios::in);
-	if (fileStream.fail()) {
-		cout << "Failed to open " << queryfile << "\n\n";
-		return 1;
-	}
+
+	if (openFileStream(queryfile, fileStream, false)){return 1;};
+
 	int querykmersize;
 	vector < string > querySampleNames;
 	
-	try {
-		int returnval = readKmerHeader(fileStream, querykmersize, querySampleNames);
-	}
-	catch (int e){
-		cout << "An exception occurred when reading file " << queryfile << ". Please check the format. Exception Nr. " << e << '\n';
-		return 1;
-	}
+	readKmerHeader(fileStream, querykmersize, querySampleNames);
+	
 
 	char basebuffer[1];
 	char kmerbuffer[querykmersize*2/3];
@@ -105,6 +98,7 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 
 	string header;
 	string sequence;
+	char base;
 	int substringlength=(querykmersize*2)+1;
 
 	for (int s = 0; s < subjectfiles.size(); ++s){
@@ -169,15 +163,8 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 				
 				string kmer=sequence.substr(i,substringlength);
 				
-				bool isrev=false;
-				if (reverse_is_min(kmer, querykmersize+1)){
-					reverse(kmer.begin(), kmer.end());
-					transform(kmer.begin(),kmer.end(),kmer.begin(),complement);
-					isrev=true;
-				}
-				
-				char base=kmer[querykmersize];
-				kmer.erase(kmer.begin()+querykmersize);
+				bool isrev=reverseComplementIfMin(kmer);
+				extractMiddleBase(kmer, base);
 				ascii_codons(kmer);
 				
 				auto it = kmerMap.find(kmer);//check if the kmer is in the hash

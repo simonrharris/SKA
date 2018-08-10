@@ -1,111 +1,99 @@
 #include <unordered_map> //std::unordered_map
 #include <iostream> //std::cout
-#include <fstream> //std::ofstream
 #include <algorithm> //std::reverse std::transform
-#include <cassert> //std::assert
 #include <string> //std::string
 #include <sstream> //std::stringstream
 #include <vector> //std::vector
 #include <array> //std::array
 #include <chrono> //timing
+#include "general.hpp"
 #include "kmers.hpp"
 #include "gzstream.h"
+#include "DNA.hpp"
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
 using namespace std;
 
 int fastaToKmers(const vector<string> & fastas, const string & outfilename, const long & kmerlen)
 {
 
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
 
-	auto start = chrono::high_resolution_clock::now();
-
-	// Create the kmer map
-	unordered_map<string, array<int, 5> > kmerMap;
-
+	unordered_map < string, array < int, 8 > > kmerMap;//create a map to store the kmers for each base
 	int substringlength=(kmerlen*2)+1;
 	int numseqs=0;
 	int numbases=0;
-	int lastnumbases=0;
+	int numreadbases=0;
 
 	string sequence;
 	string header;
+	char base;
 
-	for (int s = 0; s < fastas.size(); ++s){
-
-
+	for (auto fastait=fastas.begin(); fastait!=fastas.end(); ++fastait){//for each fasta file
 		
-		cout << "Reading " << fastas[s] << endl;
-		igzstream gzfileStream;
-		gzfileStream.open(fastas[s].c_str());
+		string filename=*fastait;
 
-		if (gzfileStream.get()!='>'){
-			cout << fastas[s] << " is not in the correct format. Expecting header to start with >." << endl << endl;
+		cout << "Reading " << filename << endl;
+		igzstream gzfileStream;
+		gzfileStream.open(filename.c_str());//open the file as a gzFileStream
+		if (gzfileStream.fail()){
+			cerr << endl << "Error: Failed to open " << filename << endl << endl;
+			return 1;
 		}
 
-		while (getline(gzfileStream, header)){
-			getline(gzfileStream, sequence, '>');
-			sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );
+		if (gzfileStream.get()!='>'){//read the first character of the fasta file to check it is a >
+			cout << filename << " is not in the correct format. Expecting header to start with >." << endl << endl;
+			return 1;
+		}
+
+		while (getline(gzfileStream, header)){//read the next header line
+			getline(gzfileStream, sequence, '>');//read until the next > i.e. read the sequence
+
+			sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );//remove whitespace from the sequence
+
+			if(IUPACToN(sequence)){return 1;}//convert any IUPAC characters to N and reject any unrecognised characters
 
 			numseqs++;
+			numreadbases+=sequence.length();
 			
 			stringstream sequencestream;
 			sequencestream << sequence;//convert the sequence to stringstream
 			string subsequence;
 			
-			
-			while (getline(sequencestream, subsequence, 'N')){
+			while (getline(sequencestream, subsequence, 'N')){//read each section of sequence between Ns
 				
-				if (subsequence.length()<substringlength){
+				if (subsequence.length()<substringlength){//if the subsequence is too short continue
 					continue;
 				}
 				
-				transform(subsequence.begin(), subsequence.end(), subsequence.begin(), ::toupper);//change all 	letters in the string to upper case
+				transform(subsequence.begin(), subsequence.end(), subsequence.begin(), ::toupper);//change all 	letters in the string to upper case. Could put this into IUPACToN
 				
-				int i=0;
+				int i;
 
+				for (i=0; i<subsequence.length()-(substringlength-1); ++i){//for each base in the subsequence
 
-				for (auto iti = subsequence.cbegin(), end = subsequence.cend()-(substringlength-1); iti != end; ++iti, ++i){
-					numbases+=1;
-					string kmer=subsequence.substr(i,substringlength);
+					string kmer=subsequence.substr(i,substringlength);//extract the kmer
 					
-					if (reverse_is_min(kmer, kmerlen+1)){
-						reverse(kmer.begin(), kmer.end());
-						transform(kmer.begin(),kmer.end(),kmer.begin(),complement);
-					}
+					reverseComplementIfMin(kmer);//if the revcomp of the kmer is 'smaller' then revcomp it
+
+					if(extractMiddleBase(kmer, base)){return 1;}//extract the middle base
 					
-					char base=kmer[kmerlen];
-					kmer.erase(kmer.begin()+kmerlen);
-					
-					auto it = kmerMap.find(kmer);//check if the kmer is in the hash
-					
-					if ( it != kmerMap.end() ){//if the kmer is in the hash
-						it->second[base_score[int(base)]]++;//increment the count of the kmer
-					
-					}
-					else {//if the kmers isn't in the hash
-						auto ret = kmerMap.insert(make_pair(kmer, array< int, 5>()));//insert the kmer into the hash
-						ret.first->second[base_score[int(base)]]=1;//increment the count of the kmer
-					}
+					addKmerToBaseArrayMap(kmerMap, kmer, base, true);//add the kmer and base to the map
+
 				}
-		
+				numbases+=i;
     		}
 		}
- 		gzfileStream.close();
+ 		gzfileStream.close();//close the file
 	}
 	
+	cout << "Added " << numbases << " kmers from " << numseqs << " sequences of total length " << numreadbases << endl;
 	cout << kmerMap.size() << " unique kmers in map" << endl;
 	
-	cout << "Writing kmers to " << outfilename << endl;
-	
-	printkmerfile(kmerMap, outfilename, kmerlen);
+	printKmerFile(kmerMap, outfilename, kmerlen);//print the kmer file
 
-	auto finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done" << endl;
-	cout << "Total time required: " << elapsed.count() << "s" << endl << endl;
+	printDuration(start);//stop the clock
 	
 	return 0;
-	
 	
 }
 

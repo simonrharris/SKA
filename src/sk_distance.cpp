@@ -1,14 +1,15 @@
 //g++ -O3 -std=c++0x splitkmer.cpp -lz -o splitkmer
 #include <unordered_map>
 #include <map>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <bitset>
 #include <cmath>       /* ceil */
 #include "general.hpp"
 #include "kmers.hpp"
+#include "DNA.hpp"
 #include <chrono> //timing
 using namespace std;
 
@@ -17,7 +18,8 @@ using namespace std;
 int kmerDistance(const string & prefix, const bool & distancefile, const bool & clusterfile, const vector<string> & kmerfiles, const int & maxSNPS, const float & minMatched)
 {
 
-	auto start = chrono::high_resolution_clock::now();
+	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+
 	int numfiles=kmerfiles.size();
 
 	vector < string > sampleNames;
@@ -34,23 +36,13 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 	int sampleNum=0;
 	for (int s = 0; s < kmerfiles.size(); ++s){
 		
-		cout << "Reading " << kmerfiles[s] << "\n";
-		fileStream.open(kmerfiles[s], ios::in);
+		if (openFileStream(kmerfiles[s], fileStream)){return 1;};
 
-		if (fileStream.fail()) {
-			cout << "Failed to open " << kmerfiles[s] << "\n\n";
-			return 0;
-		}
 		int kmersize;
 		vector < string > names;
 		
-		try {
-			int returnval = readKmerHeader(fileStream, kmersize, names);
-		}
-		catch (int e){
-			cout << "An exception occurred when reading file " << kmerfiles[s] << ". Please check the format. Exception Nr. " << e << '\n';
-			return 1;
-		}
+		readKmerHeader(fileStream, kmersize, names);
+		
 
 		if (s==0){
 			oldkmersize=kmersize;
@@ -335,10 +327,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		distanceout.close();
 	}
 
-	auto finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done\n";
-	cout << "Total time required: " << elapsed.count() << "s\n\n";
+	printDuration(start);
 	
 	return 0;
 	
