@@ -3,6 +3,7 @@
 #include <string>
 #include <vector> //std::vector
 #include <map>
+#include <cmath>       /* ceil */
 #include "kmers.hpp"
 #include "general.hpp"
 using namespace std;
