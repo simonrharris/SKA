@@ -32,7 +32,7 @@ int summariseKmerFiles(const vector<string> & kmerfiles)
 
 		vector < int > kmers(fileSampleNames.size(), 0);
 		
-		char basebuffer[1];
+		char base;
 		char kmerbuffer[kmersize*2/3];
 		char asciibuffer[int(ceil(float(fileSampleNames.size())/6))];
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
@@ -40,16 +40,15 @@ int summariseKmerFiles(const vector<string> & kmerfiles)
 			vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a vector of bools
 
-			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-				string base (basebuffer, 1);
-				base[0]=toupper(base[0]);
+			while (fileStream.peek()!='\n' && fileStream.get(base)){
+				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmersize*2/3);
 				
 				for (int i=0; i<fileSampleNames.size(); ++i){ //add the kmer count to all samples that are true in the bitset
 						if (mybits[i]==1){
 							kmers[i]++;
-							map < char, vector < int > >::iterator it = basecounts.find(base[0]);//check if the kmer is in the map
+							map < char, vector < int > >::iterator it = basecounts.find(base);//check if the kmer is in the map
 							if ( it != basecounts.end() ){//if the kmer is in the map
 								it->second[i]++;//increment the count for the base
 							}

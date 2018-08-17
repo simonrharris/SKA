@@ -120,15 +120,14 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 	vector < int > ninboth (sampleNames.size(), 0);
 	vector < int > matches (sampleNames.size(), 0);
 
-	char basebuffer[1];
+	char base;
 	char kmerbuffer[querykmersize*2/3];
 	char asciibuffer[int(ceil(float(querySampleNames.size())/6))];
 
 	while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
 		string asciibits (asciibuffer, sizeof(asciibuffer));
-		while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-			string base (basebuffer, 1);
-			base[0]=toupper(base[0]);
+		while (fileStream.peek()!='\n' && fileStream.get(base)){
+			base=toupper(base);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, querykmersize*2/3);
 
@@ -136,7 +135,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
 				for (int i=0; i<sampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
 					//cout << it->second[i];
-					if (it->second[i]=='N' && base[0]=='N'){
+					if (it->second[i]=='N' && base=='N'){
 						ninboth[i]++;
 					}
 					else if (it->second[i]=='-'){
@@ -145,10 +144,10 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 					else if (it->second[i]=='N'){
 						nina[i]++;
 					}
-					else if (base[0]=='N'){
+					else if (base=='N'){
 						ninb[i]++;
 					}
-					else if (it->second[i]==base[0]){
+					else if (it->second[i]==base){
 						matches[i]++;
 					}
 					else {

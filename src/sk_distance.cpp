@@ -54,7 +54,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		}
 
 
-		char basebuffer[1];
+		char base;
 		char kmerbuffer[kmersize*2/3];
 		char asciibuffer[int(ceil(float(names.size())/6))];
 
@@ -63,9 +63,8 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 			vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a vector of bools
 			
-			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-				string base (basebuffer, 1);
-				base[0]=toupper(base[0]);
+			while (fileStream.peek()!='\n' && fileStream.get(base)){
+				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmersize*2/3);
 				for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
@@ -78,7 +77,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
-							it->second[sampleNum+i]=base[0];//add the base to the string
+							it->second[sampleNum+i]=base;//add the base to the string
 						}
 					}
 				}
@@ -86,7 +85,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 					string newsequence = emptySequence;
 					for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
-							newsequence[sampleNum+i] = base[0];
+							newsequence[sampleNum+i] = base;
 						}
 					}
 					kmerMap.insert(make_pair(kmer, newsequence));
@@ -111,106 +110,45 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 	
 
 	while (kmerMap.size()>0){
-	
-		auto it = kmerMap.begin();
+		
+		vector < vector < int >  > baseVector (6 , vector < int >() ) ;
+		auto kmit = kmerMap.begin();
 		auto endIter = kmerMap.end();
 		int j=0;
 	
-		for (; it!=endIter && j<1000000; ){
+		for (; kmit!=endIter && j<1000000; ){
 
-			vector < int > as;
-			vector < int > cs;
-			vector < int > gs;
-			vector < int > ts;
-			int ncount=0;
-			
+			fill(baseVector.begin(), baseVector.end(), ( vector < int >() ));
+
 			for (int i=0; i<numSamples; ++i){
-				switch (it->second[i])
-				{
-					case 'A':
-						as.push_back(i);
-						break;
-					case 'C':
-						cs.push_back(i);
-						break;
-					case 'G':
-						gs.push_back(i);
-						break;
-					case 'T':
-						ts.push_back(i);
-						break;
-					case '-':
-					case 'N':
-						kmerbitvector[i].set(j);
-						ncount++;
-						break;
+
+				baseVector[base_score[kmit->second[i]]].push_back(i);
+				if (base_score[kmit->second[i]]==5){
+					kmerbitvector[i].set(j);
 				}
 			}
 
-			if (as.size()==numSamples || cs.size()==numSamples || gs.size()==numSamples || ts.size()==numSamples){
-				kmerMap.erase(it++);
-				continue;
-			}
-	
-			int i=0;
-			for (auto it=as.begin(); it!=as.end(); ++it){
-				for (auto it2=cs.begin(); it2!=cs.end(); ++it2){
-					if (*it<*it2){
-						pairwiseSNPs[*it][*it2]++;
-					}
-					else {
-						pairwiseSNPs[*it2][*it]++;
-					}
-				}
-				for (auto it2=gs.begin(); it2!=gs.end(); ++it2){
-					if (*it<*it2){
-						pairwiseSNPs[*it][*it2]++;
-					}
-					else {
-						pairwiseSNPs[*it2][*it]++;
-					}
-				}
-				for (auto it2=ts.begin(); it2!=ts.end(); ++it2){
-					if (*it<*it2){
-						pairwiseSNPs[*it][*it2]++;
-					}
-					else {
-						pairwiseSNPs[*it2][*it]++;
-					}
-				}
-			}
-			for (auto it=cs.begin(); it!=cs.end(); ++it){
-				for (auto it2=gs.begin(); it2!=gs.end(); ++it2){
-					if (*it<*it2){
-						pairwiseSNPs[*it][*it2]++;
-					}
-					else {
-						pairwiseSNPs[*it2][*it]++;
-					}
-				}
-				for (auto it2=ts.begin(); it2!=ts.end(); ++it2){
-					if (*it<*it2){
-						pairwiseSNPs[*it][*it2]++;
-					}
-					else {
-						pairwiseSNPs[*it2][*it]++;
-					}
-				}
-			}
-			for (auto it=gs.begin(); it!=gs.end(); ++it){
-				for (auto it2=ts.begin(); it2!=ts.end(); ++it2){
-					if (*it<*it2){
-						pairwiseSNPs[*it][*it2]++;
-					}
-					else {
-						pairwiseSNPs[*it2][*it]++;
-					}
-				}
-			}
-			if (ncount>0){
+			if (baseVector[5].size()>0){
 				j++;
 			}
-			kmerMap.erase(it++);
+
+			for (int k=0; k<4; ++k){
+				for (int l=k+1; l<4; ++l){
+					for (vector < int >::iterator it=baseVector[k].begin(); it!=baseVector[k].end(); ++it){
+						for (vector < int >::iterator it2=baseVector[l].begin(); it2!=baseVector[l].end(); ++it2){
+							//count++;
+							if (*it<*it2){
+								pairwiseSNPs[*it][*it2]++;
+							}
+							else {
+								pairwiseSNPs[*it2][*it]++;
+							}
+						}
+					}
+				}
+			}
+
+			kmerMap.erase(kmit++);
 		}
 		
 		for (int i=0; i<numSamples; ++i){
@@ -330,7 +268,6 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 	printDuration(start);
 	
 	return 0;
-	
 	
 }
 

@@ -57,6 +57,11 @@ int printKmerFile(const unordered_map <string, array < int, 8 > > & mymap, const
 	cout << "Writing kmers to " << outputfile << endl;
 
 	ofstream kmerfile(outputfile);
+	if (kmerfile.fail()){
+		cerr << endl << "Error: Failed to open " << outputfile << endl << endl;
+		return 1;
+	}
+	
 	kmerfile << kmersize << endl;
 	kmerfile << outputfile.substr(0, outputfile.find_last_of(".")) << endl;
 	kmerfile << '"';
@@ -106,6 +111,11 @@ int printMergedKmerFile(const unordered_map < vector < bool >, vector < string >
 	cout << "Writing merged file to " << outputfile << endl;
 
 	ofstream kmerout(outputfile); //open output file stream
+	if (kmerout.fail()){
+		cerr << endl << "Error: Failed to open " << outputfile << endl << endl;
+		return 1;
+	}
+
 	kmerout << kmersize << endl; // print kmer size to output file stream
 	for ( vector < string >::const_iterator it=mysamples.begin(); it!=mysamples.end(); ++it){ //print each sample name to output file stream
 		kmerout << *it << " "; 

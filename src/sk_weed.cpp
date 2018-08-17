@@ -20,7 +20,7 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 
 	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	// Create the kmer map
-	unordered_map<string, string> kmerMap;
+	unordered_map<string, char> kmerMap;
 	
 	ifstream fileStream;
 
@@ -31,14 +31,14 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 	
 	readKmerHeader(fileStream, kmersize, weednames);
 	
-	char basebuffer[1];
+	char base;
 	char kmerbuffer[kmersize*2/3];
 	char asciibuffer[int(ceil(float(weednames.size())/6))];
 	while (fileStream.read(asciibuffer, sizeof(asciibuffer))){
 		string asciibits (asciibuffer, sizeof(asciibuffer));
 		
-		while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-			string base (basebuffer, 1);
+		while (fileStream.peek()!='\n' && fileStream.get(base)){
+			base=toupper(base);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, sizeof(kmerbuffer));
 			kmerMap.insert(make_pair(kmer, base));
@@ -83,8 +83,8 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){
 			string asciibits (asciibuffer, sizeof(asciibuffer));
 			
-			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-				string base (basebuffer, 1);
+			while (fileStream.peek()!='\n' && fileStream.get(base)){
+				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmersize*2/3);
 				
@@ -94,7 +94,7 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 						weededfile << asciibits;
 						firstkmer=false;
 					}
-					weededfile << base[0] << kmer;//print the kmer
+					weededfile << base << kmer;//print the kmer
 					weeded++;
 				}
 				totalweedkmers++;

@@ -52,8 +52,7 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 	
 	readKmerHeader(fileStream, querykmersize, querySampleNames);
 	
-
-	char basebuffer[1];
+	char base;
 	char kmerbuffer[querykmersize*2/3];
 	char asciibuffer[int(ceil(float(querySampleNames.size())/6))];
 	vector < unordered_map < string, vector < int > > > profileMap (querySampleNames.size());
@@ -66,9 +65,8 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 		string asciibits (asciibuffer, sizeof(asciibuffer));
 		vector < bool > mybits;
 		vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
-		while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-			string base (basebuffer, 1);
-			base[0]=toupper(base[0]);
+		while (fileStream.peek()!='\n' && fileStream.get(base)){
+			base=toupper(base);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, querykmersize*2/3);
 
@@ -76,7 +74,7 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
 				for (int i=0; i<mybits.size(); ++i){
 					if (mybits[i]){
-						it->second[i]=base[0];
+						it->second[i]=base;
 					}
 				}
 			}
@@ -84,7 +82,7 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 				auto ret = kmerMap.insert(make_pair(kmer, string (querySampleNames.size(),'-')));
 				for (int i=0; i<mybits.size(); ++i){
 					if (mybits[i]){
-						ret.first->second[i]=base[0];
+						ret.first->second[i]=base;
 					}
 				}
 			}
@@ -98,7 +96,6 @@ int typeKmerFile(const string & queryfile, const string & profileFile, const vec
 
 	string header;
 	string sequence;
-	char base;
 	int substringlength=(querykmersize*2)+1;
 
 	for (int s = 0; s < subjectfiles.size(); ++s){

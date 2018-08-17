@@ -1,5 +1,3 @@
-//g++ -O3 -std=c++0x splitkmer.cpp -lz -o splitkmer
-//usage: sk_refalign outputfilename reference.fasta reference.kmers <kmer files>
 #include <unordered_map>
 #include <set>
 #include <iostream>
@@ -8,27 +6,29 @@
 #include <algorithm>
 #include <zlib.h>
 #include <stdio.h>
-//#include "kseq.h"
 #include <string>
 #include <tuple>
 #include <vector>
+#include <map>
 #include <cmath>       /* ceil */
 #include "kmers.hpp"
 #include "general.hpp"
 #include "DNA.hpp"
 #include <chrono> //timing
 #include "gzstream.h"
-//KSEQ_INIT(gzFile, gzread)
 using namespace std;
 
 
-//int main(int argc, char *argv[])
 int alignKmersToReference(const string & reference, const string & outputfile, const vector<string> & kmerfiles, const int & kmerlen, const bool & includeref, const bool & maprepeats, const bool &fillall, const bool &variantonly, const vector <string> & sample)
 {
 
 	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	
 	ofstream alignfile(outputfile);
+	if (alignfile.fail()){
+		cerr << endl << "Error: Failed to open " << outputfile << endl << endl;
+		return 1;
+	}
 	
 	// Create the kmer map
 	unordered_map<string, vector<int> > kmerMap;
@@ -49,6 +49,10 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 
 	igzstream gzfileStream;
 	gzfileStream.open(reference.c_str());
+	if (gzfileStream.fail()){
+		cerr << endl << "Error: Failed to open " << reference << endl << endl;
+		return 1;
+	}
 
 	if (gzfileStream.get()!='>'){
 		cout << reference << " is not in the correct format. Expecting header to start with >." << endl << endl;
@@ -87,7 +91,6 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 		}
 		basenum+=sequence.length();
 			
-	
     }
     gzfileStream.close();
 
@@ -117,7 +120,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 	vector < string > sequences(numSamples, string(basenum , '-'));//create a vector to store the new sequences;
 
 	ifstream fileStream;
-	char basebuffer[1];
+
 	char kmerbuffer[kmerlen*2/3];
 	int sampleNum=0;
 	int includedSampleNum=0;
@@ -133,8 +136,8 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 		readKmerHeader(fileStream, kmersize, names);//read the header from the kmer file to get the kmer size and sample names
 		
 		if (kmersize!=kmerlen){
-			cout << "\nkmer size in " << filename << " is not " << kmerlen << endl << endl;
-			return 0;
+			cerr << "\nkmer size in " << filename << " is not " << kmerlen << endl << endl;
+			return 1;
 		}
 
 		vector < int > fileInclude;
@@ -147,12 +150,11 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 
 		if (fileInclude.size()==0){ // if no sample names in the file are going to be included then don't read the file
 			fileStream.close();
-			cout << "Nothing to align" << endl;
+			cerr << "Nothing to align" << endl;
 			sampleNum+=int(names.size());
 			names.clear();
 			continue;
 		}
-
 
 		char asciibuffer[int(ceil(float(names.size())/6))];
 
@@ -161,9 +163,8 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 			vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a vector of bools
 			
-			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-				string base (basebuffer, 1);
-				base[0]=toupper(base[0]);
+			while (fileStream.peek()!='\n' && fileStream.get(base)){
+				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmerlen*2/3);
 				auto it = kmerMap.find(kmer);//check if the kmer is in the hash
@@ -172,12 +173,13 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 						for (auto itb = it->second.begin(); itb != it->second.end(); ++itb) {
 							auto itc = revSet.find(*itb);
 							if ( itc != revSet.end() ){
-								transform(base.begin(),base.end(),base.begin(),complement);
+								//transform(base.begin(),base.end(),base.begin(),complement);
+								base=complement(base);
 							}
 							for (int j=0; j<fileInclude.size(); ++j){ //add the base to all samples that are true in the bitset
 								if (mybits[fileInclude[j]]){
-									sequences[includedSampleNum+j][*itb]=base[0];
-									if (fillall || base[0]!=refseq[*itb]){//} || *itb==15 || *itb==basenum-16){
+									sequences[includedSampleNum+j][*itb]=base;
+									if (fillall || base!=refseq[*itb]){//} || *itb==15 || *itb==basenum-16){
 										for (int i=*itb-kmerlen; i<=*itb+kmerlen; ++i){
 											if (i==*itb){
 												continue;
@@ -218,57 +220,34 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 	
 	if (variantonly){
 		vector < int > sitestoprint;
-		int consta = 0;
-		int constc = 0;
-		int constg = 0;
-		int constt = 0;
+		sitestoprint.reserve(10000);
+		vector < int > constantBases (4,0);
 		for (int i=0; i<basenum; ++i){
-			int a = 0;
-			int c = 0;
-			int g = 0;
-			int t = 0;
-			int afound = 0;
-			int cfound = 0;
-			int gfound = 0;
-			int tfound = 0;
+
+			vector < int > baseVector (6, 0);
+
 			for (int j=0; j<includedSampleNames.size(); ++j){
-				switch (toupper(sequences[j][i]))
-				{
-					case 'A':
-						a++;
-						afound=1;
-						break;
-					case 'C':
-						c++;
-						cfound=1;
-						break;
-					case 'G':
-						g++;
-						gfound=1;
-						break;
-					case 'T':
-						t++;
-						tfound=1;
-						break;
+				char base=toupper(sequences[j][i]);
+				baseVector[base_score[base]]++;
+			}
+
+			int acgtCount=0;
+			int constbase=-1;
+
+			for (int i=0; i<4; ++i){
+				if (baseVector[i]>0){
+					acgtCount++;
+					constbase=i;
 				}
 			}
-			if ((afound+cfound+gfound+tfound)==1){
-				if (a>0){
-					consta++;
-				}
-				else if (c>0){
-					constc++;
-				}
-				else if (g>0){
-					constg++;
-				}
-				else if (t>0){
-					constt++;
-				}
+
+			if (acgtCount<2){
+				constantBases[constbase]++;
 			}
-			else if ((afound+cfound+gfound+tfound)>1) {
+			else {
 				sitestoprint.push_back(i);
 			}
+			
 		}
 
 		cout << "Printing alignment of " << sitestoprint.size() << " variant sites" << endl;
@@ -282,8 +261,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 		}
 
 		cout << "Constant sites (a c g t):" << endl;
-		cout << consta << " " << constc << " " << constg << " " << constt << endl;
-
+		cout << constantBases[0] << " " << constantBases[1]  << " " << constantBases[2]  << " " << constantBases[3]  << endl;
 	}
 	else{
 		cout << "Printing alignment" << endl;

@@ -194,7 +194,7 @@ int allelesSubcommand(int argc, char *argv[]){
 	}
 	cout << endl << endl;
 
-	allelesToKmers(args, kmersize);
+	if (allelesToKmers(args, kmersize)){return 1;}
 
 	return 0;
 }
@@ -320,7 +320,7 @@ int alignSubcommand(int argc, char *argv[]){
 	cout << "Variable sites present in more than " << minproportion*100 << "% of isolates will be included" << endl;
 	cout << "Output will be written to " << outprefix << endl << endl;
 
-	alignKmers(minproportion, outprefix, args, variantonly, sample);
+	if (alignKmers(minproportion, outprefix, args, variantonly, sample)){return 1;}
 
 	return 0;
 }
@@ -390,7 +390,7 @@ int compareSubcommand(int argc, char *argv[]){
 		return 1;
 	}
 
-	compareKmerFiles(queryfile, args);
+	if (compareKmerFiles(queryfile, args)){return 1;}
 
 	return 0;
 }
@@ -541,7 +541,7 @@ int distanceSubcommand(int argc, char *argv[]){
 	}
 	cout << endl;
 
-	kmerDistance(prefix, distancefile, clusterfile, args, maxsnps, minid);
+	if (kmerDistance(prefix, distancefile, clusterfile, args, maxsnps, minid)){return 1;}
 
 	return 0;
 }
@@ -643,7 +643,7 @@ int fastaSubcommand(int argc, char *argv[]){
 
 	cout << endl;
 
-	fastaToKmers(args, outfile, kmersize);
+	if (fastaToKmers(args, outfile, kmersize)){return 1;}
 
 	return 0;
 }
@@ -886,7 +886,7 @@ int infoSubcommand(int argc, char *argv[]){
 		return 1;
 	}
 
-	getKmerFileInfo(args, tabulated);
+	if (getKmerFileInfo(args, tabulated)){return 1;}
 
 	return 0;
 }
@@ -1059,7 +1059,7 @@ int mapSubcommand(int argc, char *argv[]){
 	}
 	cout << "Output will be written to " << outprefix << endl << endl;
 
-	alignKmersToReference(reference, outprefix, args, kmersize, includeref, maprepeats, fillall, variantonly, sample);
+	if (alignKmersToReference(reference, outprefix, args, kmersize, includeref, maprepeats, fillall, variantonly, sample)){return 1;}
 
 	return 0;
 }
@@ -1156,7 +1156,7 @@ int mergeSubcommand(int argc, char *argv[]){
 	cout << endl;
 	cout << "Output will be written to " << outfile << endl << endl;
 
-	mergeKmerFiles(outfile, args, sample);
+	if (mergeKmerFiles(outfile, args, sample)){return 1;}
 
 	return 0;
 }
@@ -1209,7 +1209,7 @@ int summarySubcommand(int argc, char *argv[]){
 		return 1;
 	}
 
-	summariseKmerFiles(args);
+	if (summariseKmerFiles(args)){return 1;}
 
 	return 0;
 }
@@ -1292,7 +1292,7 @@ int typeSubcommand(int argc, char *argv[]){
 		return 1;
 	}
 
-	typeKmerFile(queryfile, profilefile, args);
+	if (typeKmerFile(queryfile, profilefile, args)){return 1;}
 
 	return 0;
 }
@@ -1410,7 +1410,7 @@ int uniqueSubcommand(int argc, char *argv[]){
 
 	cout << endl;
 
-	uniqueKmers(ingroup, args, minproportion, outfile);
+	if (uniqueKmers(ingroup, args, minproportion, outfile)){return 1;}
 
 	return 0;
 }
@@ -1496,7 +1496,7 @@ int weedSubcommand(int argc, char *argv[]){
 
 	cout << endl;
 
-	weedKmers(args, infile);
+	if (weedKmers(args, infile)){return 1;}
 
 	return 0;
 }
@@ -1558,11 +1558,11 @@ int main(int argc, char *argv[])
 			if(skaHelp()){return 1;}
 		}
 	else if (subcommand[0]=='-'){
-			cerr << endl << "Unrecognised flag " << subcommand << endl << endl;
+			cerr << endl << "Unrecognised flag: " << subcommand << endl << endl;
 			return 1;
 		}
 	else {
-		cerr << endl << "Unrecognised subcommand" << endl << endl;
+		cerr << endl << "Unrecognised subcommand: " << subcommand << endl;
 		skaHelp();
 		return 1;
 	}

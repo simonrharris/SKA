@@ -16,12 +16,77 @@
 using namespace std;
 
 
+void filterAlignment(unordered_map < string, string > & myKmerMap, vector < int > & constantBaseVector, const int numSamples, const int minrequired, const bool variantOnly){
+
+	unordered_map < string, string >::iterator kmit = myKmerMap.begin();
+	unordered_map < string, string >::iterator kmitend = myKmerMap.end();
+
+	for (; kmit!=kmitend; ){
+		vector < int > baseVector (6, 0);
+		for (int i=0; i<numSamples; ++i){//count the number of each base in the samples
+			baseVector[base_score[kmit->second[i]]]++;
+		}
+
+		int acgtTotal=0;
+		int acgtCount=0;
+		int constbase=-1;
+
+		for (int i=0; i<4; ++i){//count the total number of ACGTs and the number of different bases at the site
+			if (baseVector[i]>0){
+				acgtCount++;
+				constbase=i;//record the site as the constant base if it is present in at least one smaple. This iwll only be used if the site is constant
+			}
+			acgtTotal+=baseVector[i];
+		}
+
+		if (acgtTotal<minrequired || acgtTotal==0){ //if the total number of samples matching the kmer with a base is below the minimum, exclude the site from the alignment
+			myKmerMap.erase(kmit++);
+		}
+		else if (acgtCount==1 && variantOnly){//if the site is constant and variantonlly has been selected, record the variant base and exclude the site from the alignment
+			constantBaseVector[constbase]++;
+			myKmerMap.erase(kmit++);
+		}
+		else {
+			++kmit;
+		}
+		
+	}
+}
+
+void printAlignment(const string & outputfilename, const unordered_map < string, string > & myKmerMap, vector < int > & constantBaseVector, const vector < string > sampleNames, const bool variantOnly){
+	cout << "Printing alignment of "<< myKmerMap.size() << " sites" << endl;
+	
+	ofstream alignfile(outputfilename);
+
+	for (int i=0; i<sampleNames.size(); ++i){
+		string sampleName = sampleNames[i];
+		alignfile << ">" << sampleName << endl;
+		float nonns=0.0;
+		for (unordered_map < string, string >::const_iterator kmit=myKmerMap.begin(); kmit!=myKmerMap.end(); ++kmit){
+			alignfile << kmit->second[i];
+			if(base_score[kmit->second[i]]<4){
+				nonns++;
+			}
+		}
+		alignfile << endl;
+		if ((nonns/myKmerMap.size())<0.5){
+			cerr << "Warning: " << sampleName << " only matches " << nonns/myKmerMap.size()*100 << "% of kmers in the alignment" << endl;
+		}
+	}
+	alignfile.close();
+
+	if (variantOnly){//if the variant only option was selected, print the constant site counts
+		cout << "Constant sites matching filters (a c g t):" << endl;
+		cout << constantBaseVector[0] << " " << constantBaseVector[1]  << " " << constantBaseVector[2]  << " " << constantBaseVector[3]  << endl;
+	}
+}
+
+
 //int main(int argc, char *argv[])
 int alignKmers(const float & minproportion, const string & outputfile, const vector<string> & kmerfiles, const bool & variantonly, const vector <string> & sample)
 {
 
 	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
-
 
 	int numfiles=kmerfiles.size();//record the number of files
 
@@ -32,22 +97,17 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 	getSubsample(sample, sampleNames, include);//get a vector of bools representing which samples to include based on a provided sample file. This also removed duplicate samples in the input files
 
 	vector < string > includedSampleNames;
-	for (auto it=include.begin(); it!=include.end(); ++it){//make a vector off all included sample names to help printing output files later
-		if (*it){
-			includedSampleNames.push_back(sampleNames[distance(include.begin(), it)]);
+	for (vector < bool >::iterator vbit=include.begin(); vbit!=include.end(); ++vbit){//make a vector of all included sample names to help printing output files later
+		if (*vbit){
+			includedSampleNames.push_back(sampleNames[distance(include.begin(), vbit)]);
 		}
 	}
 
 	int numSamples = count(include.begin(), include.end(), true);//count the number of included samples
 
 	cout << numSamples << " samples will be included in the alignment" << endl;
-
 	
 	float maxmissing=round((1.0-minproportion)*numSamples);//calculate the maximum number of samples that can be missing for the site to be included in the alignment
-
-	/*if (maxmissing<1){
-		maxmissing=1;
-	}*/
 
 	float minrequired=numSamples-maxmissing;//calculate the minimum number of samples that must contain a kmer for the site to be included in the alignment
 	
@@ -60,7 +120,7 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 	int sampleNum=0;
 	int includedSampleNum=0;
 
-	char basebuffer[1];
+	char base;
 
 	ifstream fileStream;
 	for (int s = 0; s < kmerfiles.size(); ++s){//read each file and make a map of the kmers which stores the bases for each included sample
@@ -77,8 +137,8 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 		}
 
 		if (kmersize!=oldkmersize){ //if the file kmer size isn't the same as the other files then ditch out
-			cout << "kmer files have different kmer sizes\n\n";
-			return 0;
+			cerr << "kmer files have different kmer sizes" << endl << endl;
+			return 1;
 		}
 
 		vector < int > fileInclude;
@@ -106,17 +166,16 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 			vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//convert the ascii representation of the taxa to a vector of bools
 
-			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-				string base (basebuffer, 1);
-				base[0]=toupper(base[0]);
+			while (fileStream.peek()!='\n' && fileStream.get(base)){
+				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmersize*2/3);
 				
-				unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the map
-				if ( it != kmerMap.end() ){//if the kmer is in the map
+				unordered_map < string, string >::iterator kmit = kmerMap.find(kmer);//check if the kmer is in the map
+				if ( kmit != kmerMap.end() ){//if the kmer is in the map
 					for (int i=0; i<fileIncludeSize; ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[fileInclude[i]]){
-							it->second[i+includedSampleNum]=base[0];
+							kmit->second[i+includedSampleNum]=base;
 						}
 					}
 				}
@@ -125,7 +184,7 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 						string newsequence = emptySequence;//create an empty sequence
 						for (int i=0; i<fileInclude.size(); ++i){ //add the base to all included samples that are true in the bitset
 							if (mybits[fileInclude[i]]){
-								newsequence[i+includedSampleNum]=base[0];
+								newsequence[i+includedSampleNum]=base;
 							}
 						}
 						kmerMap.insert(make_pair(kmer, newsequence));
@@ -140,78 +199,12 @@ int alignKmers(const float & minproportion, const string & outputfile, const vec
 	}
 	
 	cout << kmerMap.size() << " kmers identified from " << numSamples << " samples in " << numfiles << " files" << endl;
-
 	
-	map < char, int > constantBases { { 'A', 0 }, { 'C', 0 }, { 'G', 0 }, { 'T', 0 } };
+	vector < int > constantBases (4,0);
 
-	unordered_map < string, string >::iterator it = kmerMap.begin();
-	unordered_map < string, string >::iterator endIter = kmerMap.end();
-
-	for (; it!=endIter; ){
-		int acgt=0;
-		map < char, int > baseMap;
-		for (int i=0; i<numSamples; ++i){
-
-			if(base_score[it->second[i]]>3){
-				continue;
-			}
-			
-			acgt++;
-
-			map < char, int >::iterator it2 = baseMap.find(it->second[i]);
-
-			if (it2!=baseMap.end()){
-				it2->second++;
-			}
-			else {
-				baseMap.insert(make_pair(it->second[i], 1));
-			}
-		}
-
-		if (acgt<minrequired || acgt==0){ // (afound+cfound+gfound+tfound)==0){
-			kmerMap.erase(it++);
-		}
-		else if (baseMap.size()==1 && variantonly){
-			for (auto it2=baseMap.begin(); it2!= baseMap.end(); ++it2){
-				constantBases[it2->first]++;
-			}
-			kmerMap.erase(it++);
-		}
-		else {
-			++it;
-		}
-		
-		
-	}
+	filterAlignment(kmerMap, constantBases, numSamples, minrequired, variantonly);
 	
-	
-	cout << "Printing alignment of "<< kmerMap.size() << " sites" << endl;
-	
-	ofstream alignfile(outputfile);
-
-	//map < char, int >::iterator it3;	
-
-	for (int i=0; i<numSamples; ++i){
-		string sampleName =includedSampleNames[i];
-		alignfile << ">" << sampleName << endl;
-		float nonns=0.0;
-		for (unordered_map < string, string >::iterator it=kmerMap.begin(); it!=kmerMap.end(); ++it){
-			alignfile << it->second[i];
-			if(base_score[it->second[i]]<4){
-				nonns++;
-			}
-		}
-		alignfile << endl;
-		if ((nonns/kmerMap.size())<0.5){
-			cout << "Warning: " << sampleName << " only matches " << nonns/kmerMap.size()*100 << "% of kmers in the alignment" << endl;
-		}
-	}
-	alignfile.close();
-
-	if (variantonly){
-		cout << "Constant sites matching filters (a c g t):" << endl;
-		cout << constantBases['A'] << " " << constantBases['C']  << " " << constantBases['G']  << " " << constantBases['T']  << endl;
-	}
+	printAlignment(outputfile, kmerMap, constantBases, includedSampleNames, variantonly);
 
 	printDuration(start);
 	
