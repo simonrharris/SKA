@@ -9,6 +9,7 @@
 #include "kmers.hpp"
 #include "DNA.hpp"
 #include <chrono> //std::chrono
+#include <algorithm> //std::count
 
 
 void filterAlignment(std::unordered_map < std::string, std::string > & myKmerMap, std::vector < int > & constantBaseVector, const int numSamples, const int minrequired, const bool variantOnly){
