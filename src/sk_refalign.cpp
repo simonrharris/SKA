@@ -2,7 +2,7 @@
 #include <set>
 #include <iostream>
 #include <fstream>
-//#include <algorithm>
+#include <algorithm>
 //#include <stdio.h>
 #include <string>
 #include <vector>
