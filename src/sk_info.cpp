@@ -1,6 +1,7 @@
 #include <string> //std::string
 #include <vector> //std::vector
 #include <iostream> //std::cout
+#include <cmath> //std::ceil
 #include "kmers.hpp"
 #include "general.hpp"
 
