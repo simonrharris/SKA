@@ -121,7 +121,7 @@ int alignKmers(const float & minproportion, const std::string & outputfile, cons
 		}
 	}
 
-	int numSamples = count(include.begin(), include.end(), true);//count the number of included samples
+	int numSamples = std::count(include.begin(), include.end(), true);//count the number of included samples
 
 	std::cout << numSamples << " samples will be included in the alignment" << endl;
 	
