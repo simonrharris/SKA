@@ -17,7 +17,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 {
 
 	// Create the kmer map
-	unordered_map<string, string> kmerMap;
+	unordered_map < string, string > kmerMap;
 
 	vector < string > sampleNames;
 	if (collectSampleNames(subjectfiles, sampleNames)!=0){return 1;}
@@ -60,7 +60,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, subjectkmersize*2/3);
 				
-				auto it = kmerMap.find(kmer);//check if the kmer is in the hash
+				unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
@@ -131,7 +131,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			string kmer (kmerbuffer, querykmersize*2/3);
 
-			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
+			unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
 				for (int i=0; i<sampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
 					//cout << it->second[i];

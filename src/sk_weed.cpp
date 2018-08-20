@@ -15,12 +15,12 @@ using namespace std;
 //bin/sk_weed outputfile 
 
 //int main(int argc, char *argv[])
-int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
+int weedKmers(const vector <string> & weedfiles, const string & kmerfile)
 {
 
 	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	// Create the kmer map
-	unordered_map<string, char> kmerMap;
+	unordered_map < string, char > kmerMap;
 	
 	ifstream fileStream;
 
@@ -52,7 +52,7 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 	int weeded=0;
 	int totalweedkmers=0;
 	
-	for (auto it = weedfiles.begin(); it != weedfiles.end(); ++it){
+	for (vector < string >::const_iterator it = weedfiles.begin(); it != weedfiles.end(); ++it){
 
 		if (openFileStream(*it, fileStream)){return 1;};
 
@@ -72,7 +72,7 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 	
 		ofstream weededfile(outputfile);
 		weededfile << kmersize << "\n";
-		for ( auto it=names.begin(); it!=names.end(); ++it){ //print each sample name to output file stream
+		for ( vector < string >::iterator it=names.begin(); it!=names.end(); ++it){ //print each sample name to output file stream
 			weededfile << *it << " "; 
 		}
 		weededfile << endl;
@@ -88,7 +88,7 @@ int weedKmers(const vector<string> & weedfiles, const string & kmerfile)
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmersize*2/3);
 				
-				auto it2 = kmerMap.find(kmer);//check if the kmer is in the hash
+				unordered_map < string, char >::iterator it2 = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it2 == kmerMap.end() ){//if the kmer is not in the hash
 					if (firstkmer){//if it's the first kmer, print the ascii bitstring
 						weededfile << asciibits;

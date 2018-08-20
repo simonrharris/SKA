@@ -19,7 +19,7 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 
 	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
 	// Create the kmer map
-	unordered_map<string, vector < bool > > kmerMap;
+	unordered_map <string , vector < bool > > kmerMap;
 	int oldkmersize=0;
 	int totalingroupkmers=0;
 
@@ -41,7 +41,7 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 	vector < int > ingroupSamplePositions;
 
 	for (int i=0; i<sampleNames.size(); ++i){
-		auto it = ingroupSet.find(sampleNames[i]);//check if the kmer is in the map
+		set < string >::iterator it = ingroupSet.find(sampleNames[i]);//check if the kmer is in the map
 			if ( it != ingroupSet.end() ){//if the kmer is in the map
 				ingroupSamplePositions.push_back(i);
 			}
@@ -94,7 +94,7 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 				string kmer (kmerbuffer, (kmersize*2/3)+1);
 				
 
-				auto it = kmerMap.find(kmer);//check if the kmer is in the map
+				unordered_map <string , vector < bool > >::iterator it = kmerMap.find(kmer);//check if the kmer is in the map
 				if ( it != kmerMap.end() ){//if the kmer is in the map
 					for (int i=0; i<mybits.size(); ++i){
 						it->second[i+sampleNum]=mybits[i];
@@ -118,15 +118,15 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 	cout << kmerMap.size() << " kmers identified from " << sampleNum << " samples in " << numfiles << " files" << endl;
 
 	int uniquecount=0;
-	auto it = kmerMap.begin();
-	auto endIter = kmerMap.end();
+	unordered_map <string , vector < bool > >::iterator it = kmerMap.begin();
+	unordered_map <string , vector < bool > >::iterator endIter = kmerMap.end();
 	unordered_map < vector < bool >,  vector < string > > revKmerMap;
 
 	for (; it!=endIter; ){
 		int allcount=count(it->second.begin(), it->second.end(), true);
 		int ingroupcount=0;
 
-		for (auto it2=ingroupSamplePositions.begin(); it2!=ingroupSamplePositions.end(); ++it2){
+		for (vector < int >::iterator it2=ingroupSamplePositions.begin(); it2!=ingroupSamplePositions.end(); ++it2){
 			if (it->second[*it2]){
 				ingroupcount++;
 			}
@@ -136,11 +136,11 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 
 			vector < bool > ingroupBitString (ingroupSamplePositions.size(), false);
 			int i=0;
-			for (auto it2=ingroupSamplePositions.begin(); it2!=ingroupSamplePositions.end(); ++it2, ++i){
+			for (vector < int >::iterator it2=ingroupSamplePositions.begin(); it2!=ingroupSamplePositions.end(); ++it2, ++i){
 				ingroupBitString[i]=it->second[*it2];
 			}
 
-			auto it2 = revKmerMap.find(ingroupBitString);//check if the bitset is in the map
+			unordered_map < vector < bool >,  vector < string > >::iterator it2 = revKmerMap.find(ingroupBitString);//check if the bitset is in the map
 			if ( it2 != revKmerMap.end() ){//if the bitset is in the map
 				it2->second.push_back(it->first); //add the kmer
 			}
@@ -160,7 +160,7 @@ int uniqueKmers(const vector <string> & ingroupsamples, const vector<string> & k
 	cout << uniquecount << " unique shared kmers will be written to " << outputfile << endl;
 
 	vector < string > orderedingroupsamples;
-	for ( auto it=ingroupSamplePositions.begin(); it!=ingroupSamplePositions.end(); ++it){ //print each sample name to output file stream
+	for ( vector < int >::iterator it=ingroupSamplePositions.begin(); it!=ingroupSamplePositions.end(); ++it){ //print each sample name to output file stream
 		orderedingroupsamples.push_back(sampleNames[*it]); 
 	}
 

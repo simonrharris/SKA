@@ -126,7 +126,7 @@ int allelesHelp(void){
 int allelesSubcommand(int argc, char *argv[]){
 
 	long int kmersize=15;
-	vector<string> args;
+	vector <string> args;
 
 	for (int i=2; i<argc; ++i){
 
@@ -188,7 +188,7 @@ int allelesSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}
@@ -312,7 +312,7 @@ int alignSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {	
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}
@@ -524,7 +524,7 @@ int distanceSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}
@@ -634,7 +634,7 @@ int fastaSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}
@@ -815,7 +815,7 @@ int fastqSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}
@@ -1035,7 +1035,7 @@ int mapSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}
@@ -1149,7 +1149,7 @@ int mergeSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}
@@ -1397,13 +1397,10 @@ int uniqueSubcommand(int argc, char *argv[]){
 	skaVersion();
 
 	cout << "Finding unique kmers in at least " << minproportion*100 << "% of ";
-	for (auto it = ingroup.begin(); it != ingroup.end(); ++it){
+	for (vector <string>::iterator it = ingroup.begin(); it != ingroup.end(); ++it){
 		cout << *it << " ";
 	}
-	/*cout << endl << "That are not also found in ";
-	for (auto it = outgroup.begin(); it != args.end(); ++it){
-		cout << *it << " ";
-	}*/
+	
 	cout << endl;
 
 	cout << "Output will be written to " << outfile << endl;
@@ -1489,7 +1486,7 @@ int weedSubcommand(int argc, char *argv[]){
 		cout << args.size() << " files";
 	}
 	else {
-		for (auto it = args.begin(); it != args.end(); ++it){
+		for (vector <string>::iterator it = args.begin(); it != args.end(); ++it){
 			cout << *it << " ";
 		}
 	}

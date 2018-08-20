@@ -26,7 +26,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 	if (collectSampleNames(kmerfiles, sampleNames)!=0){return 1;}
 	int numSamples=sampleNames.size();
 	
-	unordered_map<string, string> kmerMap;// Create the kmer map
+	unordered_map < string, string > kmerMap;// Create the kmer map
 	string emptySequence (numSamples , '-');
 	int oldkmersize=0;
 
@@ -73,7 +73,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 					}
 				}
 				
-				auto it = kmerMap.find(kmer);//check if the kmer is in the hash
+				unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
@@ -112,8 +112,8 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 	while (kmerMap.size()>0){
 		
 		vector < vector < int >  > baseVector (6 , vector < int >() ) ;
-		auto kmit = kmerMap.begin();
-		auto endIter = kmerMap.end();
+		unordered_map < string, string >::iterator kmit = kmerMap.begin();
+		unordered_map < string, string >::iterator endIter = kmerMap.end();
 		int j=0;
 	
 		for (; kmit!=endIter && j<1000000; ){
@@ -172,7 +172,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		cout << "Printing clusters to " << clusterfilename << endl;
 		clusterout << "ID\tCluster__autocolour\n";
 		for (int i=0; i<numSamples; ++i){
-			vector< int > matches;
+			vector < int > matches;
 			matches.push_back(i);
 			//cout << i << endl;
 			for (int j=i+1; j<numSamples; ++j){
@@ -193,8 +193,8 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 			}
 			//dotout << "\t" << kmerfiles[i] << ";" << endl; //Need to find somewhere to put this where it does what I want
 			int clusternum=clusters.size();
-			for ( auto it=matches.begin(); it!=matches.end(); ++it){
-				auto it2 = clusterMap.find(*it);//check if the match is in the hash
+			for ( vector < int >::iterator it=matches.begin(); it!=matches.end(); ++it){
+				map <int, int >::iterator it2 = clusterMap.find(*it);//check if the match is in the hash
 				if ( it2 != clusterMap.end() ){//if the match is in the hash
 					if (it2->second<clusternum){
 						clusternum=it2->second;
@@ -204,11 +204,11 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 			if (clusternum==clusters.size()){
 				clusters.push_back(vector <int>());
 			}
-			for ( auto it=matches.begin(); it!=matches.end(); ++it){
-				auto it2 = clusterMap.find(*it);//check if the match is in the hash
+			for ( vector < int >::iterator it=matches.begin(); it!=matches.end(); ++it){
+				map < int, int >::iterator it2 = clusterMap.find(*it);//check if the match is in the hash
 				if ( it2 != clusterMap.end() ){//if the match is in the hash
 					if (it2->second!=clusternum){
-						for ( auto it3=clusters[it2->second].begin(); it3!=clusters[it2->second].end(); ++it3){
+						for ( vector < int >::iterator it3=clusters[it2->second].begin(); it3!=clusters[it2->second].end(); ++it3){
 							clusters[clusternum].push_back(*it3);
 						}
 						clusters[it2->second].clear();
@@ -221,26 +221,26 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 			}
 
 
-			for ( auto it2=clusters[clusternum].begin(); it2!=clusters[clusternum].end(); ++it2){
-				auto it3 = clusterMap.find(*it2);//check if the match is in the hash
+			for ( vector < int >::iterator it2=clusters[clusternum].begin(); it2!=clusters[clusternum].end(); ++it2){
+				map < int, int >::iterator it3 = clusterMap.find(*it2);//check if the match is in the hash
 				if ( it3 != clusterMap.end() ){
 					it3->second=clusternum;//segfault is on this line
 				}	
 			}
 
 		}
-		for ( auto it=clusterMap.begin(); it!=clusterMap.end(); ++it){
+		for ( map < int, int >::iterator it=clusterMap.begin(); it!=clusterMap.end(); ++it){
 			clusterout << sampleNames[it->first] << "\t" << it->second+1 << "\n";
 		}
 		clusterout.close();
 
 		int i=0;
-		for ( auto it=clusters.begin(); it!=clusters.end(); ++it){
+		for ( vector < vector < int > >::iterator it=clusters.begin(); it!=clusters.end(); ++it){
 			++i;
 			if (it->size()>1){
 				string clusterfilename=prefix+".cluster."+to_string(i)+".txt";
 				ofstream clusterout(clusterfilename);
-				for ( auto it2=it->begin(); it2!=it->end(); ++it2){
+				for ( vector < int >::iterator it2=it->begin(); it2!=it->end(); ++it2){
 					clusterout << sampleNames[*it2] << "\n";
 				}
 				clusterout.close();

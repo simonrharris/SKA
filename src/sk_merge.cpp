@@ -37,7 +37,7 @@ int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, con
 	getSubsample(sample, sampleNames, include);//get a vector of bools representing which samples to include based on a provided sample file. This also removed duplicate samples in the input files
 
 	vector < string > includedSampleNames;
-	for (auto it=include.begin(); it!=include.end(); ++it){//make a vector of all included sample names to help printing output files later
+	for (vector < bool >::iterator it=include.begin(); it!=include.end(); ++it){//make a vector of all included sample names to help printing output files later
 		if (*it){
 			includedSampleNames.push_back(sampleNames[distance(include.begin(), it)]);
 		}
@@ -111,7 +111,7 @@ int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, con
 			while (fileStream.peek()!='\n' && fileStream.read(kmerbuffer, sizeof(kmerbuffer))){
 				string kmer (kmerbuffer, (kmersize*2/3)+1);
 				
-				auto it = kmerMap.find(kmer);//check if the kmer is in the map
+				unordered_map < string, vector < bool > >::iterator it = kmerMap.find(kmer);//check if the kmer is in the map
 				if ( it != kmerMap.end() ){//if the kmer is in the map
 					for (int i=0; i<fileInclude.size(); ++i){
 						it->second[i+includedSampleNum]=mybits[fileInclude[i]];

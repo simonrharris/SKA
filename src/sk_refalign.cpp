@@ -2,15 +2,11 @@
 #include <set>
 #include <iostream>
 #include <fstream>
-#include <cassert>
-#include <algorithm>
-#include <zlib.h>
-#include <stdio.h>
+//#include <algorithm>
+//#include <stdio.h>
 #include <string>
-#include <tuple>
 #include <vector>
-#include <map>
-#include <cmath>       /* ceil */
+#include <cmath>       // ceil
 #include "kmers.hpp"
 #include "general.hpp"
 #include "DNA.hpp"
@@ -31,8 +27,8 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 	}
 	
 	// Create the kmer map
-	unordered_map<string, vector<int> > kmerMap;
-	set<int> revSet;
+	unordered_map < string, vector <int> > kmerMap;
+	set <int> revSet;
 	int substringlength=(kmerlen*2)+1;
 	int numseqs=0;
 	string filename=splitFileName(reference);
@@ -60,7 +56,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 
 	while (getline(gzfileStream, header)){
 		getline(gzfileStream, sequence, '>');
-		sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );
+		sequence.erase(remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );
 		transform(sequence.begin(), sequence.end(), sequence.begin(), ::toupper);//change all letters in the string to upper case
 
 		refseq.append(sequence);
@@ -71,7 +67,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 		
 		int i=0;
 		
-		for (auto iti = sequence.cbegin(), end = sequence.cend()-(substringlength-1); iti != end; ++iti, ++i){
+		for (string::iterator iti = sequence.begin(), end = sequence.end()-(substringlength-1); iti != end; ++iti, ++i){
 			string kmer=sequence.substr(i,substringlength);
 			
 			if (reverseComplementIfMin(kmer)){
@@ -80,13 +76,12 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 			extractMiddleBase(kmer, base);
 			ascii_codons(kmer);
 			
-			auto it = kmerMap.find(kmer);//check if the kmer is in the hash
+			unordered_map < string, vector <int> >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
 				it->second.push_back(basenum+i+kmerlen);//add the location of the match to the map
 			}
 			else {
-				auto ret = kmerMap.insert(make_pair(kmer, vector<int>()));
-				ret.first->second.push_back(basenum+i+kmerlen);
+				kmerMap.insert(make_pair(kmer, vector<int> {basenum+i+kmerlen}));
 			}
 		}
 		basenum+=sequence.length();
@@ -107,7 +102,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 	getSubsample(sample, sampleNames, include);//get a vector of bools representing which samples to include based on a provided sample file. This also removed duplicate samples in the input files
 
 	vector < string > includedSampleNames;
-	for (auto it=include.begin(); it!=include.end(); ++it){//make a vector off all included sample names to help printing output files later
+	for (vector < bool >::iterator it=include.begin(); it!=include.end(); ++it){//make a vector off all included sample names to help printing output files later
 		if (*it){
 			includedSampleNames.push_back(sampleNames[distance(include.begin(), it)]);
 		}
@@ -136,7 +131,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 		readKmerHeader(fileStream, kmersize, names);//read the header from the kmer file to get the kmer size and sample names
 		
 		if (kmersize!=kmerlen){
-			cerr << "\nkmer size in " << filename << " is not " << kmerlen << endl << endl;
+			cerr << endl << "kmer size in " << filename << " is not " << kmerlen << endl << endl;
 			return 1;
 		}
 
@@ -167,13 +162,12 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				string kmer (kmerbuffer, kmerlen*2/3);
-				auto it = kmerMap.find(kmer);//check if the kmer is in the hash
+				unordered_map < string, vector <int> >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					if (it->second.size()==1 || maprepeats){
-						for (auto itb = it->second.begin(); itb != it->second.end(); ++itb) {
-							auto itc = revSet.find(*itb);
+						for (vector < int >::iterator itb = it->second.begin(); itb != it->second.end(); ++itb) {
+							set < int >::iterator itc = revSet.find(*itb);
 							if ( itc != revSet.end() ){
-								//transform(base.begin(),base.end(),base.begin(),complement);
 								base=complement(base);
 							}
 							for (int j=0; j<fileInclude.size(); ++j){ //add the base to all samples that are true in the bitset
@@ -187,9 +181,6 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 											if (sequences[includedSampleNum+j][i]=='-'){
 												sequences[includedSampleNum+j][i]=tolower(refseq[i]);
 											}
-											/*else if ((sequences[sampleNum+j][i]=='a' || sequences[sampleNum+j][i]=='c' || sequences[sampleNum+j][i]=='g' ||sequences[sampleNum+j][i]=='t') && sequences[sampleNum+j][i]!=tolower(refseq[i])){
-												sequences[sampleNum+j][i]='n';
-											}*/
 										}
 									}
 								}
@@ -253,11 +244,11 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 		cout << "Printing alignment of " << sitestoprint.size() << " variant sites" << endl;
 
 		for (int i=0; i<includedSampleNames.size(); ++i){
-			alignfile << ">" << includedSampleNames[i] << endl;
+			string mySequence (sitestoprint.size(), '-');
 			for (int j=0; j<sitestoprint.size(); ++j){
-				alignfile << sequences[i][sitestoprint[j]];
+				mySequence[j]=sequences[i][sitestoprint[j]];
 			}
-			alignfile << endl;
+			alignfile << ">" << includedSampleNames[i] << endl << mySequence << endl;
 		}
 
 		cout << "Constant sites (a c g t):" << endl;
@@ -266,8 +257,7 @@ int alignKmersToReference(const string & reference, const string & outputfile, c
 	else{
 		cout << "Printing alignment" << endl;
 		for (int i=0; i<includedSampleNames.size(); ++i){
-			alignfile << ">" << includedSampleNames[i] << endl;
-			alignfile << sequences[i] << endl;
+			alignfile << ">" << includedSampleNames[i] << endl << sequences[i] << endl;
 		}
 	}
 

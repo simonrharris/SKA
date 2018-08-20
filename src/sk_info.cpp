@@ -1,54 +1,49 @@
 #include <string> //std::string
 #include <vector> //std::vector
 #include <iostream> //std::cout
-#include <fstream> //std::ofstream
-#include <math.h>
 #include "kmers.hpp"
 #include "general.hpp"
-#include "DNA.hpp"
 
-using namespace std;
+int getKmerFileInfo(const std::vector< std::string > & kmerfiles, const bool tabulated){
 
-int getKmerFileInfo(const vector<string> & kmerfiles, const bool tabulated){
-
-	vector < string > sampleNames;
+	std::vector < std::string > sampleNames;
 	int kmersize;
 	int namesPerLine=8;
-	ifstream fileStream;
+	std::ifstream fileStream;
 
 	if (tabulated){
-		cout << "File\tKmer size\t# samples\t# kmers\t# sample patterns" << endl;
+		std::cout << "File\tKmer size\t# samples\t# kmers\t# sample patterns" << endl;
 	}
 
-	for (int s = 0; s < kmerfiles.size(); ++s){
+	for (int s = 0; s < kmerfiles.size(); ++s){//for each input kmer or kmerge file
 		
-		if (tabulated){
-			cout << splitFileName(kmerfiles[s]);
+		if (tabulated){//print the file name
+			std::cout << splitFileName(kmerfiles[s]);
 		}
 		else {
-			cout << endl << splitFileName(kmerfiles[s]) << endl;
-			cout << string(kmerfiles[s].size(), '=') << endl;
+			std::cout << endl << splitFileName(kmerfiles[s]) << endl;
+			std::cout << std::string(kmerfiles[s].size(), '=') << endl;
 		}
 
-		if (openFileStream(kmerfiles[s], fileStream, false)){return 1;};
+		if (openFileStream(kmerfiles[s], fileStream, false)){return 1;};//open the file
 		
-		readKmerHeader(fileStream, kmersize, sampleNames);
+		readKmerHeader(fileStream, kmersize, sampleNames);//read the header to get the kmer size and sample names
 
-		if (tabulated){
-			cout << "\t" << kmersize << "\t" << sampleNames.size();
+		if (tabulated){//print the kmer size and sample information
+			std::cout << "\t" << kmersize << "\t" << sampleNames.size();
 		}
 		else {
-			cout << "Kmer size: " << kmersize << endl;
-			cout << "Number of samples: " << sampleNames.size() << endl;
-			cout << "Sample names:"<< endl;
+			std::cout << "Kmer size: " << kmersize << endl;
+			std::cout << "Number of samples: " << sampleNames.size() << endl;
+			std::cout << "Sample names:"<< endl;
 			int j=1;
-			for (int i=0; i<sampleNames.size(); ++i, ++j){
-				cout << sampleNames[i];
+			for (int i=0; i<sampleNames.size(); ++i, ++j){//print the sample names with namesPerLine sample names per line
+				std::cout << sampleNames[i];
 				if (i!=sampleNames.size()-1){
-					cout << ", ";
+					std::cout << ", ";
 				}
 				if (j==namesPerLine || i==sampleNames.size()-1){
-					cout << endl;
+					std::cout << endl;
 					j=0;
 				}
 			}
@@ -57,24 +52,24 @@ int getKmerFileInfo(const vector<string> & kmerfiles, const bool tabulated){
 		int kmercount=0;
 		int patterncount=0;
 		char kmerbuffer[(kmersize*2/3)+1];
-		char asciibuffer[int(ceil(float(sampleNames.size())/6))];
+		char asciibuffer[int(std::ceil(float(sampleNames.size())/6))];
 
-		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
-			patterncount++;
+		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the samples
+			patterncount++;//increment the number of patterns
 			while (fileStream.peek()!='\n' && fileStream.read(kmerbuffer, sizeof(kmerbuffer))){//read the kmers on the line
-				kmercount++;
+				kmercount++;//increment the number of kmers
 			}
 			fileStream.ignore(256,'\n');//skip the end ofline character
 		}
-		if (tabulated){
-			cout << "\t" << kmercount << "\t" << patterncount << endl;
+		if (tabulated){//print the number of kmers and patterns
+			std::cout << "\t" << kmercount << "\t" << patterncount << endl;
 		}
 		else {
-			cout << "Number of kmers: " << kmercount << endl;
-			cout << "Number of sample patterns: " << patterncount << endl << endl;
+			std::cout << "Number of kmers: " << kmercount << endl;
+			std::cout << "Number of sample patterns: " << patterncount << endl << endl;
 		}
-		sampleNames.clear();
-		fileStream.close();
+		sampleNames.clear();//clear the sample names vector
+		fileStream.close();//close the file
 	}
 	return 0;
 }

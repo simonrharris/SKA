@@ -81,7 +81,7 @@ int lowqualitytoN(string & mysequence,const string & myquality, const int & user
 
 int IUPACToN(string & mysequence){
 
-	for (auto it=mysequence.begin(); it!=mysequence.end(); ++it){
+	for (string::iterator it=mysequence.begin(); it!=mysequence.end(); ++it){
 		if (base_score[int(*it)]>4){
 			cout << "Unrecognised character " << *it << "in sequence" << endl;
 			return 1;

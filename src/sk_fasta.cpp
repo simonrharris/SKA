@@ -13,7 +13,7 @@
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
 using namespace std;
 
-int fastaToKmers(const vector<string> & fastas, const string & outfilename, const long & kmerlen)
+int fastaToKmers(const vector <string> & fastas, const string & outfilename, const long & kmerlen)
 {
 
 	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
@@ -28,7 +28,7 @@ int fastaToKmers(const vector<string> & fastas, const string & outfilename, cons
 	string header;
 	char base;
 
-	for (auto fastait=fastas.begin(); fastait!=fastas.end(); ++fastait){//for each fasta file
+	for (vector <string>::const_iterator fastait=fastas.begin(); fastait!=fastas.end(); ++fastait){//for each fasta file
 		
 		string filename=*fastait;
 
