@@ -36,7 +36,7 @@ int mergeKmerFiles(const std::string & outfile, const std::vector < std::string 
 	}
 
 	//int numSamples=sampleNames.size();
-	int numSamples = count(include.begin(), include.end(), true);
+	int numSamples = std::count(include.begin(), include.end(), true);
 
 	std::vector < std::string > fileSampleNames;
 
