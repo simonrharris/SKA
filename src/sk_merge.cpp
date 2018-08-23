@@ -3,7 +3,7 @@
 #include <fstream> //std::ofstream std::ifstream
 #include <string> //std::string
 #include <vector> //std::vector
-#include <math.h> //std::ceil
+#include <cmath>  //std::ceil
 #include <chrono> //std::chrono
 #include "general.hpp"
 #include "kmers.hpp"
