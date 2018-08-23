@@ -5,6 +5,7 @@
 #include <vector> //std::vector
 #include <cmath>  //std::ceil
 #include <chrono> //std::chrono
+#include <algorithm> //std::count
 #include "general.hpp"
 #include "kmers.hpp"
 
