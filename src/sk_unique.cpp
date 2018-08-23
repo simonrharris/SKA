@@ -5,6 +5,8 @@
 #include <vector> //std::vector
 #include <set> //std::set
 #include <chrono> //std::chrono
+#include <cmath>  //std::ceil
+#include <algorithm> //std::count
 #include "kmers.hpp"
 #include "general.hpp"
 
@@ -77,7 +79,7 @@ int uniqueKmers(const std::vector < std::string > & ingroupsamples, const std::v
 
 		char basebuffer[1];
 		char kmerbuffer[(kmersize*2/3)+1];
-		char asciibuffer[int(ceil(float(fileSampleNames.size())/6))];
+		char asciibuffer[int(std::ceil(float(fileSampleNames.size())/6))];
 
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
 			std::string asciibits (asciibuffer, sizeof(asciibuffer));
@@ -116,7 +118,7 @@ int uniqueKmers(const std::vector < std::string > & ingroupsamples, const std::v
 	std::unordered_map < std::vector < bool >,  std::vector < std::string > > revKmerMap;
 
 	for (; it!=endIter; ){
-		int allcount=count(it->second.begin(), it->second.end(), true);
+		int allcount=std::count(it->second.begin(), it->second.end(), true);
 		int ingroupcount=0;
 
 		for (std::vector < int >::iterator it2=ingroupSamplePositions.begin(); it2!=ingroupSamplePositions.end(); ++it2){
