@@ -12,43 +12,41 @@
 #include "gzstream.h"
 #include "DNA.hpp"
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
-using namespace std;
 
 
-int fastqToKmers(const vector<string> & fastqs, const string & outfilename, const int & kmerlen, const int & userminquality, const int & userfilecutoff, const int & usercovcutoff, const float & userminmaf)
+int fastqToKmers(const std::vector < std::string > & fastqs, const std::string & outfilename, const int & kmerlen, const int & userminquality, const int & userfilecutoff, const int & usercovcutoff, const float & userminmaf)
 {
 
-	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
+	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();//start the clock
 	
-	unordered_map <string, array < int, 8 > > kmerMap;//create a map to store the kmers for each base
+	std::unordered_map < std::string, std::array < int, 8 > > kmerMap;//create a map to store the kmers for each base
 	int substringlength=(kmerlen*2)+1;
 	int numseqs=0;
 	int numbases=0;
 	int numreadbases=0;
 
-	string sequence;
+	std::string sequence;
 	sequence.reserve(500);
-	string quality;
+	std::string quality;
 	quality.reserve(500);
-	string subsequence;
+	std::string subsequence;
 	subsequence.reserve(500);
-	string kmer;
+	std::string kmer;
 	kmer.reserve((kmerlen*2)+1);
 	char base;
 	bool isFirst=true;
 
 	for (int s = 0; s < fastqs.size(); ++s){
 		
-		cout << "Reading " << fastqs[s] << endl;
+		std::cout << "Reading " << fastqs[s] << std::endl;
 		igzstream gzfileStream;
 		gzfileStream.open(fastqs[s].c_str());//open the fastq file
 		if (gzfileStream.fail()){
-			cerr << endl << "Error: Failed to open " << fastqs[s] << endl << endl;
+			std::cerr << std::endl << "Error: Failed to open " << fastqs[s] << std::endl << std::endl;
 			return 1;
 		}
-		
 
-		while (true){
+		while (gzfileStream.peek()!=EOF){
 			if (readNextFastqSequence(gzfileStream, fastqs[s], sequence, quality)){return 1;};//read the next fastq sequence
 
 			numseqs++;
@@ -56,16 +54,14 @@ int fastqToKmers(const vector<string> & fastqs, const string & outfilename, cons
 
 			lowqualitytoN(sequence, quality, userminquality);
 			
-			stringstream sequencestream;
+			std::stringstream sequencestream;
 			sequencestream << sequence;//convert the sequence to stringstream
 			
-			while (getline(sequencestream, subsequence, 'N')){//for each subsequence separated by Ns
+			while (std::getline(sequencestream, subsequence, 'N')){//for each subsequence separated by Ns
 				
 				if (subsequence.length()<substringlength){//if the subsequence is too small then continue
 					continue;
 				}
-				
-				transform(subsequence.begin(), subsequence.end(), subsequence.begin(), ::toupper);//change all letters in the string to upper case	
 				
 				int i=0;
 				
@@ -82,17 +78,14 @@ int fastqToKmers(const vector<string> & fastqs, const string & outfilename, cons
 				}
 				numbases+=i;
 			}
-			if (gzfileStream.peek()==EOF){
-				break;
-			}
     	}
 		gzfileStream.close();//close the file
 		isFirst=false;
 
-		cout << "Added " << numbases << " kmers from " << numseqs << " sequences" << endl;
-		cout << kmerMap.size() << " unique kmers in map" << endl;
+		std::cout << "Added " << numbases << " kmers from " << numseqs << " sequences" << std::endl;
+		std::cout << kmerMap.size() << " unique kmers in map" << std::endl;
 
-		int ret = applyFileKmerArrayMapFilters(kmerMap, userfilecutoff, userminmaf);//Filter file kmers to remove those below the maf and file cov cutoff thresholds
+		applyFileKmerArrayMapFilters(kmerMap, userfilecutoff, userminmaf);//Filter file kmers to remove those below the maf and file cov cutoff thresholds
 		
 	}
 

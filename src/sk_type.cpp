@@ -8,29 +8,30 @@
 #include <sstream> //std::stringstream
 #include <set> //std::set
 #include <algorithm> //std::transform
+#include <utility> //std::pair
 #include "kmers.hpp"
 #include "general.hpp"
 #include "DNA.hpp"
 #include "gzstream.h"
 #include "float.h"
 
-
-bool AlmostEqualRelative(float A, float B,
-                         float maxRelDiff = FLT_EPSILON)
-{
-    // Calculate the difference.
-    float diff = fabs(A - B);
-    A = fabs(A);
-    B = fabs(B);
-    // Find the largest
-    float largest = (B > A) ? B : A;
- 
-    if (diff <= largest * maxRelDiff){
-        return true;
-    }
-    else { 
-    	return false;
-    }
+void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmerMap, const std::string & myKmer, const char myBase, const std::vector < bool > & myBits, const int numSamples){
+	std::unordered_map < std::string, std::string >::iterator kmit = myKmerMap.find(myKmer);//check if the kmer is in the map
+	if ( kmit != myKmerMap.end() ){//if the kmer is in the map
+		for (int i=0; i<myBits.size(); ++i){
+			if (myBits[i]){
+				kmit->second[i]=myBase;
+			}
+		}
+	}
+	else {//if the kmer isn't in the map
+		std::pair < std::unordered_map < std::string, std::string >::iterator, bool > ret = myKmerMap.insert(std::make_pair(myKmer, std::string (numSamples,'-')));
+		for (int i=0; i<myBits.size(); ++i){
+			if (myBits[i]){
+				ret.first->second[i]=myBase;
+			}
+		}
+	}
 }
 
 //int main(int argc, char *argv[])
@@ -63,41 +64,23 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 		std::vector < bool > mybits;
 		vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
 		while (fileStream.peek()!='\n' && fileStream.get(base)){
-			base=std::toupper(base);
+			//base=std::toupper(base);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 			std::string kmer (kmerbuffer, querykmersize*2/3);
 
-			std::unordered_map < std::string, std::string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
-			if ( it != kmerMap.end() ){//if the kmer is in the hash
-				for (int i=0; i<mybits.size(); ++i){
-					if (mybits[i]){
-						it->second[i]=base;
-					}
-				}
-			}
-			else {
-				std::pair < std::unordered_map < std::string, std::string >::iterator, bool > ret = kmerMap.insert(std::make_pair(kmer, std::string (querySampleNames.size(),'-')));
-				for (int i=0; i<mybits.size(); ++i){
-					if (mybits[i]){
-						ret.first->second[i]=base;
-					}
-				}
-			}
+			addKmerToStringMap(kmerMap, kmer, base, mybits, querySampleNames.size());
+
     	}
     	fileStream.ignore(256,'\n');//skip the end ofline character
     }
 	fileStream.close();
 
-
-	//cout << "Best matching alleles:"<< endl;
-
 	std::string header;
-	std::string sequence;
+	
 	int substringlength=(querykmersize*2)+1;
 
 	for (int s = 0; s < subjectfiles.size(); ++s){
 
-		int numAlleles=0;
 		std::vector < std::string > alleleNames;
 		std::vector < float > bestid (querySampleNames.size(), 0);
 		std::vector < int > Ncount (querySampleNames.size(), 0);
@@ -106,54 +89,27 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 		std::vector < std::string > bestSequences (querySampleNames.size());
 
 		igzstream gzfileStream;
-		gzfileStream.open(subjectfiles[s].c_str());
-		if (gzfileStream.fail()) {
-			cout << "Failed to open " << subjectfiles[s] << endl << endl;
-			return 1;
-		}
-
-		if (gzfileStream.get()!='>'){
-			std::cerr << endl << "Error: " << subjectfiles[s] << " is not in the correct format. Expecting header to start with >." << endl << endl;
-			return 1;
-		}
-
-		while (std::getline(gzfileStream, header)){
-			std::getline(gzfileStream, sequence, '>');
-			numAlleles++;
-		}
- 		gzfileStream.close();//annoyingly have to close and reopen the file as seek/rewind aren't implemented for gzstream
 
 		int alleleNumber=0;
 
-		gzfileStream.clear();
-		gzfileStream.open(subjectfiles[s].c_str());
+		if(openGzFileStream(subjectfiles[s], gzfileStream)){return 1;}
 
-		if (gzfileStream.get()!='>'){
-			std::cerr << endl << "Error: " << subjectfiles[s] << " is not in the correct format. Expecting header to start with >." << endl << endl;
-			continue;
-		}
-
-		while (std::getline(gzfileStream, header)){
-
-			std::stringstream headerstream;
-			headerstream << header;//convert the sequence to stringstream
+		while (gzfileStream.peek()!=EOF){
 
 			std::string alleleName;
-			std::getline(headerstream, alleleName, ' ');
+			std::string sequence;
+			sequence.reserve(10000);
+
+			if(readNextFastaSequence(gzfileStream, subjectfiles[s], alleleName, sequence)){return 1;}
+
 			alleleNames.push_back(alleleName);
-		
-			std::getline(gzfileStream, sequence, '>');
 
-			sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );
-
-			std::vector < std::string > alleleSequence ( querySampleNames.size() , string ( sequence.length() , '-' ) );
-			std::vector < std::vector < bool > > alleleCoverage ( querySampleNames.size() , vector < bool > ( sequence.length() , false ) );
+			std::vector < std::string > alleleSequence ( querySampleNames.size() , std::string ( sequence.length() , '-' ) );
+			std::vector < std::vector < bool > > alleleCoverage ( querySampleNames.size() , std::vector < bool > ( sequence.length() , false ) );
 				
 			if (sequence.length()<substringlength){
 				continue;
 			}
-			
-			std::transform(sequence.begin(), sequence.end(), sequence.begin(), ::toupper);//change all letters in the string to upper case
 			
 			int i=0;
 
@@ -163,7 +119,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 				
 				bool isrev=reverseComplementIfMin(kmer);
 				extractMiddleBase(kmer, base);
-				ascii_codons(kmer);
+				if(ascii_codons(kmer)){return 1;}
 				
 				std::unordered_map < std::string, std::string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				
@@ -185,11 +141,11 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 										alleleSequence[k][j]=querybase;
 									}
 									else if (querybase==base){
-										//cout << "HERE" << endl;
+										//cout << "HERE" << std::endl;
 										alleleSequence[k][j]=base;
 									}
 									else if (alleleSequence[k][j]!=base){
-										//cout << querybase << " " << alleleSequence[k][j] << " " << base << endl;
+										//cout << querybase << " " << alleleSequence[k][j] << " " << base << std::endl;
 										alleleSequence[k][j]='N';
 									}
 								}
@@ -221,14 +177,13 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
     				}
     			}
     			float sampleid=(Ns+matches)/sequence.length();
-    			//cout  << alleleNumber << " " << sequence.length() << " " << matches << " " << sampleid << " " << Ns << " " << gaps << endl;
+    			//cout  << alleleNumber << " " << sequence.length() << " " << matches << " " << sampleid << " " << Ns << " " << gaps << std::endl;
 				if (sampleid>bestid[k]){
 					bestMatches[k].clear();
 					bestid[k]=sampleid;
 					Ncount[k]=Ns;
 					gapcount[k]=gaps;
 				}
-				//if (sampleid>0 && AlmostEqualRelative(sampleid, bestid[k])){
 				if (sampleid>0 && sampleid==bestid[k]){
 					bestMatches[k].push_back(alleleNumber);
 					bestSequences[k]=alleleSequence[k];
@@ -247,8 +202,8 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 			//cout << querySampleNames[k];
 	 		for (std::vector < int >::iterator it=bestMatches[k].begin(); it!=bestMatches[k].end(); ++it){
 	 			//cout << "\t" << alleleNames[*it];
-				string::size_type found=alleleNames[*it].find_last_of("_");
-				if (found!=string::npos){
+				std::string::size_type found=alleleNames[*it].find_last_of("_");
+				if (found!=std::string::npos){
 					locus=alleleNames[*it].substr(0,found);
 					allele=stoi(alleleNames[*it].substr(found+1));
 				}
@@ -275,13 +230,13 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 					hasgaps[k].insert(locus);
 				}
 				std::ofstream alignfile(querySampleNames[k]+"_"+locus+".fa");
-				alignfile << ">" << querySampleNames[k] << "_" << locus << endl;
-				alignfile << bestSequences[k] << endl;
+				alignfile << ">" << querySampleNames[k] << "_" << locus << std::endl;
+				alignfile << bestSequences[k] << std::endl;
 				alignfile.close();
 			}
-			/*cout << ">" << querySampleNames[k] << "_" << locus << endl;
-			cout << bestSequences[k] << endl;*/
-			//cout << "\t" << bestid[k] << "\t" << Ncount[k] << "\t" << gapcount[k] << endl;
+			/*cout << ">" << querySampleNames[k] << "_" << locus << std::endl;
+			cout << bestSequences[k] << std::endl;*/
+			//cout << "\t" << bestid[k] << "\t" << Ncount[k] << "\t" << gapcount[k] << std::endl;
 		}
 	}
 
@@ -325,14 +280,14 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 		}
 
 		if (alleles.size()!=profileMap[0].size()){
-			std::cerr << "the alleles in your profile file don't match those in your input files" << endl << endl;
+			std::cerr << "Error: Found " << alleles.size() << " alleles in your allele file and " << profileMap[0].size() << " alleles in your profile file" << std::endl << std::endl;
 			return 1;
 		}
 
 		for (std::map < std::string, int >::iterator it=alleles.begin(); it!=alleles.end(); ++it){
 			std::unordered_map < std::string, std::vector < int > >::iterator it2 = profileMap[0].find(it->first);//check if the kmer is in the hash
 			if ( it2 == profileMap[0].end() ){//if the kmer is not in the hash
-				std::cerr << "the alleles in your profile file don't match those in your input files" << endl << endl;
+				std::cerr << "Error: Cannot find " << it->first << " in your profiles file" << std::endl << std::endl;
 				return 1;
 			}
 		}
@@ -341,7 +296,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 		for (std::map < std::string, int >::iterator it=alleles.begin(); it!=alleles.end(); ++it){
 			std::cout << it->first << "\t";
 		}
-		std::cout << "ST" << endl;
+		std::cout << "ST" << std::endl;
 
 		std::string line;
 		int linenumber=0;
@@ -357,7 +312,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 			}
 
 			if (words.size()<maxallelecolumn){
-				std::cerr << "Malformed profile file on line " << linenumber << ". Expecting at least " << maxallelecolumn << " columns and found " << words.size() << endl << endl;
+				std::cerr << "Malformed profile file on line " << linenumber << ". Expecting at least " << maxallelecolumn << " columns and found " << words.size() << std::endl << std::endl;
 				return 1;
 			}
 
@@ -421,10 +376,10 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 				}
 			}
 			if (profileMap[k]["ST"].size()==1){
-				std::cout << profileMap[k]["ST"][0] << endl;
+				std::cout << profileMap[k]["ST"][0] << std::endl;
 			}
 			else {
-				std::cout << "-" << endl;
+				std::cout << "-" << std::endl;
 			}
 		}
 
@@ -434,14 +389,14 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 		for (int k=0; k<querySampleNames.size(); ++k){
 			for (std::unordered_map < std::string, std::vector < int > >::iterator it=profileMap[k].begin(); it!=profileMap[k].end(); ++it){
 				allLoci.insert(it->first);
-				//cout << it->first << endl;
+				//cout << it->first << std::endl;
 			}
 		}
 		std::cout << "Sample";
 		for (std::set < std::string >::iterator it=allLoci.begin(); it!=allLoci.end(); ++it){
 			std::cout << "\t" << *it;
 		}
-		std::cout << endl;
+		std::cout << std::endl;
 		for (int k=0; k<querySampleNames.size(); ++k){
 			std::cout << querySampleNames[k] << "\t";
 			for (std::set < std::string >::iterator it=allLoci.begin(); it!=allLoci.end(); ++it){
@@ -472,7 +427,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 					std::cout << profileMap[k][*it][profileMap[k][*it].size()-1] << suffix << "\t";
 				}
 			}
-			std::cout << endl;
+			std::cout << std::endl;
 		}
 	}
 

@@ -5,7 +5,6 @@
 #include <string> //std::string
 #include <vector> //std::vector
 
-//using namespace std;
-
+void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmerMap, const std::string & myKmer, const char myBase, const std::vector < bool > & myBits, const int numSamples);
 
 int typeKmerFile(const std::string & queryfile, const std::string & profileFile, const std::vector< std::string > & subjectfiles);

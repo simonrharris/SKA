@@ -5,6 +5,4 @@
 #include <string> //std::string
 #include <vector> //std::vector
 
-using namespace std;
-
-int compareKmerFiles(const string & queryfile, const vector<string> & subjectfiles);
+int compareKmerFiles(const std::string & queryfile, const std::vector < std::string > & subjectfiles);

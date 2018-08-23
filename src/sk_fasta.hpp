@@ -5,6 +5,4 @@
 #include <string> //std::string
 #include <vector> //std::vector
 
-using namespace std;
-
-int fastaToKmers(const vector<string> & fastas, const string & outfilename, const long & kmerlen);
+int fastaToKmers(const std::vector < std::string > & fastas, const std::string & outfilename, const long & kmerlen);

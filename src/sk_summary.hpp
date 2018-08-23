@@ -5,6 +5,4 @@
 #include <string> //std::string
 #include <vector> //std::vector
 
-using namespace std;
-
-int summariseKmerFiles(const vector<string> & kmerfiles);
+int summariseKmerFiles(const std::vector < std::string > & kmerfiles);

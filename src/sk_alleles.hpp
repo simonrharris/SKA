@@ -4,7 +4,10 @@
 
 #include <string> //std::string
 #include <vector> //std::vector
+#include <unordered_map> //std::unordered_map
 
-using namespace std;
+int reverseKmerMap(std::unordered_map < std::string, std::string > & myKmerMap, std::unordered_map < std::vector < bool >, std::vector < std::string > > & myRevKmerMap, const int alleleCount);
 
-int allelesToKmers(const vector<string> & alleles, const long & kmerlen);
+void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmerMap, const std::string & myKmer, const char myBase, const int alleleNumber, const int alleleCount);
+
+int allelesToKmers(const std::vector< std::string > & alleles, const long & kmerlen);

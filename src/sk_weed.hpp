@@ -4,6 +4,4 @@
 
 #include <string> //std::string
 
-using namespace std;
-
-int weedKmers(const vector<string> & weedfiles, const string & kmerfile);
+int weedKmers(const std::vector < std::string > & weedfiles, const std::string & kmerfile);

@@ -1,54 +1,64 @@
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <chrono> //timing
-using namespace std;
+#include <string> //std::string
+#include <fstream> //std::ifstream
+#include <iostream> //std::cout std::cerr
+#include <sstream> //std::stringstream
+#include <vector> //std::vector
+#include <chrono> //std::chrono
+#include "gzstream.h"
 
-
-string splitFileName(const string & str){
-	string filename=str;
-	string path="";
-	string::size_type found=filename.find_last_of("/\\");
-	if (found!=string::npos){
+std::string splitFileName(const std::string & str){
+	std::string filename=str;
+	std::string path="";
+	std::string::size_type found=filename.find_last_of("/\\");
+	if (found!=std::string::npos){
 		path=str.substr(0,found);
 		filename=str.substr(found+1);
 	}
 	return filename;
 }
 
-int openFileStream(const string & fileName, ifstream & fileStream, bool verbose){
+int openFileStream(const std::string & fileName, std::ifstream & fileStream, bool verbose){
 
-	if (fileStream.is_open()){
-		fileStream.close();
-		fileStream.clear();
-	}
+	fileStream.close();
+	fileStream.clear();
 
 	if (verbose){
-		cout << "Reading " << fileName << endl;
+		std::cout << "Reading " << fileName << std::endl;
 	}
 
-	fileStream.open(fileName, ios::in);
+	fileStream.open(fileName, std::ios::in);
 	if (fileStream.fail()) {
-		cerr << "Failed to open " << fileName << endl << endl;
+		std::cerr << "Failed to open " << fileName << std::endl << std::endl;
 		return 1;
 	}
-	else{
-		return 0;
-	}
+	return 0;
+	
 }
 
-int fileToVector(const string & filename, vector <string> & fileargs){
-	ifstream fileStream;
-	fileStream.open(filename, ios::in);
-	if (fileStream.fail()) {
-		cerr << "Failed to open " << filename << endl << endl;
+int openGzFileStream(const std::string & fileName, igzstream & gzFileStream, bool verbose){
+
+	gzFileStream.close();
+	gzFileStream.clear();
+
+	gzFileStream.open(fileName.c_str());
+	if (gzFileStream.fail()) {
+		std::cerr << "Failed to open " << fileName << std::endl << std::endl;
 		return 1;
 	}
-	string word;
+	return 0;
+}
+
+int fileToVector(const std::string & filename, std::vector < std::string > & fileargs){
+	std::ifstream fileStream;
+	fileStream.open(filename, std::ios::in);
+	if (fileStream.fail()) {
+		std::cerr << "Failed to open " << filename << std::endl << std::endl;
+		return 1;
+	}
+	std::string word;
 	while (fileStream >> word){
 		if (word.length()>500){
-			cerr << "Names > 500 characters are not allowed" << endl;
+			std::cerr << "Names > 500 characters are not allowed" << std::endl;
 			return 1;
 		}
 		else if (word.length()>0){
@@ -58,9 +68,9 @@ int fileToVector(const string & filename, vector <string> & fileargs){
 	return 0;
 }
 
-void printDuration(const chrono::high_resolution_clock::time_point start){
-	chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
-	chrono::duration<double> elapsed = finish - start;
-	cout << "Done" << endl;
-	cout << "Total time required: " << elapsed.count() << "s" << endl;
+void printDuration(const std::chrono::high_resolution_clock::time_point start){
+	std::chrono::high_resolution_clock::time_point finish = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> elapsed = finish - start;
+	std::cout << "Done" << std::endl;
+	std::cout << "Total time required: " << elapsed.count() << "s" << std::endl;
 }

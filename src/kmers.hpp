@@ -6,36 +6,34 @@
 #include <string> //std::string
 #include <array> //std::array
 
-using namespace std;
-
 extern char complement_table[128];
 
 extern char base_score[128];
 
 extern char bases[4];
 
-void ascii_bitstring(string & mybits);
+void ascii_bitstring(std::string & mybits);
 
-void vectorbool_from_ascii(string & myascii, vector < bool > & mybits);
+void vectorbool_from_ascii(std::string & myascii, std::vector < bool > & mybits);
 
-int extractMiddleBase(string & kmer, char & myChar);
+int extractMiddleBase(std::string & kmer, char & myChar);
 
-int lowqualitytoN(string & mysequence,const string & myquality, int & minquality);
+int lowqualitytoN(std::string & mysequence,const std::string & myquality, int & minquality);
 
-int printKmerFile(const unordered_map < string, array < int, 8 > > & mymap, const string outputfile, const int kmersize);
+int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > > & mymap, const std::string outputfile, const int kmersize);
 
-int printMergedKmerFile(const unordered_map < vector < bool >, vector < string > > & mymap, const string outfileprefix, const vector < string > & mysamples, const int kmersize);
+int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::vector < std::string > > & mymap, const std::string outfileprefix, const std::vector < std::string > & mysamples, const int kmersize);
 
-int readKmerHeader(ifstream & fileStream, int & kmersize, vector < string > & names);
+int readKmerHeader(std::ifstream & fileStream, int & kmersize, std::vector < std::string > & names);
 
-int collectSampleNames(const vector < string > & files, vector < string > & names);
+int collectSampleNames(const std::vector < std::string > & files, std::vector < std::string > & names);
 
-int getSubsample(const vector < string > & sample, const vector < string > & names, vector < bool > & include);
+int getSubsample(const std::vector < std::string > & sample, const std::vector < std::string > & names, std::vector < bool > & include);
 
-void addKmerToBaseArrayMap(unordered_map <string, array < int, 8 > > & kmerMap, const string & kmer, const char base, const bool firstFile);
+void addKmerToBaseArrayMap(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const std::string & kmer, const char base, const bool firstFile);
 
-int applyFileKmerArrayMapFilters(unordered_map <string, array < int, 8 > > & kmerMap, const int & userfilecutoff, const float & userminmaf);
+void applyFileKmerArrayMapFilters(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const int & userfilecutoff, const float & userminmaf);
 
-int applyFinalKmerArrayMapFilters(unordered_map <string, array < int, 8 > > & kmerMap, const int & usercovcutoff, const float & userminmaf);
+void applyFinalKmerArrayMapFilters(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const int & usercovcutoff, const float & userminmaf);
 
-void reverseVectorBoolKmerMap(unordered_map < string, vector < bool > > & kmerMap, unordered_map < vector < bool >,  vector < string > > & revKmerMap);
+void reverseVectorBoolKmerMap(std::unordered_map < std::string, std::vector < bool > > & kmerMap, std::unordered_map < std::vector < bool >,  std::vector < std::string > > & revKmerMap);

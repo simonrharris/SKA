@@ -5,6 +5,4 @@
 #include <string> //std::string
 #include <vector> //std::vector
 
-using namespace std;
-
-int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, const vector <string> & sample);
+int mergeKmerFiles(const std::string & outfile, const std::vector < std::string > & kmerfiles, const std::vector < std::string > & sample);

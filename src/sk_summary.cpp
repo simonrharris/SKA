@@ -1,74 +1,67 @@
-#include <iostream>
-#include <fstream>
-#include <string>
+#include <iostream> //std::cout std::cerr
+#include <fstream> //std::istream
+#include <string> //std::string
 #include <vector> //std::vector
-#include <map>
-#include <cmath>       /* ceil */
+#include <map> //std::map
+#include <cmath> //std::ceil
 #include "kmers.hpp"
 #include "general.hpp"
-using namespace std;
 
-
-int summariseKmerFiles(const vector<string> & kmerfiles)
+int summariseKmerFiles(const std::vector < std::string > & kmerfiles)
 {
 	int kmersize;
-	vector < string > fileSampleNames;
-	ifstream fileStream;
+	std::vector < std::string > fileSampleNames;
+	std::ifstream fileStream;
 	
-	cout << "Sample\tKmer size\tTotal kmers\tAs\tCs\tGs\tTs\tNs\tOthers\tGC Content\n";
+	std::cout << "Sample\tKmer size\tTotal kmers\tAs\tCs\tGs\tTs\tNs\tOthers\tGC Content" << std::endl;
 	for (int s = 0; s < kmerfiles.size(); ++s){
 		
 		if (openFileStream(kmerfiles[s], fileStream, false)){return 1;};
 		
 		readKmerHeader(fileStream, kmersize, fileSampleNames);
 
-		map < char, vector < int > > basecounts;
+		std::map < char, std::vector < int > > basecounts{ {'A', std::vector < int > (fileSampleNames.size(), 0)}, {'C', std::vector < int > (fileSampleNames.size(), 0)}, {'G', std::vector < int > (fileSampleNames.size(), 0)}, {'T', std::vector < int > (fileSampleNames.size(), 0)}, {'N', std::vector < int > (fileSampleNames.size(), 0)}, {'O', std::vector < int > (fileSampleNames.size(), 0)}};
 
-		vector < char > bases {'A', 'C', 'G', 'T', 'N', 'O'};
-
-		for (vector<char>::iterator it=bases.begin(); it!=bases.end(); ++it){
-			basecounts.insert(make_pair(*it, vector < int > (fileSampleNames.size(), 0)));
-		}
-
-		vector < int > kmers(fileSampleNames.size(), 0);
+		std::vector < int > kmers(fileSampleNames.size(), 0);
 		
 		char base;
 		char kmerbuffer[kmersize*2/3];
 		char asciibuffer[int(ceil(float(fileSampleNames.size())/6))];
+
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
-			string asciibits (asciibuffer, sizeof(asciibuffer));
-			vector < bool > mybits;
+			std::string asciibits (asciibuffer, sizeof(asciibuffer));
+			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a vector of bools
 
 			while (fileStream.peek()!='\n' && fileStream.get(base)){
 				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
-				string kmer (kmerbuffer, kmersize*2/3);
+				std::string kmer (kmerbuffer, kmersize*2/3);
 				
 				for (int i=0; i<fileSampleNames.size(); ++i){ //add the kmer count to all samples that are true in the bitset
-						if (mybits[i]==1){
-							kmers[i]++;
-							map < char, vector < int > >::iterator it = basecounts.find(base);//check if the kmer is in the map
-							if ( it != basecounts.end() ){//if the kmer is in the map
-								it->second[i]++;//increment the count for the base
-							}
-							else {//if the kmer isn't in the map
-								basecounts['O'][i]++;//increment the count for other
-							}
+					if (mybits[i]==1){
+						kmers[i]++;
+						std::map < char, std::vector < int > >::iterator it = basecounts.find(base);//check if the kmer is in the map
+						if ( it != basecounts.end() ){//if the kmer is in the map
+							it->second[i]++;//increment the count for the base
+						}
+						else {//if the kmer isn't in the map
+							basecounts['O'][i]++;//increment the count for other
 						}
 					}
+				}
 			}
 			fileStream.ignore(256,'\n');//skip the end ofline character
     	}
 		fileStream.close();
 		
 		for (int i=0; i<fileSampleNames.size(); ++i){ //print the results	
-			cout << fileSampleNames[i] << "\t" << kmersize << "\t" << kmers[i] << "\t";
-			for (vector<char>::iterator it=bases.begin(); it!=bases.end(); ++it){
-				cout << basecounts[*it][i] << "\t";
+			std::cout << fileSampleNames[i] << "\t" << kmersize << "\t" << kmers[i] << "\t";
+			for (std::map < char, std::vector < int > >::iterator it=basecounts.begin(); it!=basecounts.end(); ++it){
+				std::cout << it->second[i] << "\t";
 			}
 			float gccontent=(float(basecounts['C'][i])+float(basecounts['G'][i]))/(float(basecounts['A'][i])+float(basecounts['C'][i])+float(basecounts['G'][i])+float(basecounts['T'][i]));
-			cout << gccontent << endl;
+			std::cout << gccontent << std::endl;
 		}
     	fileSampleNames.clear();
 	}

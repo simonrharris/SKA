@@ -1,43 +1,35 @@
-//g++ -O3 -std=c++0x splitkmer.cpp -lz -o splitkmer
-#include <unordered_map>
-#include <map>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <set>
-#include <vector>
-#include <math.h>
-#include <algorithm>
+#include <unordered_map> //std::unordered_map
+#include <iostream> //std::cout std::cerr
+#include <fstream> //std::ofstream std::ifstream
+#include <string> //std::string
+#include <vector> //std::vector
+#include <math.h> //std::ceil
+#include <chrono> //std::chrono
 #include "general.hpp"
 #include "kmers.hpp"
-#include "DNA.hpp"
-#include <chrono> //timing
-using namespace std;
 
 
-//int main(int argc, char *argv[])
-int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, const vector <string> & sample)
+int mergeKmerFiles(const std::string & outfile, const std::vector < std::string > & kmerfiles, const std::vector < std::string > & sample)
 {
 
-	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
+	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();//start the clock
 
 	int numfiles=kmerfiles.size();
 	
 	// Create the kmer map
-	unordered_map < string, vector < bool > > kmerMap;
+	std::unordered_map < std::string, std::vector < bool > > kmerMap;
 	
-	vector< int > kmerCounts;
+	std::vector< int > kmerCounts;
 	int kmersize=0;
-	vector < string > sampleNames;
+	std::vector < std::string > sampleNames;
 
 	if (collectSampleNames(kmerfiles, sampleNames)!=0){return 1;}
 
-	vector < bool > include (sampleNames.size());
+	std::vector < bool > include (sampleNames.size());
 	getSubsample(sample, sampleNames, include);//get a vector of bools representing which samples to include based on a provided sample file. This also removed duplicate samples in the input files
 
-	vector < string > includedSampleNames;
-	for (vector < bool >::iterator it=include.begin(); it!=include.end(); ++it){//make a vector of all included sample names to help printing output files later
+	std::vector < std::string > includedSampleNames;
+	for (std::vector < bool >::iterator it=include.begin(); it!=include.end(); ++it){//make a vector of all included sample names to help printing output files later
 		if (*it){
 			includedSampleNames.push_back(sampleNames[distance(include.begin(), it)]);
 		}
@@ -46,11 +38,11 @@ int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, con
 	//int numSamples=sampleNames.size();
 	int numSamples = count(include.begin(), include.end(), true);
 
-	vector < string > fileSampleNames;
+	std::vector < std::string > fileSampleNames;
 
 	int sampleNum=0;
 	int includedSampleNum=0;
-	ifstream fileStream;
+	std::ifstream fileStream;
 
 	for (int s = 0; s < kmerfiles.size(); ++s){
 
@@ -65,11 +57,11 @@ int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, con
 		}
 
 		if (newkmersize!=kmersize){
-			cout << "kmer files have different kmer sizes" << endl << endl;
+			std::cout << "kmer files have different kmer sizes" << std::endl << std::endl;
 			return 0;
 		}
 
-		vector < int > fileInclude;
+		std::vector < int > fileInclude;
 
 		for (int i=0; i<fileSampleNames.size(); ++i){ //put the index of all sample names that are to be included into a vector
 			if (include[sampleNum+i]){
@@ -88,11 +80,11 @@ int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, con
 
 		char basebuffer[1];
 		char kmerbuffer[(kmersize*2/3)+1];
-		char asciibuffer[int(ceil(float(fileSampleNames.size())/6))];
+		char asciibuffer[int(std::ceil(float(fileSampleNames.size())/6))];
 
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
-			string asciibits (asciibuffer, sizeof(asciibuffer));
-			vector < bool > mybits;
+			std::string asciibits (asciibuffer, sizeof(asciibuffer));
+			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a vector of bools
 
 			int mybitcount=0;
@@ -103,26 +95,26 @@ int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, con
 			}
 
 			if (mybitcount==0){
-				string line;
-				getline(fileStream, line);
+				std::string line;
+				std::getline(fileStream, line);
 				continue;
 			}
 
 			while (fileStream.peek()!='\n' && fileStream.read(kmerbuffer, sizeof(kmerbuffer))){
-				string kmer (kmerbuffer, (kmersize*2/3)+1);
+				std::string kmer (kmerbuffer, (kmersize*2/3)+1);
 				
-				unordered_map < string, vector < bool > >::iterator it = kmerMap.find(kmer);//check if the kmer is in the map
+				std::unordered_map < std::string, std::vector < bool > >::iterator it = kmerMap.find(kmer);//check if the kmer is in the map
 				if ( it != kmerMap.end() ){//if the kmer is in the map
 					for (int i=0; i<fileInclude.size(); ++i){
 						it->second[i+includedSampleNum]=mybits[fileInclude[i]];
 					}
 				}
 				else {//if the kmer is not in the hash
-					vector < bool > taxonBitset(numSamples, false);//create a new vector of bools for all samples
+					std::vector < bool > taxonBitset(numSamples, false);//create a new vector of bools for all samples
 					for (int i=0; i<fileInclude.size(); ++i){ //change the bools to true based for taxa in the file containing the kmer
 						taxonBitset[i+includedSampleNum]=mybits[fileInclude[i]];
 					}
-					kmerMap.insert(make_pair(kmer, taxonBitset));//add the new vector to the map
+					kmerMap.insert(std::make_pair(kmer, taxonBitset));//add the new vector to the map
 				}
 	    	}
 	    	fileStream.ignore(256,'\n');//skip the end of line character
@@ -133,15 +125,15 @@ int mergeKmerFiles(const string & outfile, const vector<string> & kmerfiles, con
 		fileStream.close();
 	}
 
-	cout << kmerMap.size() << " kmers identified from " << includedSampleNum << " samples in " << numfiles << " files" << endl;
+	std::cout << kmerMap.size() << " kmers identified from " << includedSampleNum << " samples in " << numfiles << " files" << std::endl;
 	
-	cout << "Merging..." << endl;
+	std::cout << "Merging..." << std::endl;
 
-	unordered_map < vector < bool >,  vector < string > > revKmerMap;
+	std::unordered_map < std::vector < bool >,  std::vector < std::string > > revKmerMap;
 
 	reverseVectorBoolKmerMap(kmerMap, revKmerMap);//reverse the map so that we have a new map of kmers for each combination of samples
 
-	cout << revKmerMap.size() << " unique taxon combinations in map" << endl;
+	std::cout << revKmerMap.size() << " unique taxon combinations in map" << std::endl;
 	
 	if(printMergedKmerFile(revKmerMap, outfile, includedSampleNames, kmersize)){return 1;}
 	

@@ -1,4 +1,3 @@
-//g++ -O3 -std=c++0x src/sk_compare -lz -o bin/sk_compare
 #include <unordered_map> //std::unordered_map
 #include <iostream> //std::cout
 #include <fstream> //std::ofstream
@@ -9,28 +8,25 @@
 #include "general.hpp"
 #include "DNA.hpp"
 
-using namespace std;
 
-
-//int main(int argc, char *argv[])
-int compareKmerFiles(const string & queryfile, const vector<string> & subjectfiles)
+int compareKmerFiles(const std::string & queryfile, const std::vector < std::string > & subjectfiles)
 {
 
 	// Create the kmer map
-	unordered_map < string, string > kmerMap;
+	std::unordered_map < std::string, std::string > kmerMap;
 
-	vector < string > sampleNames;
+	std::vector < std::string > sampleNames;
 	if (collectSampleNames(subjectfiles, sampleNames)!=0){return 1;}
 	int numSamples=sampleNames.size();
-	string emptySequence (numSamples , '-');
-	vector < int > queryKmers (numSamples, 0);
+	std::string emptySequence (numSamples , '-');
+	std::vector < int > queryKmers (numSamples, 0);
 
 	int sampleNum=0;
 	int subjectkmersize;
 	int oldsubjectkmersize;
-	vector < string > subjectSampleNames;
+	std::vector < std::string > subjectSampleNames;
 
-	ifstream fileStream;
+	std::ifstream fileStream;
 
 	for (int s = 0; s < subjectfiles.size(); ++s){
 		
@@ -43,7 +39,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 		}
 
 		if (subjectkmersize!=oldsubjectkmersize){
-			cout << "kmer files have different kmer sizes\n\n";
+			std::cerr << "kmer files have different kmer sizes" << std::endl <<std::endl;
 			return 0;
 		}
 
@@ -51,16 +47,16 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 		char kmerbuffer[subjectkmersize*2/3];
 		char asciibuffer[int(ceil(float(subjectSampleNames.size())/6))];
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
-			string asciibits (asciibuffer, sizeof(asciibuffer));
-			vector < bool > mybits;
+			std::string asciibits (asciibuffer, sizeof(asciibuffer));
+			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
 			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-				string base (basebuffer, 1);
+				std::string base (basebuffer, 1);
 				base[0]=toupper(base[0]);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
-				string kmer (kmerbuffer, subjectkmersize*2/3);
+				std::string kmer (kmerbuffer, subjectkmersize*2/3);
 				
-				unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
+				std::unordered_map < std::string, std::string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
@@ -70,14 +66,14 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 					}
 				}
 				else {
-					string newsequence = emptySequence;
+					std::string newsequence = emptySequence;
 					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
 							newsequence[i+sampleNum]=base[0];
 							queryKmers[i+sampleNum]++;
 						}
 					}
-					kmerMap.insert(make_pair(kmer, newsequence));
+					kmerMap.insert(std::make_pair(kmer, newsequence));
 				}
 			}
 			fileStream.ignore(256,'\n');//skip the end ofline character
@@ -87,15 +83,15 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 		fileStream.close();
 	}
 	
-	fileStream.open(queryfile, ios::in);
+	fileStream.open(queryfile, std::ios::in);
 	if (fileStream.fail()) {
-		cout << "Failed to open " << queryfile << "\n\n";
+		std::cerr << "Failed to open " << queryfile << std::endl << std::endl;
 		return 1;
 	}
 	int querykmersize;
-	vector < string > querySampleNames;
+	std::vector < std::string > querySampleNames;
 	if (querySampleNames.size()>1){
-		cout << "Error: Query can only be a single sample, not a kmerge" << endl;
+		std::cerr << "Error: Query can only be a single sample, not a kmerge" << std::endl;
 		return 1;
 	}
 	
@@ -103,38 +99,37 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 			int returnval = readKmerHeader(fileStream, querykmersize, querySampleNames);
 		}
 		catch (int e){
-			cout << "An exception occurred when reading file " << queryfile << ". Please check the format. Exception Nr. " << e << '\n';
+			std::cerr << "An exception occurred when reading file " << queryfile << ". Please check the format. Exception Nr. " << e << std::endl;
 			return 1;
 		}
 	if (subjectkmersize!=querykmersize){
-		cout << queryfile << " has different kmer size to query\n";
+		std::cout << queryfile << " has different kmer size to query" << std::endl;
 		return 1;
 	}
 
-	cout << "Subject\tKmers unique to Query\tKmers unique to Subject\tMatches\t% kmers in Query matching\t% kmers in Subject matching\tSNPs\t%ID of matching kmers\t%ID of Query kmers\t%ID of Subject kmers\tNs in Query\tNs in Subject\tNs in both\n";
+	std::cout << "Subject\tKmers unique to Query\tKmers unique to Subject\tMatches\t% kmers in Query matching\t% kmers in Subject matching\tSNPs\t%ID of matching kmers\t%ID of Query kmers\t%ID of Subject kmers\tNs in Query\tNs in Subject\tNs in both" << std::endl;
 	
-	vector < int > kmerjustinb (sampleNames.size(), 0);
-	vector < int > snps (sampleNames.size(), 0);
-	vector < int > nina (sampleNames.size(), 0);
-	vector < int > ninb (sampleNames.size(), 0);
-	vector < int > ninboth (sampleNames.size(), 0);
-	vector < int > matches (sampleNames.size(), 0);
+	std::vector < int > kmerjustinb (sampleNames.size(), 0);
+	std::vector < int > snps (sampleNames.size(), 0);
+	std::vector < int > nina (sampleNames.size(), 0);
+	std::vector < int > ninb (sampleNames.size(), 0);
+	std::vector < int > ninboth (sampleNames.size(), 0);
+	std::vector < int > matches (sampleNames.size(), 0);
 
 	char base;
 	char kmerbuffer[querykmersize*2/3];
 	char asciibuffer[int(ceil(float(querySampleNames.size())/6))];
 
 	while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
-		string asciibits (asciibuffer, sizeof(asciibuffer));
+		std::string asciibits (asciibuffer, sizeof(asciibuffer));
 		while (fileStream.peek()!='\n' && fileStream.get(base)){
 			base=toupper(base);
 			fileStream.read(kmerbuffer, sizeof(kmerbuffer));
-			string kmer (kmerbuffer, querykmersize*2/3);
+			std::string kmer (kmerbuffer, querykmersize*2/3);
 
-			unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
+			std::unordered_map < std::string, std::string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 			if ( it != kmerMap.end() ){//if the kmer is in the hash
 				for (int i=0; i<sampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-					//cout << it->second[i];
 					if (it->second[i]=='N' && base=='N'){
 						ninboth[i]++;
 					}
@@ -154,7 +149,6 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 						snps[i]++;
 					}
 				}
-				//cout << endl;
 			}
 			else {
 				for (int i=0; i<sampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
@@ -175,7 +169,7 @@ int compareKmerFiles(const string & queryfile, const vector<string> & subjectfil
 		float percentidofquery=(percentidofmatches*percentmatcha)/100;
 		float percentidofsubject=(percentidofmatches*percentmatchb)/100;
 		
-		cout << sampleNames[i] << "\t" << kmerjustina << "\t" << kmerjustinb[i] << "\t" << matches[i] << "\t" << percentmatcha << "\t" << percentmatchb << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << nina[i] << "\t" << ninb[i] << "\t" << ninboth[i] << "\n";
+		std::cout << sampleNames[i] << "\t" << kmerjustina << "\t" << kmerjustinb[i] << "\t" << matches[i] << "\t" << percentmatcha << "\t" << percentmatchb << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << nina[i] << "\t" << ninb[i] << "\t" << ninboth[i] << std::endl;
 
 	}
 	return 0;

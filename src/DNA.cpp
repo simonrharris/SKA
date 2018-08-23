@@ -1,19 +1,8 @@
-//g++ -O3 -std=c++0x src/kmers.cpp -lz -o bin/sk_fastq
-#include <unordered_map> //std::unordered_map
 #include <string> //std::string
-#include <array> //std::array
-#include <vector> // std::vector
 #include <algorithm> //std::reverse std::transform
-#include <sstream> // std::istringstream
-#include <chrono> //timing
-#include <cassert> //std::assert
-#include <fstream> //std::ifstream
-#include <iostream> //std::cout
-#include <cmath> //std::pow
-#include <set> //std::set
+#include <sstream> // std::stringstream
+#include <iostream> //std:cerr
 #include "gzstream.h"
-
-using namespace std;
 
 char complement_table[128] = {
       '-',
@@ -47,7 +36,7 @@ char complement(const char & n){
 	return complement_table[int(n)];
 }
 
-bool reverseComplementIsMin(const string & mystring){
+bool reverseComplementIsMin(const std::string & mystring){
 	for (float i = 0; i < ((mystring.length())/2); ++i){
 		int j = i+1;
 		if (mystring[i]<complement_table[int(mystring[mystring.length()-j])]){
@@ -60,18 +49,18 @@ bool reverseComplementIsMin(const string & mystring){
 	return false;
 }
 
-bool reverseComplementIfMin(string & mystring){
+bool reverseComplementIfMin(std::string & mystring){
 	if (reverseComplementIsMin(mystring)){
-		reverse(mystring.begin(), mystring.end());
-		transform(mystring.begin(),mystring.end(),mystring.begin(),complement);
+		std::reverse(mystring.begin(), mystring.end());
+		std::transform(mystring.begin(),mystring.end(),mystring.begin(),complement);
 		return true;
 	}
 	return false;
 }
 
-int lowqualitytoN(string & mysequence,const string & myquality, const int & userminquality, int adjustment){
+int lowqualitytoN(std::string & mysequence,const std::string & myquality, const int & userminquality, int adjustment){
 	int minquality=userminquality+adjustment;
-	for (string::size_type i = 0; i<mysequence.length(); ++i){
+	for (std::string::size_type i = 0; i<mysequence.length(); ++i){
 		if (myquality[i]<minquality){
 			mysequence[i]='N';
 		}
@@ -79,11 +68,10 @@ int lowqualitytoN(string & mysequence,const string & myquality, const int & user
 	return 0;
 }
 
-int IUPACToN(string & mysequence){
-
-	for (string::iterator it=mysequence.begin(); it!=mysequence.end(); ++it){
+int IUPACToN(std::string & mysequence){
+	for (std::string::iterator it=mysequence.begin(); it!=mysequence.end(); ++it){
 		if (base_score[int(*it)]>4){
-			cout << "Unrecognised character " << *it << "in sequence" << endl;
+			std::cerr << "Error: Unrecognised character " << *it << "in sequence" << std::endl << std::endl;
 			return 1;
 		}
 		else if (base_score[int(*it)]>3){
@@ -93,42 +81,89 @@ int IUPACToN(string & mysequence){
 	return 0;
 }
 
-void ascii_codons(string & myDNA){
-	for (string::size_type i = 0; i<myDNA.length(); i+=3){
-		assert((i+2)<myDNA.length());
+int ascii_codons(std::string & myDNA){
+	for (std::string::size_type i = 0; i<myDNA.length(); i+=3){
+		if ((i+2)>=myDNA.length()){
+			std::cerr << "Kmer length must be divisible by 3" << std::endl << std::endl;
+			return 1;
+		}
 		myDNA[i/3] = (base_score[int(myDNA[i])]+(base_score[int(myDNA[i+1])]*4)+(base_score[int(myDNA[i+2])]*16))+63;
 	}
 	myDNA.erase(myDNA.length()/3);
+	return 0;
 }
 
-void codons_from_ascii(string & myascii){
-	for (string::size_type i = 0; i<myascii.length(); ++i){
+void codons_from_ascii(std::string & myascii){
+	for (std::string::size_type i = 0; i<myascii.length(); ++i){
 		return;
 	}
 }
 
-int readNextFastqSequence(igzstream & gzfileStream, const string & filename, string & sequence, string & quality){
-	string line;
+
+int readNextFastaSequence(igzstream & gzfileStream, const std::string & filename, std::string & name, std::string & sequence){
+	std::string line;
+	line.reserve(10000);
+	if (gzfileStream.get()!='>'){//check the fist character is a > and remove it
+		std::cerr << "Error: " << filename << " is not in the correct format. Expecting header line to start with >." << std::endl << std::endl;
+		return 1;
+	}
+  	std::getline(gzfileStream, line);//read the rest of the headerline
+  	std::stringstream headerstream;
+	headerstream << line;//convert the sequence to stringstream
+	std::getline(headerstream, name, ' ');
+  	while (gzfileStream.peek()!=EOF && gzfileStream.peek()!='>'){//read the sequence
+  		std::getline(gzfileStream, line);
+  		sequence.append(line);
+  	}
+	if (gzfileStream.fail()){
+		std::cerr << filename << " is not in the correct format." << std::endl << std::endl;
+		return 1;
+	}
+	sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );//remove any gaps from the sequence
+	std::transform(sequence.begin(), sequence.end(), sequence.begin(), ::toupper);//change all letters in the string to upper case
+	return 0;
+}
+
+
+int readNextFastqSequence(igzstream & gzfileStream, const std::string & filename, std::string & sequence, std::string & quality){
+	std::string line;
+	line.reserve(1000);
 	if (gzfileStream.peek()!='@'){
-		cout << filename << " is not in the correct format. Expecting header line to start with @." << endl << endl;
+		std::cerr << "Error: " << filename << " is not in the correct format. Expecting header line to start with @." << std::endl << std::endl;
 		return 1;
 	}
   	getline(gzfileStream, line);
   	getline(gzfileStream, sequence);
   	if (gzfileStream.peek()!='+'){
-		cout << filename << " is not in the correct format. Expecting separator line to start with +." << endl << endl;
+		std::cerr << "Error: " << filename << " is not in the correct format. Expecting separator line to start with +." << std::endl << std::endl;
 		return 1;
 	}
   	getline(gzfileStream, line);
   	getline(gzfileStream, quality);
   	if (quality.length()!=sequence.length()){
-  		cout << filename << " is not in the correct format. Sequence and quality lines must be of equal length." << endl << endl;
+  		std::cerr << "Error: " << filename << " is not in the correct format. Sequence and quality lines must be of equal length." << std::endl << std::endl;
 		return 1;
   	}
-
-		if (not gzfileStream.good()){
-			cout << filename << " is not in the correct format. Expecting a multiple of 4 lines." << endl << endl;
-			return 1;
+	if (gzfileStream.fail()){
+		std::cerr << "Error: " << filename << " is not in the correct format. Expecting a multiple of 4 lines." << std::endl << std::endl;
+		return 1;
 	}
+	std::transform(sequence.begin(), sequence.end(), sequence.begin(), ::toupper);//change all letters in the string to upper case	
+	return 0;
+}
+
+
+int countSequencesinFasta(const std::string & filename, int & sequenceCount){	
+	igzstream gzfileStream;
+	gzfileStream.open(filename.c_str());
+	if (gzfileStream.get()!='>'){
+		std::cerr << "Error: " << filename << " is not in the correct format. Expecting header to start with >." << std::endl << std::endl;
+		return 1;
+	}
+	std::string sequence;
+	while (getline(gzfileStream, sequence, '>')){
+		sequenceCount++;
+	}
+	gzfileStream.close();
 	return 0;
 }

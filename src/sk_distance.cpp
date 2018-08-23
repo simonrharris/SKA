@@ -11,35 +11,33 @@
 #include "kmers.hpp"
 #include "DNA.hpp"
 #include <chrono> //timing
-using namespace std;
 
 
-//int main(int argc, char *argv[])
-int kmerDistance(const string & prefix, const bool & distancefile, const bool & clusterfile, const vector<string> & kmerfiles, const int & maxSNPS, const float & minMatched)
+int kmerDistance(const std::string & prefix, const bool distancefile, const bool clusterfile, const std::vector < std::string > & kmerfiles, const int maxSNPS, const float minMatched)
 {
 
-	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
 	int numfiles=kmerfiles.size();
 
-	vector < string > sampleNames;
+	std::vector < std::string > sampleNames;
 	if (collectSampleNames(kmerfiles, sampleNames)!=0){return 1;}
 	int numSamples=sampleNames.size();
 	
-	unordered_map < string, string > kmerMap;// Create the kmer map
-	string emptySequence (numSamples , '-');
+	std::unordered_map < std::string, std::string > kmerMap;// Create the kmer map
+	std::string emptySequence (numSamples , '-');
 	int oldkmersize=0;
 
-	vector < int > kmerCounts(numSamples, 0);
+	std::vector < int > kmerCounts(numSamples, 0);
 
-	ifstream fileStream;
+	std::ifstream fileStream;
 	int sampleNum=0;
 	for (int s = 0; s < kmerfiles.size(); ++s){
 		
 		if (openFileStream(kmerfiles[s], fileStream)){return 1;};
 
 		int kmersize;
-		vector < string > names;
+		std::vector < std::string > names;
 		
 		readKmerHeader(fileStream, kmersize, names);
 		
@@ -49,7 +47,7 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		}
 
 		if (kmersize!=oldkmersize){
-			cout << "kmer files have different kmer sizes\n\n";
+			std::cout << "kmer files have different kmer sizes\n\n" << std::endl << std::endl;
 			return 0;
 		}
 
@@ -59,21 +57,21 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		char asciibuffer[int(ceil(float(names.size())/6))];
 
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){
-			string asciibits (asciibuffer, sizeof(asciibuffer));
-			vector < bool > mybits;
+			std::string asciibits (asciibuffer, sizeof(asciibuffer));
+			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a vector of bools
 			
 			while (fileStream.peek()!='\n' && fileStream.get(base)){
 				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
-				string kmer (kmerbuffer, kmersize*2/3);
+				std::string kmer (kmerbuffer, kmersize*2/3);
 				for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
 					if (mybits[i]){
 						kmerCounts[sampleNum+i]++;
 					}
 				}
 				
-				unordered_map < string, string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
+				std::unordered_map < std::string, std::string >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
@@ -82,13 +80,13 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 					}
 				}
 				else {
-					string newsequence = emptySequence;
+					std::string newsequence = emptySequence;
 					for (int i=0; i<names.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
 							newsequence[sampleNum+i] = base;
 						}
 					}
-					kmerMap.insert(make_pair(kmer, newsequence));
+					kmerMap.insert(std::make_pair(kmer, newsequence));
 				}
 	    	}
 	    	fileStream.ignore(256,'\n');//skip the end ofline character
@@ -96,29 +94,29 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 	    sampleNum+=int(names.size()); //add the number of samples in the file to the count of total samples
 		fileStream.close();
 	}
-	cout << kmerMap.size() << " kmers read from " << numSamples << " samples in " << numfiles << " files\n";
+	std::cout << kmerMap.size() << " kmers read from " << numSamples << " samples in " << numfiles << " files" << std::endl;
 
-	vector < vector < int > > pairwiseSNPs( numSamples , vector<int>( numSamples , 0 ) );
-	vector < vector < int > > pairwiseMatches( numSamples , vector<int>( numSamples , kmerMap.size() ) );
-	vector < vector < int > > pairwiseNs( numSamples , vector<int>( numSamples , 0 ) );
+	std::vector < std::vector < int > > pairwiseSNPs( numSamples , std::vector < int >( numSamples , 0 ) );
+	std::vector < std::vector < int > > pairwiseMatches( numSamples , std::vector < int >( numSamples , kmerMap.size() ) );
+	std::vector < std::vector < int > > pairwiseNs( numSamples , std::vector < int >( numSamples , 0 ) );
 	
 	
-	cout << "Calculating SNP distances" << endl;;
+	std::cout << "Calculating SNP distances" << std::endl;
 
-	vector < bitset < 1000000 > >  kmerbitvector( numSamples, 0 );
-	bitset < 1000000 > mykmerbits;
+	std::vector < std::bitset < 1000000 > >  kmerbitvector( numSamples, 0 );
+	std::bitset < 1000000 > mykmerbits;
 	
 
 	while (kmerMap.size()>0){
 		
-		vector < vector < int >  > baseVector (6 , vector < int >() ) ;
-		unordered_map < string, string >::iterator kmit = kmerMap.begin();
-		unordered_map < string, string >::iterator endIter = kmerMap.end();
+		std::vector < std::vector < int >  > baseVector (6 , std::vector < int >() ) ;
+		std::unordered_map < std::string, std::string >::iterator kmit = kmerMap.begin();
+		std::unordered_map < std::string, std::string >::iterator endIter = kmerMap.end();
 		int j=0;
 	
 		for (; kmit!=endIter && j<1000000; ){
 
-			fill(baseVector.begin(), baseVector.end(), ( vector < int >() ));
+			std::fill(baseVector.begin(), baseVector.end(), ( std::vector < int >() ));
 
 			for (int i=0; i<numSamples; ++i){
 
@@ -134,8 +132,8 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 
 			for (int k=0; k<4; ++k){
 				for (int l=k+1; l<4; ++l){
-					for (vector < int >::iterator it=baseVector[k].begin(); it!=baseVector[k].end(); ++it){
-						for (vector < int >::iterator it2=baseVector[l].begin(); it2!=baseVector[l].end(); ++it2){
+					for (std::vector < int >::iterator it=baseVector[k].begin(); it!=baseVector[k].end(); ++it){
+						for (std::vector < int >::iterator it2=baseVector[l].begin(); it2!=baseVector[l].end(); ++it2){
 							//count++;
 							if (*it<*it2){
 								pairwiseSNPs[*it][*it2]++;
@@ -160,23 +158,23 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		}
 	}
 
-	string dotfilename=prefix+".dot";
-	ofstream dotout(dotfilename);
-	dotout << "graph {" << endl;
+	std::string dotfilename=prefix+".dot";
+	std::ofstream dotout(dotfilename);
+	dotout << "graph {" << std::endl;
 
 	if (clusterfile){
-		string clusterfilename=prefix+".clusters.tsv";
-		ofstream clusterout(clusterfilename);
-		map <int, int> clusterMap;
-		vector < vector <int> > clusters;
-		cout << "Printing clusters to " << clusterfilename << endl;
-		clusterout << "ID\tCluster__autocolour\n";
+		std::string clusterfilename=prefix+".clusters.tsv";
+		std::ofstream clusterout(clusterfilename);
+		std::map <int, int> clusterMap;
+		std::vector < std::vector <int> > clusters;
+		std::cout << "Printing clusters to " << clusterfilename << std::endl;
+		clusterout << "ID\tCluster__autocolour" << std::endl;
 		for (int i=0; i<numSamples; ++i){
-			vector < int > matches;
+			std::vector < int > matches;
 			matches.push_back(i);
 			//cout << i << endl;
 			for (int j=i+1; j<numSamples; ++j){
-				float kmercount=min(kmerCounts[i], kmerCounts[j]);
+				float kmercount=std::min(kmerCounts[i], kmerCounts[j]);
 				float percentmatched = float(pairwiseMatches[i][j])/kmercount;
 				if (pairwiseSNPs[i][j]<=maxSNPS && percentmatched>=minMatched){
 
@@ -188,13 +186,13 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 					else {
 						similarity=1.0;
 					}
-					dotout << "\t" << sampleNames[i] << " -- " << sampleNames[j] << " [weight=" << similarity << "] ;" << endl;
+					dotout << "\t" << sampleNames[i] << " -- " << sampleNames[j] << " [weight=" << similarity << "] ;" << std::endl;
 				}
 			}
 			//dotout << "\t" << kmerfiles[i] << ";" << endl; //Need to find somewhere to put this where it does what I want
 			int clusternum=clusters.size();
-			for ( vector < int >::iterator it=matches.begin(); it!=matches.end(); ++it){
-				map <int, int >::iterator it2 = clusterMap.find(*it);//check if the match is in the hash
+			for ( std::vector < int >::iterator it=matches.begin(); it!=matches.end(); ++it){
+				std::map <int, int >::iterator it2 = clusterMap.find(*it);//check if the match is in the hash
 				if ( it2 != clusterMap.end() ){//if the match is in the hash
 					if (it2->second<clusternum){
 						clusternum=it2->second;
@@ -202,45 +200,45 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 				}
 			}
 			if (clusternum==clusters.size()){
-				clusters.push_back(vector <int>());
+				clusters.push_back(std::vector <int>());
 			}
-			for ( vector < int >::iterator it=matches.begin(); it!=matches.end(); ++it){
-				map < int, int >::iterator it2 = clusterMap.find(*it);//check if the match is in the hash
+			for ( std::vector < int >::iterator it=matches.begin(); it!=matches.end(); ++it){
+				std::map < int, int >::iterator it2 = clusterMap.find(*it);//check if the match is in the hash
 				if ( it2 != clusterMap.end() ){//if the match is in the hash
 					if (it2->second!=clusternum){
-						for ( vector < int >::iterator it3=clusters[it2->second].begin(); it3!=clusters[it2->second].end(); ++it3){
+						for ( std::vector < int >::iterator it3=clusters[it2->second].begin(); it3!=clusters[it2->second].end(); ++it3){
 							clusters[clusternum].push_back(*it3);
 						}
 						clusters[it2->second].clear();
 					}
 				}
 				else{
-					clusterMap.insert(make_pair(*it, clusternum));
+					clusterMap.insert(std::make_pair(*it, clusternum));
 					clusters[clusternum].push_back(*it);
 				}
 			}
 
 
-			for ( vector < int >::iterator it2=clusters[clusternum].begin(); it2!=clusters[clusternum].end(); ++it2){
-				map < int, int >::iterator it3 = clusterMap.find(*it2);//check if the match is in the hash
+			for ( std::vector < int >::iterator it2=clusters[clusternum].begin(); it2!=clusters[clusternum].end(); ++it2){
+				std::map < int, int >::iterator it3 = clusterMap.find(*it2);//check if the match is in the hash
 				if ( it3 != clusterMap.end() ){
 					it3->second=clusternum;//segfault is on this line
 				}	
 			}
 
 		}
-		for ( map < int, int >::iterator it=clusterMap.begin(); it!=clusterMap.end(); ++it){
+		for ( std::map < int, int >::iterator it=clusterMap.begin(); it!=clusterMap.end(); ++it){
 			clusterout << sampleNames[it->first] << "\t" << it->second+1 << "\n";
 		}
 		clusterout.close();
 
 		int i=0;
-		for ( vector < vector < int > >::iterator it=clusters.begin(); it!=clusters.end(); ++it){
+		for ( std::vector < std::vector < int > >::iterator it=clusters.begin(); it!=clusters.end(); ++it){
 			++i;
 			if (it->size()>1){
-				string clusterfilename=prefix+".cluster."+to_string(i)+".txt";
-				ofstream clusterout(clusterfilename);
-				for ( vector < int >::iterator it2=it->begin(); it2!=it->end(); ++it2){
+				std::string clusterfilename=prefix+".cluster."+std::to_string(i)+".txt";
+				std::ofstream clusterout(clusterfilename);
+				for ( std::vector < int >::iterator it2=it->begin(); it2!=it->end(); ++it2){
 					clusterout << sampleNames[*it2] << "\n";
 				}
 				clusterout.close();
@@ -248,18 +246,18 @@ int kmerDistance(const string & prefix, const bool & distancefile, const bool & 
 		}
 	}
 
-	dotout << "}" << endl;
+	dotout << "}" << std::endl;
 	dotout.close();
 	
 	if (distancefile){
-		string distancefilename=prefix+".distances.tsv";
-		cout << "Printing distances to " << distancefilename << "\n";
+		std::string distancefilename=prefix+".distances.tsv";
+		std::cout << "Printing distances to " << distancefilename << std::endl;
 		
-		ofstream distanceout(distancefilename);
-		distanceout << "File 1\tFile 2\tMatches\tMismatches\tSNPs\n";
+		std::ofstream distanceout(distancefilename);
+		distanceout << "File 1\tFile 2\tMatches\tMismatches\tSNPs" <<std::endl;
 		for (int i=0; i<numSamples; ++i){
 			for (int j=i+1; j<numSamples; ++j){
-				distanceout << sampleNames[i] << "\t" << sampleNames[j] << "\t" << pairwiseMatches[i][j] << "\t" << (kmerCounts[i]-pairwiseMatches[i][j]+kmerCounts[j]-pairwiseMatches[i][j]) << "\t" << pairwiseSNPs[i][j] << "\n";
+				distanceout << sampleNames[i] << "\t" << sampleNames[j] << "\t" << pairwiseMatches[i][j] << "\t" << (kmerCounts[i]-pairwiseMatches[i][j]+kmerCounts[j]-pairwiseMatches[i][j]) << "\t" << pairwiseSNPs[i][j] << std::endl;
 			}
 		}
 		distanceout.close();

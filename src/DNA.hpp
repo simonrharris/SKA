@@ -7,8 +7,6 @@
 #include <fstream> //ifstream
 #include "gzstream.h"
 
-using namespace std;
-
 extern char complement_table[128];
 
 extern char base_score[128];
@@ -17,17 +15,21 @@ extern char bases[4];
 
 char complement(const char & n);
 
-bool reverseComplementIsMin(const string & mystring);
+bool reverseComplementIsMin(const std::string & mystring);
 
-bool reverseComplementIfMin(string & mystring);
+bool reverseComplementIfMin(std::string & mystring);
 
-int readNextFastqSequence(igzstream & gzfileStream, const string & filename, string & sequence, string & quality);
+int lowqualitytoN(std::string & mysequence,const std::string & myquality, const int & userminquality, int adjustment=33);
 
-int lowqualitytoN(string & mysequence,const string & myquality, const int & userminquality, int adjustment=33);
+int IUPACToN(std::string & mysequence);
 
-int IUPACToN(string & mysequence);
+int ascii_codons(std::string & myDNA);
 
-void ascii_codons(string & myDNA);
+void codons_from_ascii(std::string & myascii);
 
-void codons_from_ascii(string & myascii);
+int readNextFastaSequence(igzstream & gzfileStream, const std::string & filename, std::string & name, std::string & sequence);
+
+int readNextFastqSequence(igzstream & gzfileStream, const std::string & filename, std::string & sequence, std::string & quality);
+
+int countSequencesinFasta(const std::string & filename, int & sequenceCount);
 

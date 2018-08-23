@@ -13,7 +13,7 @@ int getKmerFileInfo(const std::vector< std::string > & kmerfiles, const bool tab
 	std::ifstream fileStream;
 
 	if (tabulated){
-		std::cout << "File\tKmer size\t# samples\t# kmers\t# sample patterns" << endl;
+		std::cout << "File\tKmer size\t# samples\t# kmers\t# sample patterns" << std::endl;
 	}
 
 	for (int s = 0; s < kmerfiles.size(); ++s){//for each input kmer or kmerge file
@@ -22,8 +22,8 @@ int getKmerFileInfo(const std::vector< std::string > & kmerfiles, const bool tab
 			std::cout << splitFileName(kmerfiles[s]);
 		}
 		else {
-			std::cout << endl << splitFileName(kmerfiles[s]) << endl;
-			std::cout << std::string(kmerfiles[s].size(), '=') << endl;
+			std::cout << std::endl << splitFileName(kmerfiles[s]) << std::endl;
+			std::cout << std::string(kmerfiles[s].size(), '=') << std::endl;
 		}
 
 		if (openFileStream(kmerfiles[s], fileStream, false)){return 1;};//open the file
@@ -34,9 +34,9 @@ int getKmerFileInfo(const std::vector< std::string > & kmerfiles, const bool tab
 			std::cout << "\t" << kmersize << "\t" << sampleNames.size();
 		}
 		else {
-			std::cout << "Kmer size: " << kmersize << endl;
-			std::cout << "Number of samples: " << sampleNames.size() << endl;
-			std::cout << "Sample names:"<< endl;
+			std::cout << "Kmer size: " << kmersize << std::endl;
+			std::cout << "Number of samples: " << sampleNames.size() << std::endl;
+			std::cout << "Sample names:"<< std::endl;
 			int j=1;
 			for (int i=0; i<sampleNames.size(); ++i, ++j){//print the sample names with namesPerLine sample names per line
 				std::cout << sampleNames[i];
@@ -44,7 +44,7 @@ int getKmerFileInfo(const std::vector< std::string > & kmerfiles, const bool tab
 					std::cout << ", ";
 				}
 				if (j==namesPerLine || i==sampleNames.size()-1){
-					std::cout << endl;
+					std::cout << std::endl;
 					j=0;
 				}
 			}
@@ -63,11 +63,11 @@ int getKmerFileInfo(const std::vector< std::string > & kmerfiles, const bool tab
 			fileStream.ignore(256,'\n');//skip the end ofline character
 		}
 		if (tabulated){//print the number of kmers and patterns
-			std::cout << "\t" << kmercount << "\t" << patterncount << endl;
+			std::cout << "\t" << kmercount << "\t" << patterncount << std::endl;
 		}
 		else {
-			std::cout << "Number of kmers: " << kmercount << endl;
-			std::cout << "Number of sample patterns: " << patterncount << endl << endl;
+			std::cout << "Number of kmers: " << kmercount << std::endl;
+			std::cout << "Number of sample patterns: " << patterncount << std::endl << std::endl;
 		}
 		sampleNames.clear();//clear the sample names vector
 		fileStream.close();//close the file

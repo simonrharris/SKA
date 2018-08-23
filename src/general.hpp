@@ -2,16 +2,18 @@
 #define __GENERAL_HPP__
 #endif
 
-#include <string>
-#include <fstream>
-#include <vector>
-#include <chrono> //timing
-using namespace std;
+#include <string> //std::string
+#include <fstream> //std::ifstream
+#include <vector> //std::vector
+#include <chrono> //std::chrono
+#include "gzstream.h"
 
-string splitFileName(const string & str);
+std::string splitFileName(const std::string & str);
 
-int openFileStream(const string & fileName, ifstream & fileStream, bool verbose=true);
+int openFileStream(const std::string & fileName, std::ifstream & fileStream, bool verbose=true);
 
-int fileToVector(const string & filename, vector <string> & fileargs);
+int openGzFileStream(const std::string & fileName, igzstream & gzFileStream, bool verbose=true);
 
-void printDuration(const chrono::high_resolution_clock::time_point start);
+int fileToVector(const std::string & filename, std::vector < std::string > & fileargs);
+
+void printDuration(const std::chrono::high_resolution_clock::time_point start);

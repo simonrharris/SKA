@@ -1,5 +1,5 @@
 #include <unordered_map> //std::unordered_map
-#include <iostream> //std::cout
+#include <iostream> //std::cout std::cerr
 #include <algorithm> //std::reverse std::transform
 #include <string> //std::string
 #include <sstream> //std::stringstream
@@ -11,67 +11,55 @@
 #include "gzstream.h"
 #include "DNA.hpp"
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
-using namespace std;
 
-int fastaToKmers(const vector <string> & fastas, const string & outfilename, const long & kmerlen)
+int fastaToKmers(const std::vector < std::string > & fastas, const std::string & outfilename, const long & kmerlen)
 {
 
-	const chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();//start the clock
+	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();//start the clock
 
-	unordered_map < string, array < int, 8 > > kmerMap;//create a map to store the kmers for each base
+	std::unordered_map < std::string, std::array < int, 8 > > kmerMap;//create a map to store the kmers for each base
 	int substringlength=(kmerlen*2)+1;
 	int numseqs=0;
 	int numbases=0;
 	int numreadbases=0;
-
-	string sequence;
-	string header;
 	char base;
 
-	for (vector <string>::const_iterator fastait=fastas.begin(); fastait!=fastas.end(); ++fastait){//for each fasta file
+	for (std::vector < std::string >::const_iterator fastait=fastas.begin(); fastait!=fastas.end(); ++fastait){//for each fasta file
 		
-		string filename=*fastait;
+		std::string filename = *fastait;
 
-		cout << "Reading " << filename << endl;
+		std::cout << "Reading " << filename << std::endl;
 		igzstream gzfileStream;
-		gzfileStream.open(filename.c_str());//open the file as a gzFileStream
-		if (gzfileStream.fail()){
-			cerr << endl << "Error: Failed to open " << filename << endl << endl;
-			return 1;
-		}
 
-		if (gzfileStream.get()!='>'){//read the first character of the fasta file to check it is a >
-			cout << filename << " is not in the correct format. Expecting header to start with >." << endl << endl;
-			return 1;
-		}
+		if(openGzFileStream(filename, gzfileStream)){return 1;}//open the fasta file. May be gzipped.
 
-		while (getline(gzfileStream, header)){//read the next header line
-			getline(gzfileStream, sequence, '>');//read until the next > i.e. read the sequence
+		while (gzfileStream.peek() != EOF){
 
-			sequence.erase(std::remove_if( sequence.begin(), sequence.end(), ::isspace ), sequence.end() );//remove whitespace from the sequence
+			std::string sequence;
+			std::string name;
+
+			if(readNextFastaSequence(gzfileStream, filename, name, sequence)){return 1;}//read the next sequence from the file
 
 			if(IUPACToN(sequence)){return 1;}//convert any IUPAC characters to N and reject any unrecognised characters
 
 			numseqs++;
-			numreadbases+=sequence.length();
+			numreadbases += sequence.length();
 			
-			stringstream sequencestream;
+			std::stringstream sequencestream;
 			sequencestream << sequence;//convert the sequence to stringstream
-			string subsequence;
+			std::string subsequence;
 			
-			while (getline(sequencestream, subsequence, 'N')){//read each section of sequence between Ns
+			while (std::getline(sequencestream, subsequence, 'N')){//read each section of sequence between Ns
 				
-				if (subsequence.length()<substringlength){//if the subsequence is too short continue
+				if (subsequence.length() < substringlength){//if the subsequence is too short continue
 					continue;
 				}
 				
-				transform(subsequence.begin(), subsequence.end(), subsequence.begin(), ::toupper);//change all 	letters in the string to upper case. Could put this into IUPACToN
-				
 				int i;
 
-				for (i=0; i<subsequence.length()-(substringlength-1); ++i){//for each base in the subsequence
+				for (i=0; i < subsequence.length() - (substringlength-1); ++i){//for each base in the subsequence
 
-					string kmer=subsequence.substr(i,substringlength);//extract the kmer
+					std::string kmer = subsequence.substr(i,substringlength);//extract the kmer
 					
 					reverseComplementIfMin(kmer);//if the revcomp of the kmer is 'smaller' then revcomp it
 
@@ -80,14 +68,14 @@ int fastaToKmers(const vector <string> & fastas, const string & outfilename, con
 					addKmerToBaseArrayMap(kmerMap, kmer, base, true);//add the kmer and base to the map
 
 				}
-				numbases+=i;
+				numbases += i;
     		}
 		}
  		gzfileStream.close();//close the file
 	}
 	
-	cout << "Added " << numbases << " kmers from " << numseqs << " sequences of total length " << numreadbases << endl;
-	cout << kmerMap.size() << " unique kmers in map" << endl;
+	std::cout << "Added " << numbases << " kmers from " << numseqs << " sequences of total length " << numreadbases << std::endl;
+	std::cout << kmerMap.size() << " unique kmers in map" << std::endl;
 	
 	printKmerFile(kmerMap, outfilename, kmerlen);//print the kmer file
 
