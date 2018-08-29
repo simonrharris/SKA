@@ -59,7 +59,7 @@ int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > 
 		std::cerr << std::endl << "Error: Failed to open " << outputfile << std::endl << std::endl;
 		return 1;
 	}
-
+	kmerfile << "SKA v" << versionNumber << std::endl;
 	kmerfile << kmersize << std::endl;
 	std:: string samplename=splitFileName(outputfile);
 	kmerfile << samplename.substr(0, samplename.find_last_of(".")) << std::endl;
@@ -96,16 +96,7 @@ int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > 
 	return 0;
 }
 
-int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::vector < std::string > > & mymap, const std::string outfileprefix, const std::vector < std::string > & mysamples, const int kmersize){
-
-	std::string outputfile;
-
-	if (mysamples.size()==1){
-		outputfile=outfileprefix+".kmers";
-	}
-	else {
-		outputfile=outfileprefix+".kmerge";
-	}
+int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::vector < std::string > > & mymap, const std::string outputfile, const std::vector < std::string > & mysamples, const int kmersize){
 
 	std::cout << "Writing merged file to " << outputfile << std::endl;
 
@@ -114,7 +105,7 @@ int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::ve
 		std::cerr << std::endl << "Error: Failed to open " << outputfile << std::endl << std::endl;
 		return 1;
 	}
-
+	kmerout << "SKA v" << versionNumber << std::endl;
 	kmerout << kmersize << std::endl; // print kmer size to output file stream
 	for ( std::vector < std::string >::const_iterator it=mysamples.begin(); it!=mysamples.end(); ++it){ //print each sample name to output file stream
 		kmerout << *it << " "; 
@@ -144,6 +135,7 @@ int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::ve
 int readKmerHeader(std::ifstream & fileStream, int & kmersize, std::vector < std::string > & names){
 	
 	std::string line;
+	std::getline(fileStream, line);
 	fileStream >> kmersize;
 	if (kmersize==0){
 		return 1;

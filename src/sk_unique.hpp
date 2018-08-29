@@ -4,4 +4,4 @@
 
 #include <string> //std::string
 
-int uniqueKmers(const std::vector < std::string > & ingroupsamples, const std::vector < std::string > & kmerfiles, const float & minproportion, const std::string & outputfile);
+int uniqueKmers(const std::vector < std::string > & ingroupsamples, const std::vector < std::string > & kmerfiles, const float & minproportion, const std::string & outputfile, const bool incNs);

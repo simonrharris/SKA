@@ -22,7 +22,7 @@ int lowqualitytoN(std::string & mysequence,const std::string & myquality, int & 
 
 int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > > & mymap, const std::string outputfile, const int kmersize);
 
-int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::vector < std::string > > & mymap, const std::string outfileprefix, const std::vector < std::string > & mysamples, const int kmersize);
+int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::vector < std::string > > & mymap, const std::string outputfile, const std::vector < std::string > & mysamples, const int kmersize);
 
 int readKmerHeader(std::ifstream & fileStream, int & kmersize, std::vector < std::string > & names);
 

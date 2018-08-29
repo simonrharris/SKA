@@ -181,6 +181,7 @@ int weedKmers(const std::vector < std::string > & weedfiles, const std::string &
 		std::cout << "Writing weeded kmers to " << outputfile << std::endl;
 	
 		std::ofstream weededfile(outputfile);
+		weededfile << "SKA v" << versionNumber << std::endl;
 		weededfile << kmersize << std::endl;
 		for ( std::vector < std::string >::iterator it=names.begin(); it!=names.end(); ++it){ //print each sample name to output file stream
 			weededfile << *it << " "; 

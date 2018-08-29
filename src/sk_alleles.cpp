@@ -133,7 +133,7 @@ int allelesToKmers(const std::vector < std::string > & alleles, const long & kme
 
 		if(reverseKmerMap(kmerMap, revKmerMap, numAlleles)){return 1;}
 
-		if(printMergedKmerFile(revKmerMap, alleles[s], alleleNames, kmerlen)){return 1;}
+		if(printMergedKmerFile(revKmerMap, alleles[s]+".skf", alleleNames, kmerlen)){return 1;}
 
 	}
 

@@ -48,7 +48,7 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 			std::string gffline;
 			while (std::getline(gzfileStream,gffline)){
 				if (gffline.length()>1 && gffline[0]=='#' && gffline[1]=='#'){
-					std::cout << "Comment: " << gffline << std::endl;
+					//std::cout << "Comment: " << gffline << std::endl;
 					if (gffline=="##FASTA"){
 						break;
 					}
@@ -180,7 +180,9 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 	if (includerepeats){
 		vcffile << "##INFO=<ID=RR,Number=0,Type=Flag,Description=\"Repeat Region\">" << std::endl;
 	}
-	vcffile << "##FORMAT=<ID=NS4,Number=4,Type=Integer,Description=\"Number Samples With A, C, G or T\">" << std::endl;
+	vcffile << "##INFO=<ID=NS5,Number=5,Type=Integer,Description=\"Number Samples With A, C, G, T or N\">" << std::endl;
+	vcffile << "##INFO=<ID=FT,Number=0,Type=String,Description=\"Feature Type\">" << std::endl;
+	vcffile << "##INFO=<ID=FBP,Number=1,Type=Integer,Description=\"Position Of Site In Feature\">" << std::endl;
 	vcffile << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO" << std::endl;
 
 	int totalbases=0;
@@ -218,6 +220,11 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 					while (std::getline(linestream, word, '\t')){
 						words.push_back(std::string(word));
 					}
+
+					if (words[2]!="CDS" && words[2]!="tRNA" && words[2]!="rRNA"){
+						continue;
+					}
+
 					std::unordered_map < std::string, std::vector < int > >::iterator it = contigAnnotation.find(words[0]);//check if the contig is in the hash
 					if ( it != contigAnnotation.end() ){//if the contig is in the hash
 						if (std::stoi(words[4])>it->second.size()){
@@ -226,7 +233,7 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 						for (int i=std::stoi(words[3])-1; i<std::stoi(words[4]); ++i){
 							it->second[i]=features.size();
 						}
-						std::cout << it->second.size() << std::endl;
+						//std::cout << it->second.size() << std::endl;
 					}
 					else {//if the kmers isn't in the hash and we are adding from the first fastq file
 						std::pair < std::unordered_map < std::string, std::vector < int> >::iterator,bool>  ret = contigAnnotation.insert(std::make_pair(words[0], std::vector < int> (10000000, -1)));//insert the kmer into the hash
@@ -238,6 +245,7 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 					features.push_back(words);
 				}
 			}
+			std::cout << features.size() << " features found in " << contigAnnotation.size() << " contigs" << std::endl;
 		}
 		else if (gzfileStream.peek()!='>'){
 			std::cerr << "Error: " << reffile << " is not in the correct format. Expecting header line to start with # or >." << std::endl << std::endl;
@@ -250,16 +258,18 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 
 		std::string sequence;
 		std::string name;
-		std::cout << features.size() << " features found in " << contigAnnotation.size() << " contigs" << std::endl;
+		
 
-		for (std::unordered_map < std::string, std::vector < int > >::iterator cait=contigAnnotation.begin(); cait!=contigAnnotation.end(); ++cait){
+		/*for (std::unordered_map < std::string, std::vector < int > >::iterator cait=contigAnnotation.begin(); cait!=contigAnnotation.end(); ++cait){
 			std::cout << cait->first;
 			for (std::vector < int >::iterator viit=cait->second.begin(); viit!=cait->second.end(); ++viit){
-				std::cout << " " << *viit << " " << features[*viit][8] << std::endl;
+				if (*viit>0){
+					std::cout << " " << *viit << " " << features[*viit][8] << std::endl;
+				}
 			}
-		}
+		}*/
 
-		std::cout << "Parsing Sequence" << std::endl;
+		//std::cout << "Parsing Sequence" << std::endl;
 		if(readNextFastaSequence(gzfileStream, reffile, name, sequence)){return 1;}//read the next sequence from the file
 
 		if(IUPACToN(sequence)){return 1;}//convert any IUPAC characters to N and reject any unrecognised characters
@@ -287,7 +297,7 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 				int samplesmatching=0;
 				int baseintrep=90000;
 				std::string altstring="";
-				std::string NS4string=";NS4=";
+				std::string NS5string=";NS5=";
 				//it->second[base_score[base]]++;
 				int j;
 				if (isrev){
@@ -312,10 +322,10 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 							}
 						}
 					}
-					if (NS4string.length()>5){
-						NS4string+=",";
+					if (NS5string.length()>5){
+						NS5string+=",";
 					}
-					NS4string+=std::to_string(it->second[j]);
+					NS5string+=std::to_string(it->second[j]);
 					if (isrev){
 						j--;
 					}
@@ -323,6 +333,19 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 						j++;
 					}
 				}
+				if(it->second[4]>0){//deal with Ns here
+					basecount++;
+					if (altstring.length()>0){
+						altstring+=",";
+					}
+					altstring+="N";
+				}
+				if (NS5string.length()>5){
+					NS5string+=",";
+				}
+				NS5string+=std::to_string(it->second[4]);
+				samplesmatching+=it->second[4];
+
 				if (altstring.length()==0){
 					altstring=".";
 				}
@@ -350,18 +373,48 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 					isSNP=true;
 				}
 				else{
-					NS4string="";
+					NS5string="";
 				}
 
 				std::string annotation="";
+				char strand='.';
+				int featureStart=-1;
+				int featureEnd=-1;
+				std::string refAA="";
+				std::string altAAs="";
+				std::string featureType="";
+				int featureBasePosition=-1;
+				int featureAAPosition=-1;
+				int frame=-1;
 
 				if ( cait != contigAnnotation.end() ){//if the contig is in the hash
-					annotation=features[cait->second[i+kmersize]][8];
+					if (cait->second[i+kmersize]>0){
+						annotation=features[cait->second[i+kmersize]][8];
+						strand=features[cait->second[i+kmersize]][6][0];
+						featureStart=stoi(features[cait->second[i+kmersize]][3]);
+						featureEnd=stoi(features[cait->second[i+kmersize]][4]);
+						featureType=";FT="+features[cait->second[i+kmersize]][2];
+						
+						if (strand=='+'){
+							featureBasePosition=((i+kmersize+1)-featureStart)+1;
+						}
+						else if (strand=='-'){
+							featureBasePosition=(featureEnd-(i+kmersize+1))+1;
+						}
+					}
+				}
+
+				std::string featureBasePositionString="";
+				if (featureBasePosition>0){
+					featureBasePositionString=";FBP="+std::to_string(featureBasePosition);
+				}
+				if (featureType==";FT=CDS"){
+					featureAAPosition=(featureBasePosition-1)/3;
+					frame=(featureBasePosition-1)%3;
 				}
 
 				if ((isSNP || not snponly) and (includerepeats || not isrepeat )){
-					//std::cout << codons_from_ascii(kmer) << "\t" << base << "\t" << name << "\t" << i+kmersize+1 << "\t" << baseintrep << "\t"<< isSNP << "\t" << isrev << "\t" << isrepeat << std::endl;
-					vcffile << name << "\t" << i+kmersize+1 << "\t.\t" << mybase << "\t" << altstring << "\t.\t.\t" << "NS=" << samplesmatching << NS4string << repeatstring << annotation << std::endl;
+					vcffile << name << "\t" << i+kmersize+1 << "\t.\t" << mybase << "\t" << altstring << "\t.\t.\t" << "NS=" << samplesmatching << NS5string << repeatstring << featureType << featureBasePositionString << " " << featureAAPosition << " " << frame << " " << featureStart << " " << featureEnd << " " << strand << std::endl;
 				}
 				
 			

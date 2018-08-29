@@ -10,7 +10,7 @@
 #include "kmers.hpp"
 #include "general.hpp"
 
-int uniqueKmers(const std::vector < std::string > & ingroupsamples, const std::vector < std::string > & kmerfiles, const float & minproportion, const std::string & outputfile)
+int uniqueKmers(const std::vector < std::string > & ingroupsamples, const std::vector < std::string > & kmerfiles, const float & minproportion, const std::string & outputfile, const bool incNs)
 {
 
 	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -118,6 +118,12 @@ int uniqueKmers(const std::vector < std::string > & ingroupsamples, const std::v
 	std::unordered_map < std::vector < bool >,  std::vector < std::string > > revKmerMap;
 
 	for (; it!=endIter; ){
+
+		if (not incNs && it->first[0]=='N'){
+			kmerMap.erase(it++);
+			continue;
+		}
+
 		int allcount=std::count(it->second.begin(), it->second.end(), true);
 		int ingroupcount=0;
 

@@ -562,7 +562,7 @@ int fastaHelp(void){
 
 int fastaSubcommand(int argc, char *argv[]){
 
-	std::string outfile="fasta.kmers";
+	std::string outfile="fasta.skf";
 	long int kmersize=15;
 	std::vector < std::string > args;
 
@@ -597,7 +597,7 @@ int fastaSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = std::string(argv[i])+".kmers";
+				outfile = std::string(argv[i])+".skf";
 			}
 			else {
 				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
@@ -669,7 +669,7 @@ int fastqHelp(void){
 
 int fastqSubcommand(int argc, char *argv[]){
 
-	std::string outfile="fastq.kmers";
+	std::string outfile="fastq.skf";
 	long int covcutoff=4;
 	long int filecovcutoff=2;
 	long int kmersize=15;
@@ -768,7 +768,7 @@ int fastqSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = std::string(argv[i])+".kmers";
+				outfile = std::string(argv[i])+".skf";
 			}
 			else {
 				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
@@ -1174,7 +1174,7 @@ int mergeSubcommand(int argc, char *argv[]){
 
 	std::vector < std::string > args;
 	std::vector < std::string > sample;
-	std::string outfile="merged";
+	std::string outfile="merged.skf";
 
 	for (int i=2; i<argc; ++i){
 
@@ -1187,7 +1187,7 @@ int mergeSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = std::string(argv[i])+"";
+				outfile = std::string(argv[i])+".skf";
 			}
 			else {
 				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
@@ -1315,7 +1315,7 @@ int typeHelp(void){
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-p <file>\ttab file containing profile information." << std::endl;
-	std::cout << "-q <file>\tQuery split kmer file. This can be a single kmer file or a \n\t\tkmerge." << std::endl << std::endl;
+	std::cout << "-q <file>\tQuery split kmer file. This can be a single kmer file." << std::endl << std::endl;
 	return 0;
 }
 
@@ -1398,6 +1398,7 @@ int uniqueHelp(void){
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-i <file>\tFile of ingroup sample names. Unique kmers found \n\t\tin these files will be retained." << std::endl;
+	std::cout << "-n\t\tAllow Ns as in unique split kmers." << std::endl;
 	std::cout << "-o <file>\tOutput file prefix. [Default = unique]" << std::endl;
 	std::cout << "-p <float>\tMinimum proportion of ingroup isolates required to possess a \n\t\tsplit kmer for that kmer to be retained. [Default = 0.9]" << std::endl << std::endl;
 					   
@@ -1407,10 +1408,11 @@ int uniqueHelp(void){
 
 int uniqueSubcommand(int argc, char *argv[]){
 
-	std::string outfile="unique.kmers";
+	std::string outfile="unique.skf";
 	std::vector < std::string > ingroup;
 	float minproportion=0.9;
 	std::vector < std::string > args;
+	bool allowNs = false;
 
 	for (int i=2; i<argc; ++i){
 
@@ -1420,10 +1422,20 @@ int uniqueSubcommand(int argc, char *argv[]){
 			uniqueHelp();
 			return 0;
 		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], args);
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -f flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = std::string(argv[i])+".kmers";
+				outfile = std::string(argv[i])+".skf";
 			}
 			else {
 				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
@@ -1440,15 +1452,8 @@ int uniqueSubcommand(int argc, char *argv[]){
 				return 1;
 			}
 		}
-		else if (arg == "-f"){
-			i++;
-			if (i<argc){
-				fileToVector(argv[i], args);
-			}
-			else {
-				std::cerr << std::endl << "Expecting file name after -f flag" << std::endl << std::endl;
-				return 1;
-			}
+		else if (arg == "-n"){
+			allowNs = true;
 		}
 		else if (arg == "-p"){
 			i++;
@@ -1500,7 +1505,7 @@ int uniqueSubcommand(int argc, char *argv[]){
 
 	std::cout << std::endl;
 
-	if (uniqueKmers(ingroup, args, minproportion, outfile)){return 1;}
+	if (uniqueKmers(ingroup, args, minproportion, outfile, allowNs)){return 1;}
 
 	return 0;
 }
@@ -1512,10 +1517,10 @@ int weedHelp(void){
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-i <file>\tName of kmer file containing kmers to be weeded. [Required]" << std::endl;
-	std::cout << "-m <int>\tMinimum number of isolates required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 0]" << std::endl;
-	std::cout << "-M <int>\tMaximum number of isolates required to possess a split\n\t\tkmer for that kmer to be retained. 0 = No maximum. [Default = 0]" << std::endl;
-	std::cout << "-p <float>\tMinimum proportion of isolates required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 0.0]" << std::endl;
-	std::cout << "-P <float>\tMaximum proportion of isolates required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 1.0]" << std::endl;
+	std::cout << "-m <int>\tMinimum number of samples required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 0]" << std::endl;
+	std::cout << "-M <int>\tMaximum number of samples required to possess a split\n\t\tkmer for that kmer to be retained. 0 = No maximum. [Default = 0]" << std::endl;
+	std::cout << "-p <float>\tMinimum proportion of samples required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 0.0]" << std::endl;
+	std::cout << "-P <float>\tMaximum proportion of samples required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 1.0]" << std::endl;
 	                        //123456789012345678901234567890123456789012345678901234567890
 	return 0;
 }
