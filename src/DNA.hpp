@@ -11,7 +11,11 @@ extern char complement_table[128];
 
 extern char base_score[128];
 
+extern char complement_base_score[5];
+
 extern char bases[4];
+
+extern char complement_bases[5];
 
 char complement(const char & n);
 
@@ -25,7 +29,7 @@ int IUPACToN(std::string & mysequence);
 
 int ascii_codons(std::string & myDNA);
 
-void codons_from_ascii(std::string & myascii);
+std::string codons_from_ascii(std::string & myascii);
 
 int readNextFastaSequence(igzstream & gzfileStream, const std::string & filename, std::string & name, std::string & sequence);
 

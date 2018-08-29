@@ -241,4 +241,16 @@ namespace {
 
   }
 
+
+
+    // Test codons_from_ascii
+
+  TEST(codons_from_asciiTest, codonsFromAscii){
+
+    string asciisequence="sZR~_H";
+    codons_from_ascii(asciisequence);
+    EXPECT_STREQ("sZR~_H", sequence.c_str());
+
+  }
+
 } 

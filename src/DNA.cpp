@@ -28,8 +28,16 @@ char base_score[128] = {
 	  5, 5, 5, 5, 5
 };
 
+char complement_base_score[5] = {
+      4, 3, 2, 1, 5
+};
+
 char bases[5] = {
           'A', 'C', 'G', 'T', 'N'
+};
+
+char complement_bases[5] = {
+          'T', 'G', 'C', 'A', 'N'
 };
 
 char complement(const char & n){   
@@ -93,10 +101,15 @@ int ascii_codons(std::string & myDNA){
 	return 0;
 }
 
-void codons_from_ascii(std::string & myascii){
+std::string codons_from_ascii(std::string & myascii){
+	std::string myDNA ((myascii.length()*3), '-');
 	for (std::string::size_type i = 0; i<myascii.length(); ++i){
-		return;
+		myDNA[(i*3)+2]=bases[int(myascii[i]-63)/16];
+		int sixteensreamainder=int(myascii[i]-63)%16;
+		myDNA[(i*3)+1]=bases[sixteensreamainder/4];
+		myDNA[(i*3)]=bases[sixteensreamainder%4];
 	}
+	return myDNA;
 }
 
 

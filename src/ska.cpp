@@ -11,6 +11,7 @@
 #include "sk_distance.hpp"
 #include "sk_fasta.hpp"
 #include "sk_fastq.hpp"
+#include "sk_find.hpp"
 #include "sk_merge.hpp"
 #include "sk_info.hpp"
 #include "sk_refalign.hpp"
@@ -38,6 +39,8 @@ int fastqHelp(void);
 int fastqSubcommand(int argc, char *argv[]);
 int infoHelp(void);
 int infoSubcommand(int argc, char *argv[]);
+int findHelp(void);
+int findSubcommand(int argc, char *argv[]);
 int mapHelp(void);
 int mapSubcommand(int argc, char *argv[]);
 int mergeHelp(void);
@@ -58,7 +61,7 @@ int MaxQual=60;
 int MinCov=0;
 int maxNamesToPrint=10;
 
-std::string versionNumber = "0.1";
+
 std::string citation = "TBA";
 
 long int getint(char * arg){
@@ -91,6 +94,7 @@ int skaHelp(void){
 	std::cout << "distance\tPairwise distance calculation and clustering from split kmer" << std::endl << "\t\tfiles" << std::endl;
 	std::cout << "fasta\t\tCreate a split kmer file from fasta file(s)" << std::endl;
 	std::cout << "fastq\t\tCreate a split kmer file from fastq file(s)" << std::endl;
+	std::cout << "find\t\tLocate split kmers in a reference fasta file" << std::endl;
 	std::cout << "info\t\tPrint some information about one or more kmer or kmerge" << std::endl << "\t\tfiles" << std::endl;
 				   //123456789012345678901234567890123456789012345678901234567890
 	std::cout << "map\t\tAlign split kmer file(s) against a reference fasta file" << std::endl;
@@ -832,6 +836,97 @@ int fastqSubcommand(int argc, char *argv[]){
 	return 0;
 }
 
+int findHelp(void){
+	std::cout << std::endl << "Usage:" << std::endl;
+	std::cout << "ska find [options] <kmer files>" << std::endl << std::endl;
+	std::cout << "Options:" << std::endl;
+	std::cout << "-h\t\tPrint this help." << std::endl;
+	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
+	std::cout << "-i\t\tInclude kmers in repetitive reference regions." << std::endl;
+	std::cout << "-o <file>\tPrefix for output files. [Default = found]" << std::endl;
+	std::cout << "-r <file>\tReference fasta/gff file name. [Required]" << std::endl;
+	std::cout << "-v\t\tOnly output variant sites." << std::endl;
+	return 0;
+}
+
+
+int findSubcommand(int argc, char *argv[]){
+
+	std::string outfile="found.vcf";
+	std::string reference="";
+	std::vector < std::string > args;
+	bool snponly=false;
+	bool includerepeats=false;
+
+	for (int i=2; i<argc; ++i){
+
+		std::string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			findHelp();
+			return 0;
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], args);
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -f flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-i"){
+			includerepeats = true;
+		}
+		else if (arg == "-o"){
+			i++;
+			if (i<argc){
+				outfile = std::string(argv[i])+".vcf";
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-r"){
+			i++;
+			if (i<argc){
+				reference = argv[i];
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -r flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-v"){
+			snponly = true;
+		}
+		else if (arg[0]=='-'){
+			std::cerr << std::endl << "Unrecognised flag " << arg << std::endl << std::endl;
+				return 1;
+		}
+		else {
+			args.push_back(arg);
+		}
+	}
+
+	if (args.size()<1){
+		std::cerr << std::endl << "Too few arguments" << std::endl;
+		findHelp();
+		return 1;
+	}
+	if (reference==""){
+		std::cerr << std::endl << "Reference sequence is required" << std::endl;
+		findHelp();
+		return 1;
+	}
+
+	if (findKmersInFasta(args, reference, snponly, includerepeats, outfile)){return 1;}
+
+	return 0;
+}
+
 
 int infoHelp(void){
 	std::cout << std::endl << "Usage:" << std::endl;
@@ -1305,7 +1400,7 @@ int uniqueHelp(void){
 	std::cout << "-i <file>\tFile of ingroup sample names. Unique kmers found \n\t\tin these files will be retained." << std::endl;
 	std::cout << "-o <file>\tOutput file prefix. [Default = unique]" << std::endl;
 	std::cout << "-p <float>\tMinimum proportion of ingroup isolates required to possess a \n\t\tsplit kmer for that kmer to be retained. [Default = 0.9]" << std::endl << std::endl;
-					   //123456789012345678901234567890123456789012345678901234567890
+					   
 	return 0;
 }
 
@@ -1417,6 +1512,11 @@ int weedHelp(void){
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-i <file>\tName of kmer file containing kmers to be weeded. [Required]" << std::endl;
+	std::cout << "-m <int>\tMinimum number of isolates required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 0]" << std::endl;
+	std::cout << "-M <int>\tMaximum number of isolates required to possess a split\n\t\tkmer for that kmer to be retained. 0 = No maximum. [Default = 0]" << std::endl;
+	std::cout << "-p <float>\tMinimum proportion of isolates required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 0.0]" << std::endl;
+	std::cout << "-P <float>\tMaximum proportion of isolates required to possess a split\n\t\tkmer for that kmer to be retained. [Default = 1.0]" << std::endl;
+	                        //123456789012345678901234567890123456789012345678901234567890
 	return 0;
 }
 
@@ -1425,6 +1525,10 @@ int weedSubcommand(int argc, char *argv[]){
 
 	std::string infile="";
 	std::string kmerfile="";
+	float minproportion=0.0;
+	float maxproportion=1.0;
+	int minsamples=0;
+	int maxsamples=0;
 	std::vector < std::string > args;
 
 	for (int i=2; i<argc; ++i){
@@ -1434,6 +1538,16 @@ int weedSubcommand(int argc, char *argv[]){
 		if (arg=="-h" || arg=="--help"){
 			weedHelp();
 			return 0;
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], args);
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -f flag" << std::endl << std::endl;
+				return 1;
+			}
 		}
 		else if (arg == "-i"){
 			i++;
@@ -1445,13 +1559,83 @@ int weedSubcommand(int argc, char *argv[]){
 				return 1;
 			}
 		}
-		else if (arg == "-f"){
+		else if (arg == "-m"){
 			i++;
 			if (i<argc){
-				fileToVector(argv[i], args);
+				try {
+					minsamples = getint(argv[i]);
+				}
+				catch (const std::invalid_argument& e) {
+					std::cerr << std::endl << "Expecting positive int after -m flag" << std::endl << std::endl;
+					return 1;
+				}
 			}
 			else {
-				std::cerr << std::endl << "Expecting file name after -f flag" << std::endl << std::endl;
+				std::cerr << std::endl << "Expecting positive int after -m flag" << std::endl << std::endl;
+				return 1;
+			}
+			if (minsamples < 0){
+				std::cerr << std::endl << "Minimum number of samples must be 0 or greater" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-M"){
+			i++;
+			if (i<argc){
+				try {
+					maxsamples = getint(argv[i]);
+				}
+				catch (const std::invalid_argument& e) {
+					std::cerr << std::endl << "Expecting positive int after -m flag" << std::endl << std::endl;
+					return 1;
+				}
+			}
+			else {
+				std::cerr << std::endl << "Expecting positive int after -m flag" << std::endl << std::endl;
+				return 1;
+			}
+			if (maxsamples < 0){
+				std::cerr << std::endl << "Maximum number of samples must be 0 or greater" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-p"){
+			i++;
+			if (i<argc){
+				try {
+					minproportion = getfloat(argv[i]);
+				}
+				catch (const std::invalid_argument& e) {
+					std::cerr << std::endl << "Expecting float between 0 and 1 after -p flag" << std::endl << std::endl;
+					return 1;
+				}
+			}
+			else {
+				std::cerr << std::endl << "Expecting float between 0 and 1 after -p flag" << std::endl << std::endl;
+				return 1;
+			}
+			if (minproportion < 0 || minproportion > 1){
+				std::cerr << std::endl << "Minimum proportion must be between 0 and 1" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-P"){
+			i++;
+			if (i<argc){
+				try {
+					maxproportion = getfloat(argv[i]);
+				}
+				catch (const std::invalid_argument& e) {
+					std::cerr << std::endl << "Expecting float between 0 and 1 after -P flag" << std::endl << std::endl;
+					return 1;
+				}
+			}
+			else {
+				std::cerr << std::endl << "Expecting float between 0 and 1 after -P flag" << std::endl << std::endl;
+				return 1;
+			}
+			if (maxproportion < 0 || maxproportion > 1){
+				std::cerr << std::endl << "Maximum proportion must be between 0 and 1" << std::endl << std::endl;
 				return 1;
 			}
 		}
@@ -1470,8 +1654,19 @@ int weedSubcommand(int argc, char *argv[]){
 		return 1;
 	}
 
-	if (infile==""){
-		std::cerr << "Input split kmer file is required" << std::endl;
+	if (infile=="" && minproportion==0 && minsamples==0 && maxproportion==1 && maxproportion==0){
+		std::cerr << "Input split kmer file is required if no sample numbers or proportions are set" << std::endl;
+		weedHelp();
+		return 1;
+	}
+
+	if (minproportion>=maxproportion){
+		std::cerr << "Maxproportion must be greater than minproportion" << std::endl;
+		weedHelp();
+		return 1;
+	}
+	if (minsamples>=maxsamples && maxsamples!=0){
+		std::cerr << "Maxsamples must be greater than minsamples" << std::endl;
 		weedHelp();
 		return 1;
 	}
@@ -1491,7 +1686,7 @@ int weedSubcommand(int argc, char *argv[]){
 
 	std::cout << std::endl;
 
-	if (weedKmers(args, infile)){return 1;}
+	if (weedKmers(args, infile, minproportion, maxproportion, minsamples, maxsamples)){return 1;}
 
 	return 0;
 }
@@ -1524,6 +1719,9 @@ int main(int argc, char *argv[])
 		}
 	else if (subcommand == "fastq"){
 			if(fastqSubcommand(argc, argv)){return 1;}
+		}
+	else if (subcommand == "find"){
+			if(findSubcommand(argc, argv)){return 1;}
 		}
 	else if (subcommand == "info"){
 			if(infoSubcommand(argc, argv)){return 1;}

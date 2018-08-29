@@ -182,7 +182,6 @@ int alignKmers(const float & minproportion, const std::string & outputfile, cons
 			vectorbool_from_ascii(asciibits, mybits);//convert the ascii representation of the taxa to a vector of bools
 
 			while (fileStream.peek()!='\n' && fileStream.get(base)){
-				//base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				std::string kmer (kmerbuffer, kmersize*2/3);
 				

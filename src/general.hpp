@@ -8,6 +8,8 @@
 #include <chrono> //std::chrono
 #include "gzstream.h"
 
+extern std::string versionNumber;
+
 std::string splitFileName(const std::string & str);
 
 int openFileStream(const std::string & fileName, std::ifstream & fileStream, bool verbose=true);

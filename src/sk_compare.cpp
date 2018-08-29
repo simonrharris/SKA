@@ -40,19 +40,16 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 
 		if (subjectkmersize!=oldsubjectkmersize){
 			std::cerr << "kmer files have different kmer sizes" << std::endl <<std::endl;
-			return 0;
+			return 1;
 		}
-
-		char basebuffer[1];
+		char base;
 		char kmerbuffer[subjectkmersize*2/3];
 		char asciibuffer[int(ceil(float(subjectSampleNames.size())/6))];
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
 			std::string asciibits (asciibuffer, sizeof(asciibuffer));
 			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
-			while (fileStream.peek()!='\n' && fileStream.read(basebuffer, sizeof(basebuffer))){
-				std::string base (basebuffer, 1);
-				base[0]=toupper(base[0]);
+			while (fileStream.peek()!='\n' && fileStream.get(base)){
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				std::string kmer (kmerbuffer, subjectkmersize*2/3);
 				
@@ -60,7 +57,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
-							it->second[i+sampleNum]=base[0];
+							it->second[i+sampleNum]=base;
 							queryKmers[i+sampleNum]++;
 						}
 					}
@@ -69,7 +66,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 					std::string newsequence = emptySequence;
 					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
 						if (mybits[i]){
-							newsequence[i+sampleNum]=base[0];
+							newsequence[i+sampleNum]=base;
 							queryKmers[i+sampleNum]++;
 						}
 					}

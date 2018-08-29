@@ -9,6 +9,7 @@
 #include <cmath> //std::pow
 #include <set> //std::set
 #include "DNA.hpp"
+#include "general.hpp"
 
 
 void ascii_bitstring(std::string & mybits){
@@ -60,7 +61,8 @@ int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > 
 	}
 
 	kmerfile << kmersize << std::endl;
-	kmerfile << outputfile.substr(0, outputfile.find_last_of(".")) << std::endl;
+	std:: string samplename=splitFileName(outputfile);
+	kmerfile << samplename.substr(0, samplename.find_last_of(".")) << std::endl;
 	kmerfile << '"';
 	for (std::unordered_map < std::string, std::array < int, 8 > >::const_iterator it=mymap.begin(); it!=mymap.end(); ++it){
 		std::string kmer=it->first;

@@ -24,7 +24,7 @@ void addKmerToBasePositionMap(std::unordered_map < std::string, std::vector <int
 }
 
 
-void printVariantSites(std::ofstream & myOutfile, const int totalbases, const std::vector < std::string > & sampleNames, const std::vector < std::string > & mySequences){
+void printVariantSites(std::ofstream & myOutfile, const int totalbases, const std::vector < std::string > & sampleNames, const std::vector < std::string > & mySequences, const bool includeReference, const std::string & myReferenceSequence){
 	std::vector < int > sitestoprint;
 	sitestoprint.reserve(10000);
 	std::vector < int > constantBases (4, 0);
@@ -57,6 +57,14 @@ void printVariantSites(std::ofstream & myOutfile, const int totalbases, const st
 	}
 
 	std::cout << "Printing alignment of " << sitestoprint.size() << " variant sites" << std::endl;
+
+	if (includeReference){
+		std::string mySequence (sitestoprint.size(), '-');
+		for (int j=0; j<sitestoprint.size(); ++j){
+			mySequence[j]=myReferenceSequence[sitestoprint[j]];
+		}
+		myOutfile << mySequence << std::endl;
+	}
 
 	for (int i=0; i<sampleNames.size(); ++i){
 		std::string mySequence (sitestoprint.size(), '-');
@@ -191,15 +199,18 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 				std::unordered_map < std::string, std::vector <int> >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					if (it->second.size()==1 || maprepeats){//if the match is unique or the user has chosen to map repeats
+						
 						for (std::vector < int >::iterator itb = it->second.begin(); itb != it->second.end(); ++itb) {//iterate each match of the kmer in the reference
+							char mybase=base;
 							std::set < int >::iterator itc = revSet.find(*itb);//for each match see if the kmer in the reference is on the reverse strand
 							if ( itc != revSet.end() ){//if so, complement the base
-								base=complement(base);
+								mybase=complement(base);
 							}
+
 							for (int j=0; j<fileInclude.size(); ++j){ //add the base to all samples that are true in the bitset
 								if (mybits[fileInclude[j]]){
-									sequences[includedSampleNum+j][*itb]=base;//set the base of the sequence at the site matching the reference
-									if (fillall || base!=refseq[*itb]){//if the match is a SNP or if the user has asked to map all sites in the kmer
+									sequences[includedSampleNum+j][*itb]=mybase;//set the base of the sequence at the site matching the reference
+									if (fillall || mybase!=refseq[*itb]){//if the match is a SNP or if the user has asked to map all sites in the kmer
 										for (int i=*itb-kmerlen; i<=*itb+kmerlen; ++i){//for kmer sites either site of the middle base
 											if (i==*itb){
 												continue;//skip the middle base as we've already set that
@@ -243,14 +254,15 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 
 	if (includeref){
 		std::cout << "Printing reference sequence to file" << std::endl;
-		alignfile << ">" << filename << std::endl << refseq << std::endl;
+		alignfile << ">" << filename << std::endl; 
 	}
 	
 	if (variantonly){
-		printVariantSites(alignfile, basenum, includedSampleNames, sequences);
+		printVariantSites(alignfile, basenum, includedSampleNames, sequences, includeref, refseq);
 	}
 	else{
 		std::cout << "Printing alignment" << std::endl;
+		alignfile << refseq << std::endl;
 		for (int i=0; i<includedSampleNames.size(); ++i){
 			alignfile << ">" << includedSampleNames[i] << std::endl << sequences[i] << std::endl;
 		}
