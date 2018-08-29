@@ -9,7 +9,6 @@
 #include <algorithm> //std::count
 #include <chrono> //std::chrono
 #include <ctime> //std::localtime
-#include <iomanip> //std::put_time
 #include "kmers.hpp"
 #include "general.hpp"
 #include "DNA.hpp"
@@ -171,7 +170,10 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 	vcffile << "##fileformat=VCFv4.3" << std::endl;
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     time_t in_time_t = std::chrono::system_clock::to_time_t(now);
-	vcffile << "##fileDate=" << std::put_time(std::localtime(&in_time_t), "%Y%m%d") << std::endl;
+    char timestr[100];
+    if (std::strftime(timestr, sizeof(timestr), "%Y%m%d", std::localtime(&in_time_t))) {
+        vcffile << "##fileDate=" << timestr << std::endl;
+    }
 	vcffile << "##source=SKA v"<< versionNumber << std::endl;
 	vcffile << "##reference="<< reffile << std::endl;
 	vcffile << "##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of Samples With Matching Kmer\">" << std::endl;
