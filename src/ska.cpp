@@ -29,6 +29,8 @@ int allelesHelp(void);
 int allelesSubcommand(int argc, char *argv[]);
 int alignHelp(void);
 int alignSubcommand(int argc, char *argv[]);
+int annotateHelp(void);
+int annotateSubcommand(int argc, char *argv[]);
 int compareHelp(void);
 int compareSubcommand(int argc, char *argv[]);
 int distanceHelp(void);
@@ -39,8 +41,6 @@ int fastqHelp(void);
 int fastqSubcommand(int argc, char *argv[]);
 int infoHelp(void);
 int infoSubcommand(int argc, char *argv[]);
-int findHelp(void);
-int findSubcommand(int argc, char *argv[]);
 int mapHelp(void);
 int mapSubcommand(int argc, char *argv[]);
 int mergeHelp(void);
@@ -90,11 +90,11 @@ int skaHelp(void){
 	std::cout << "Subcommands:" << std::endl;
 	std::cout << "align\t\tReference-free alignment from a set of split kmer files" << std::endl;
 	std::cout << "alleles\t\tCreate a merged split kmer file for all sequenes in one or" << std::endl << "\t\tmore multifasta files" << std::endl;
+	std::cout << "annotate\tLocate/annotate split kmers in a reference fasta/gff file" << std::endl;
 	std::cout << "compare\t\tPrint comparison statistics for a query split kmer file" << std::endl << "\t\tagainst a set of subject split kmer files" << std::endl;
 	std::cout << "distance\tPairwise distance calculation and clustering from split kmer" << std::endl << "\t\tfiles" << std::endl;
 	std::cout << "fasta\t\tCreate a split kmer file from fasta file(s)" << std::endl;
 	std::cout << "fastq\t\tCreate a split kmer file from fastq file(s)" << std::endl;
-	std::cout << "find\t\tLocate split kmers in a reference fasta file" << std::endl;
 	std::cout << "info\t\tPrint some information about one or more kmer or kmerge" << std::endl << "\t\tfiles" << std::endl;
 				   //123456789012345678901234567890123456789012345678901234567890
 	std::cout << "map\t\tAlign split kmer file(s) against a reference fasta file" << std::endl;
@@ -323,6 +323,134 @@ int alignSubcommand(int argc, char *argv[]){
 	std::cout << "Output will be written to " << outprefix << std::endl << std::endl;
 
 	if (alignKmers(minproportion, outprefix, args, variantonly, sample)){return 1;}
+
+	return 0;
+}
+
+int annotateHelp(void){
+	std::cout << std::endl << "Usage:" << std::endl;
+	std::cout << "ska annotate [options] <kmer files>" << std::endl << std::endl;
+	std::cout << "Options:" << std::endl;
+	std::cout << "-h\t\tPrint this help." << std::endl;
+	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
+	std::cout << "-i\t\tInclude kmers in repetitive reference regions." << std::endl;
+	std::cout << "-o <file>\tPrefix for output files. [Default = found]" << std::endl;
+	std::cout << "-p\t\tInclude product in output." << std::endl;
+	std::cout << "-r <file>\tReference fasta/gff file name. [Required]" << std::endl;
+	std::cout << "-v\t\tOnly output variant sites." << std::endl << std::endl;
+	return 0;
+}
+
+
+int annotateSubcommand(int argc, char *argv[]){
+
+	std::string outfile="annotation.vcf";
+	std::string reference="";
+	std::vector < std::string > args;
+	bool snponly=false;
+	bool includerepeats=false;
+	bool includeproduct=false;
+
+	for (int i=2; i<argc; ++i){
+
+		std::string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			annotateHelp();
+			return 0;
+		}
+		else if (arg == "-f"){
+			i++;
+			if (i<argc){
+				fileToVector(argv[i], args);
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -f flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-i"){
+			includerepeats = true;
+		}
+		else if (arg == "-p"){
+			includeproduct = true;
+		}
+		else if (arg == "-o"){
+			i++;
+			if (i<argc){
+				outfile = std::string(argv[i])+".vcf";
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-r"){
+			i++;
+			if (i<argc){
+				reference = argv[i];
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -r flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-v"){
+			snponly = true;
+		}
+		else if (arg[0]=='-'){
+			std::cerr << std::endl << "Unrecognised flag " << arg << std::endl << std::endl;
+				return 1;
+		}
+		else {
+			args.push_back(arg);
+		}
+	}
+
+	if (args.size()<1){
+		std::cerr << std::endl << "Too few arguments" << std::endl;
+		annotateHelp();
+		return 1;
+	}
+	if (reference==""){
+		std::cerr << std::endl << "Reference sequence is required" << std::endl;
+		annotateHelp();
+		return 1;
+	}
+
+	skaVersion();
+
+	std::cout << "Annotating split kmer matches in " << reference << " from ";
+	if (args.size()>maxNamesToPrint){
+		std::cout << args.size() << " files";
+	}
+	else {	
+		for (std::vector <std::string>::iterator it = args.begin(); it != args.end(); ++it){
+			std::cout << *it << " ";
+		}
+	}
+	std::cout << std::endl;
+
+	if (snponly){
+		std::cout << "Only variant sites will be included" << std::endl;
+	}
+	if (includerepeats){
+		std::cout << "Matches in repeats will be included" << std::endl;
+	}
+	else {
+		std::cout << "Matches in repeats will not be included" << std::endl;
+	}
+	if (includeproduct){
+		std::cout << "Product information for CDSs will be printed" << std::endl;
+	}
+	else{
+		std::cout << "Product information for CDSs will not be printed" << std::endl;
+	}
+
+	std::cout << "Output will be written to " << outfile << std::endl << std::endl;
+
+
+	if (findKmersInFasta(args, reference, snponly, includerepeats, includeproduct, outfile)){return 1;}
 
 	return 0;
 }
@@ -832,97 +960,6 @@ int fastqSubcommand(int argc, char *argv[]){
 	std::cout << std::endl;
 
 	if (fastqToKmers(args, outfile, kmersize, minquality, filecovcutoff, covcutoff, minmaf)){return 1;}
-
-	return 0;
-}
-
-int findHelp(void){
-	std::cout << std::endl << "Usage:" << std::endl;
-	std::cout << "ska find [options] <kmer files>" << std::endl << std::endl;
-	std::cout << "Options:" << std::endl;
-	std::cout << "-h\t\tPrint this help." << std::endl;
-	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
-	std::cout << "-i\t\tInclude kmers in repetitive reference regions." << std::endl;
-	std::cout << "-o <file>\tPrefix for output files. [Default = found]" << std::endl;
-	std::cout << "-r <file>\tReference fasta/gff file name. [Required]" << std::endl;
-	std::cout << "-v\t\tOnly output variant sites." << std::endl;
-	return 0;
-}
-
-
-int findSubcommand(int argc, char *argv[]){
-
-	std::string outfile="found.vcf";
-	std::string reference="";
-	std::vector < std::string > args;
-	bool snponly=false;
-	bool includerepeats=false;
-
-	for (int i=2; i<argc; ++i){
-
-		std::string arg=(argv[i]);
-
-		if (arg=="-h" || arg=="--help"){
-			findHelp();
-			return 0;
-		}
-		else if (arg == "-f"){
-			i++;
-			if (i<argc){
-				fileToVector(argv[i], args);
-			}
-			else {
-				std::cerr << std::endl << "Expecting file name after -f flag" << std::endl << std::endl;
-				return 1;
-			}
-		}
-		else if (arg == "-i"){
-			includerepeats = true;
-		}
-		else if (arg == "-o"){
-			i++;
-			if (i<argc){
-				outfile = std::string(argv[i])+".vcf";
-			}
-			else {
-				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
-				return 1;
-			}
-		}
-		else if (arg == "-r"){
-			i++;
-			if (i<argc){
-				reference = argv[i];
-			}
-			else {
-				std::cerr << std::endl << "Expecting file name after -r flag" << std::endl << std::endl;
-				return 1;
-			}
-		}
-		else if (arg == "-v"){
-			snponly = true;
-		}
-		else if (arg[0]=='-'){
-			std::cerr << std::endl << "Unrecognised flag " << arg << std::endl << std::endl;
-				return 1;
-		}
-		else {
-			args.push_back(arg);
-		}
-	}
-
-	if (args.size()<1){
-		std::cerr << std::endl << "Too few arguments" << std::endl;
-		findHelp();
-		return 1;
-	}
-	if (reference==""){
-		std::cerr << std::endl << "Reference sequence is required" << std::endl;
-		findHelp();
-		return 1;
-	}
-
-	if (findKmersInFasta(args, reference, snponly, includerepeats, outfile)){return 1;}
 
 	return 0;
 }
@@ -1725,8 +1762,8 @@ int main(int argc, char *argv[])
 	else if (subcommand == "fastq"){
 			if(fastqSubcommand(argc, argv)){return 1;}
 		}
-	else if (subcommand == "find"){
-			if(findSubcommand(argc, argv)){return 1;}
+	else if (subcommand == "annotate"){
+			if(annotateSubcommand(argc, argv)){return 1;}
 		}
 	else if (subcommand == "info"){
 			if(infoSubcommand(argc, argv)){return 1;}

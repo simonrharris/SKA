@@ -4,6 +4,7 @@
 #include <iostream> //std:cerr
 #include "gzstream.h"
 
+
 char complement_table[128] = {
       '-',
 	  '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-',
