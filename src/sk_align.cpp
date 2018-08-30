@@ -101,7 +101,7 @@ void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmer
 }
 
 
-int alignKmers(const float & minproportion, const std::string & outputfile, const std::vector < std::string > & kmerfiles, const bool & variantonly, const std::vector < std::string > & sample)
+int alignKmers(const float & minproportion, const std::string & outputprefix, const std::vector < std::string > & kmerfiles, const bool & variantonly, const bool & printkmers, const std::vector < std::string > & sample)
 {
 
 	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();//start the clock
@@ -137,13 +137,14 @@ int alignKmers(const float & minproportion, const std::string & outputfile, cons
 	int sampleNum=0;
 	int includedSampleNum=0;
 	char base;
+	int kmersize;
 
 	std::ifstream fileStream;
 	for (int s = 0; s < kmerfiles.size(); ++s){//read each file and make a map of the kmers which stores the bases for each included sample
 		
 		if (openFileStream(kmerfiles[s], fileStream)){return 1;};
 
-		int kmersize;
+		
 		std::vector < std::string > names;
 		
 		readKmerHeader(fileStream, kmersize, names);//read the header from the kmer file to get the kmer size and sample names
@@ -201,7 +202,20 @@ int alignKmers(const float & minproportion, const std::string & outputfile, cons
 
 	filterAlignment(kmerMap, constantBases, numSamples, minrequired, variantonly);
 	
-	printAlignment(outputfile, kmerMap, constantBases, includedSampleNames, variantonly);
+	printAlignment(outputprefix+".aln", kmerMap, constantBases, includedSampleNames, variantonly);
+
+	if (printkmers){
+
+		std::cout << "Printing aligned split kmers" << std::endl;
+
+		std::unordered_map < std::vector < bool >,  std::vector < std::string > > revKmerMap;
+
+		reverseStringKmerMap(kmerMap, revKmerMap);//reverse the map so that we have a new map of kmers for each combination of samples
+
+		std::cout << revKmerMap.size() << " unique taxon combinations in map" << std::endl;
+		
+		if(printMergedKmerFile(revKmerMap, outputprefix+".skf", includedSampleNames, kmersize)){return 1;}
+	}
 
 	printDuration(start);
 	

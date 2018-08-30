@@ -209,10 +209,11 @@ int alignHelp(void){
 	std::cout << "Options:" << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
+	std::cout << "-k\t\tPrint aligned split kmers to file." << std::endl;
 	std::cout << "-o <file>\tPrefix for output files. [Default = reference_free]" << std::endl;
 	std::cout << "-p <float>\tMinimum proportion of isolates required to possess a split \n\t\tkmer for that kmer to be included in the alignment. \n\t\t[Default = 0.9]" << std::endl;
 	std::cout << "-s <file>\tFile of sample names to include in the alignment." << std::endl;
-	std::cout << "-v\tOutput variant only alignment. [Default = all sites]" << std::endl << std::endl;
+	std::cout << "-v\t\tOutput variant only alignment. [Default = all sites]" << std::endl << std::endl;
 	return 0;
 }
 
@@ -222,6 +223,7 @@ int alignSubcommand(int argc, char *argv[]){
 	std::string outprefix="reference_free";
 	float minproportion=0.9;
 	bool variantonly=false;
+	bool printkmers=false;
 	std::vector < std::string > args;
 	std::vector < std::string > sample;
 
@@ -273,6 +275,9 @@ int alignSubcommand(int argc, char *argv[]){
 				return 1;
 			}
 		}
+		else if (arg == "-k"){
+			printkmers = true;
+		}
 		else if (arg == "-s"){
 			i++;
 			if (i<argc){
@@ -299,7 +304,7 @@ int alignSubcommand(int argc, char *argv[]){
 		outprefix+="_variants";
 	}
 
-	outprefix+=".aln";
+	//outprefix+=".aln";
 	
 	if (args.size()<1){
 		std::cerr << std::endl << "Too few arguments" << std::endl;
@@ -322,7 +327,7 @@ int alignSubcommand(int argc, char *argv[]){
 	std::cout << "Variable sites present in more than " << minproportion*100 << "% of isolates will be included" << std::endl;
 	std::cout << "Output will be written to " << outprefix << std::endl << std::endl;
 
-	if (alignKmers(minproportion, outprefix, args, variantonly, sample)){return 1;}
+	if (alignKmers(minproportion, outprefix, args, variantonly, printkmers, sample)){return 1;}
 
 	return 0;
 }

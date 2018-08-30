@@ -12,4 +12,4 @@ void printAlignment(const std::string & outputfilename, const std::unordered_map
 
 void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmerMap, const std::string & myKmer, const char myBase, const std::vector < bool > & myBits, const std::vector < int > & mySamples, int sampleNumber, int totalSamples, int maxMissing);
 
-int alignKmers(const float & maxmissingproportion, const std::string & outputfile, const std::vector < std::string > & kmerfiles, const bool & variantonly, const std::vector < std::string > & sample);
+int alignKmers(const float & maxmissingproportion, const std::string & outputprefix, const std::vector < std::string > & kmerfiles, const bool & variantonly, const bool & printkmers, const std::vector < std::string > & sample);

@@ -37,3 +37,5 @@ void applyFileKmerArrayMapFilters(std::unordered_map < std::string, std::array <
 void applyFinalKmerArrayMapFilters(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const int & usercovcutoff, const float & userminmaf);
 
 void reverseVectorBoolKmerMap(std::unordered_map < std::string, std::vector < bool > > & kmerMap, std::unordered_map < std::vector < bool >,  std::vector < std::string > > & revKmerMap);
+
+void reverseStringKmerMap(std::unordered_map < std::string, std::string > & kmerMap, std::unordered_map < std::vector < bool >, std::vector < std::string > > & revKmerMap);

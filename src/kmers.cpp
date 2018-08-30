@@ -52,7 +52,7 @@ int extractMiddleBase(std::string & myString, char & myChar){
 
 int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > > & mymap, const std::string outputfile, const int kmersize){
 	
-	std::cout << "Writing kmers to " << outputfile << std::endl;
+	std::cout << "Writing split kmers to " << outputfile << std::endl;
 
 	std::ofstream kmerfile(outputfile);
 	if (kmerfile.fail()){
@@ -98,7 +98,7 @@ int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > 
 
 int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::vector < std::string > > & mymap, const std::string outputfile, const std::vector < std::string > & mysamples, const int kmersize){
 
-	std::cout << "Writing merged file to " << outputfile << std::endl;
+	std::cout << "Writing split kmers to " << outputfile << std::endl;
 
 	std::ofstream kmerout(outputfile); //open output file stream
 	if (kmerout.fail()){
@@ -359,6 +359,43 @@ void reverseVectorBoolKmerMap(std::unordered_map < std::string, std::vector < bo
 		}
 		else {//if the bitset isn't in the map
 			revKmerMap.insert(std::make_pair(it->second, std::vector < std::string > {it->first})); //insert the vector into the map
+		}
+		kmerMap.erase(it++); //remove kmer from kmerMap to save space
+	}
+
+}
+
+
+void reverseStringKmerMap(std::unordered_map < std::string, std::string > & kmerMap, std::unordered_map < std::vector < bool >, std::vector < std::string > > & revKmerMap){
+
+	std::unordered_map < std::string, std::string >::iterator it = kmerMap.begin();
+	std::unordered_map < std::string, std::string >::iterator endIter = kmerMap.end();
+
+	for (; it!=endIter; ){
+
+		for (int i=0; i<5; ++i){
+			std::string kmer (1, bases[i]);
+			kmer+=it->first;
+			std::vector < bool > myvb (it->second.length(), false);
+
+			int j=0;
+			bool matched=false;
+			for (std::string::iterator sit=it->second.begin(); sit!=it->second.end(); ++sit, ++j){
+				if (*sit==bases[i]){
+					myvb[j]=true;
+					matched=true;
+				}
+			}
+
+			if (matched){
+				std::unordered_map < std::vector < bool >, std::vector < std::string > >::iterator it2 = revKmerMap.find(myvb);//check if the bitset is in the map
+				if ( it2 != revKmerMap.end() ){//if the bitset is in the map
+					it2->second.push_back(kmer); //add the kmer
+				}
+				else {//if the bitset isn't in the map
+					revKmerMap.insert(std::make_pair(myvb, std::vector < std::string > {kmer})); //insert the vector into the map
+				}
+			}
 		}
 		kmerMap.erase(it++); //remove kmer from kmerMap to save space
 	}
