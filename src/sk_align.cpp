@@ -12,7 +12,7 @@
 #include <algorithm> //std::count
 
 
-void filterAlignment(std::unordered_map < std::string, std::string > & myKmerMap, std::vector < int > & constantBaseVector, const int numSamples, const int minrequired, const bool variantOnly){
+void filterAlignment(std::unordered_map < std::string, std::string > & myKmerMap, std::vector < int > & constantBaseVector, const int numSamples, const int minrequired, const bool variantOnly, float & sitecount, float & variantsitecount){
 
 	std::unordered_map < std::string, std::string >::iterator kmit = myKmerMap.begin();
 	std::unordered_map < std::string, std::string >::iterator kmitend = myKmerMap.end();
@@ -41,8 +41,13 @@ void filterAlignment(std::unordered_map < std::string, std::string > & myKmerMap
 		else if (acgtCount==1 && variantOnly){//if the site is constant and variantonlly has been selected, record the variant base and exclude the site from the alignment
 			constantBaseVector[constbase]++;
 			myKmerMap.erase(kmit++);
+			sitecount++;
 		}
 		else {
+			sitecount++;
+			if (acgtCount>1){
+				variantsitecount++;
+			}
 			++kmit;
 		}
 		
@@ -92,7 +97,7 @@ void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmer
 		if ((currentSampleNumber)<=maxMissing){
 			std::pair < std::unordered_map < std::string, std::string >::iterator, bool > ret = myKmerMap.insert(std::make_pair(myKmer, std::string (totalSamples,'-')));
 			for (int i=0; i<mySamples.size(); ++i){
-				if (myBits[i]){
+				if (myBits[mySamples[i]]){
 					ret.first->second[i+currentSampleNumber]=myBase;
 				}
 			}
@@ -200,7 +205,12 @@ int alignKmers(const float & minproportion, const std::string & outputprefix, co
 	
 	std::vector < int > constantBases (4,0);
 
-	filterAlignment(kmerMap, constantBases, numSamples, minrequired, variantonly);
+	float totalsites=0;
+	float variantsites=0;
+
+	filterAlignment(kmerMap, constantBases, numSamples, minrequired, variantonly, totalsites, variantsites);
+
+	if(calculateMissedSNPs(totalsites, variantsites, kmersize)){return 1;};
 	
 	printAlignment(outputprefix+".aln", kmerMap, constantBases, includedSampleNames, variantonly);
 

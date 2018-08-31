@@ -19,3 +19,5 @@ int openGzFileStream(const std::string & fileName, igzstream & gzFileStream, boo
 int fileToVector(const std::string & filename, std::vector < std::string > & fileargs);
 
 void printDuration(const std::chrono::high_resolution_clock::time_point start);
+
+int calculateMissedSNPs(float totalSiteCount, const float variantSiteCount, const int kmerSize);

@@ -232,12 +232,17 @@ int alignKmersToReference(const std::string & reference, const std::string & out
     	for (int i=0; i<fileInclude.size(); ++i){//print the percentage of mapped bases for each sample in a file
 	    	int mappedbases=basenum;
 	    	int mappedNs=0;
+	    	int snps=0;
 	    	for (int j=0; j<basenum; ++j){
 	    		if (sequences[includedSampleNum+i][j]=='-'){
 	    			mappedbases--;
 	    		}
+	    		if (base_score[sequences[includedSampleNum+i][j]]<4 && base_score[refseq[j]]<4 && sequences[includedSampleNum+i][j]!=refseq[j] && ::isupper(sequences[includedSampleNum+i][j]) ) { 
+	    			snps++;
+	    		}
 	    	}
-			std::cout << includedSampleNames[i] << ": " << float(mappedbases)/(basenum)*100 << "% of reference bases mapped" << std::endl;
+			std::cout << includedSampleNames[i] << ": " << float(mappedbases)/(basenum)*100 << "% of reference bases mapped. " << snps << " SNPs found vs reference sequence. ";
+			if(calculateMissedSNPs(basenum, snps, kmersize)){return 1;};
     	}
     	sampleNum+=int(names.size()); //add the number of samples in the file to the count of total samples
     	includedSampleNum+=fileInclude.size();
@@ -262,7 +267,9 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 	}
 	else{
 		std::cout << "Printing alignment" << std::endl;
-		alignfile << refseq << std::endl;
+		if (includeref){
+			alignfile << refseq << std::endl;
+		}
 		for (int i=0; i<includedSampleNames.size(); ++i){
 			alignfile << ">" << includedSampleNames[i] << std::endl << sequences[i] << std::endl;
 		}

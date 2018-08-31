@@ -6,7 +6,7 @@
 #include <vector> //std::vector
 #include <unordered_map> //std::unordered_map
 
-void filterAlignment(std::unordered_map < std::string, std::string > & myKmerMap, std::vector < int > & constantBaseVector, const int numSamples, const int minrequired, const bool & variantonly);
+void filterAlignment(std::unordered_map < std::string, std::string > & myKmerMap, std::vector < int > & constantBaseVector, const int numSamples, const int minrequired, const bool & variantonly, float & sitecount, float & variantsitecount);
 
 void printAlignment(const std::string & outputfilename, const std::unordered_map < std::string, std::string > & myKmerMap, std::vector < int > & constantBaseVector, const std::vector < std::string > sampleNames, const bool variantOnly);
 
