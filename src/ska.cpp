@@ -95,9 +95,10 @@ int skaHelp(void){
 	std::cout << "distance\tPairwise distance calculation and clustering from split kmer" << std::endl << "\t\tfiles" << std::endl;
 	std::cout << "fasta\t\tCreate a split kmer file from fasta file(s)" << std::endl;
 	std::cout << "fastq\t\tCreate a split kmer file from fastq file(s)" << std::endl;
-	std::cout << "info\t\tPrint some information about one or more kmer or kmerge" << std::endl << "\t\tfiles" << std::endl;
-				   //123456789012345678901234567890123456789012345678901234567890
+	std::cout << "info\t\tPrint some information about one or more kmer files" << std::endl;
+				        //123456789012345678901234567890123456789012345678901234567890
 	std::cout << "map\t\tAlign split kmer file(s) against a reference fasta file" << std::endl;
+	std::cout << "merge\t\tMerge split kmer file(s) into one file" << std::endl;
 	std::cout << "summary\t\tPrint split kmer file summary statistics" << std::endl;
 	std::cout << "type\t\tType split kmer files using a set of allele files" << std::endl;
 	std::cout << "unique\t\tOutput kmers unique to a set of split kmer files" << std::endl;
@@ -1340,7 +1341,7 @@ int summarySubcommand(int argc, char *argv[]){
 
 	if (args.size()<1){
 		std::cerr << std::endl << "Too few arguments" << std::endl;
-		compareHelp();
+		summaryHelp();
 		return 1;
 	}
 
