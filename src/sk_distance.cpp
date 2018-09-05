@@ -254,10 +254,13 @@ int kmerDistance(const std::string & prefix, const bool distancefile, const bool
 		std::cout << "Printing distances to " << distancefilename << std::endl;
 		
 		std::ofstream distanceout(distancefilename);
-		distanceout << "File 1\tFile 2\tMatches\tMismatches\tSNPs" <<std::endl;
+		distanceout << "File 1\tFile 2\tMatches\tMismatches\tIdentity\tSNPs" <<std::endl;
 		for (int i=0; i<numSamples; ++i){
 			for (int j=i+1; j<numSamples; ++j){
-				distanceout << sampleNames[i] << "\t" << sampleNames[j] << "\t" << pairwiseMatches[i][j] << "\t" << (kmerCounts[i]-pairwiseMatches[i][j]+kmerCounts[j]-pairwiseMatches[i][j]) << "\t" << pairwiseSNPs[i][j] << std::endl;
+				float matches=pairwiseMatches[i][j] ;
+				float mismatches=(kmerCounts[i]-pairwiseMatches[i][j]+kmerCounts[j]-pairwiseMatches[i][j]);
+				float myID=matches/(mismatches+matches);
+				distanceout << sampleNames[i] << "\t" << sampleNames[j] << "\t" << int(matches) << "\t" << int(mismatches) << "\t" << myID << "\t" << pairwiseSNPs[i][j] << std::endl;
 			}
 		}
 		distanceout.close();

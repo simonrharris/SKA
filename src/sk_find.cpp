@@ -229,7 +229,7 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 		vcffile << "##INFO=<ID=ID,Number=1,Type=String,Description=\"Feature ID\">" << std::endl;
 		vcffile << "##INFO=<ID=LT,Number=1,Type=String,Description=\"Feature Locus Tag\">" << std::endl;
 		vcffile << "##INFO=<ID=SI,Number=1,Type=String,Description=\"Feature Systematic ID\">" << std::endl;
-		vcffile << "##INFO=<ID=GE,Number=1,Type=String,Description=\"Gene Name)\">" << std::endl;
+		vcffile << "##INFO=<ID=GE,Number=1,Type=String,Description=\"Gene Name\">" << std::endl;
 		if (includeproduct){
 			vcffile << "##INFO=<ID=PR,Number=1,Type=String,Description=\"Product\">" << std::endl;
 		}

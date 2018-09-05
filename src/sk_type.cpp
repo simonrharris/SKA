@@ -279,6 +279,11 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 			++i;
 		}
 
+		if (ST==-1){
+			std::cerr << "Error: Found no ST column in your profile file" << std::endl << std::endl;
+			return 1;
+		}
+
 		if (alleles.size()!=profileMap[0].size()){
 			std::cerr << "Error: Found " << alleles.size() << " alleles in your allele file and " << profileMap[0].size() << " alleles in your profile file" << std::endl << std::endl;
 			return 1;

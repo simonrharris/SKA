@@ -977,6 +977,7 @@ int infoHelp(void){
 	std::cout << "Options:" << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
+	std::cout << "-t\t\tPrint tabulated output." << std::endl << std::endl;
 	return 0;
 }
 
@@ -1040,7 +1041,7 @@ int mapHelp(void){
 	std::cout << "-o <file>\tOutput file prefix. [Default = mappedkmers]" << std::endl;
 	std::cout << "-r <file>\tReference fasta file name. [Required]" << std::endl;
 	std::cout << "-s <file>\tFile of sample names to include in the alignment." << std::endl;
-	std::cout << "-v\tOutput variant only alignment. [Default = all sites]" << std::endl << std::endl;
+	std::cout << "-v\t\tOutput variant only alignment. [Default = all sites]" << std::endl << std::endl;
 	return 0;
 }
 
@@ -1353,10 +1354,10 @@ int summarySubcommand(int argc, char *argv[]){
 
 int typeHelp(void){
 	std::cout << std::endl << "Usage:" << std::endl;
-	std::cout << "ska type [options] <subject split kmer files>" << std::endl << std::endl;
+	std::cout << "ska type [options] <locus fasta files>" << std::endl << std::endl;
 	std::cout << "Options:" << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
-	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
+	std::cout << "-f <file>\tFile of locus fasta file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-p <file>\ttab file containing profile information." << std::endl;
 	std::cout << "-q <file>\tQuery split kmer file. This can be a single kmer file." << std::endl << std::endl;
 	return 0;
