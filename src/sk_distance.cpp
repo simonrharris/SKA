@@ -13,7 +13,7 @@
 #include <chrono> //timing
 
 
-int kmerDistance(const std::string & prefix, const bool distancefile, const bool clusterfile, const std::vector < std::string > & kmerfiles, const int maxSNPS, const float minMatched)
+int kmerDistance(const std::string & prefix, const bool distancefile, const bool clusterfile, const std::vector < std::string > & kmerfiles, const int maxSNPS, const float minMatched, const bool includeSingletons)
 {
 
 	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -172,12 +172,12 @@ int kmerDistance(const std::string & prefix, const bool distancefile, const bool
 		for (int i=0; i<numSamples; ++i){
 			std::vector < int > matches;
 			matches.push_back(i);
-			//cout << i << endl;
+			int matchcount=0;
 			for (int j=i+1; j<numSamples; ++j){
 				float kmercount=std::min(kmerCounts[i], kmerCounts[j]);
 				float percentmatched = float(pairwiseMatches[i][j])/kmercount;
 				if (pairwiseSNPs[i][j]<=maxSNPS && percentmatched>=minMatched){
-
+					matchcount++;
 					matches.push_back(j);
 					float similarity;
 					if (maxSNPS>0){
@@ -189,7 +189,9 @@ int kmerDistance(const std::string & prefix, const bool distancefile, const bool
 					dotout << "\t" << sampleNames[i] << " -- " << sampleNames[j] << " [weight=" << similarity << "] ;" << std::endl;
 				}
 			}
-			//dotout << "\t" << kmerfiles[i] << ";" << endl; //Need to find somewhere to put this where it does what I want
+			if (matchcount==0 && includeSingletons){
+				dotout << "\t" << sampleNames[i] << " ;" << std::endl; //Need to find somewhere to put this where it does what I want
+			}
 			int clusternum=clusters.size();
 			for ( std::vector < int >::iterator it=matches.begin(); it!=matches.end(); ++it){
 				std::map <int, int >::iterator it2 = clusterMap.find(*it);//check if the match is in the hash

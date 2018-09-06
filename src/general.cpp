@@ -6,7 +6,7 @@
 #include <chrono> //std::chrono
 #include "gzstream.h"
 
-std::string versionNumber = "0.1";
+std::string versionNumber = "1.0";
 
 std::string splitFileName(const std::string & str){
 	std::string filename=str;

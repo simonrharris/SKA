@@ -6,4 +6,4 @@
 #include <vector> //std::vector
 
 
-int kmerDistance(const std::string & prefix, const bool distancefile, const bool clusterfile, const std::vector < std::string > & kmerfiles, const int maxSNPS, const float minMatched);
+int kmerDistance(const std::string & prefix, const bool distancefile, const bool clusterfile, const std::vector < std::string > & kmerfiles, const int maxSNPS, const float minMatched, const bool includeSingletons);

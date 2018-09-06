@@ -541,7 +541,8 @@ int distanceHelp(void){
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-i <float>\tIdentity cutoff for defining clusters. Isolates will be \n\t\tclustered if they share at least this proportion of the \n\t\tsplit kmers in the file with fewer kmers and pass the SNP \n\t\tcutoff. [Default = 0.9]" << std::endl;
 	std::cout << "-o <file>\tPrefix for output files. [Default = distances]" << std::endl;
-	std::cout << "-s <int>\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff. [Default = 20]" << std::endl << std::endl;
+	std::cout << "-s <int>\tSNP cutoff for defining clusters. Isolates will be clustered \n\t\tif they are separated by fewer than this number of SNPs and \n\t\tpass the identity cutoff. [Default = 20]" << std::endl;
+	std::cout << "-S \t\tInclude singletons in dot file" << std::endl << std::endl;
 	return 0;
 }
 
@@ -550,6 +551,7 @@ int distanceSubcommand(int argc, char *argv[]){
 
 	bool distancefile=true;
 	bool clusterfile=true;
+	bool includesingletons=false;
 	std::string prefix="distances";
 	float minid=0.9;
 	int maxsnps=20;
@@ -629,6 +631,9 @@ int distanceSubcommand(int argc, char *argv[]){
 				return 1;
 			}
 		}
+		else if (arg == "-S"){
+			includesingletons=true;
+		}
 		else if (arg[0]=='-'){
 			std::cerr << std::endl << "Unrecognised flag " << arg << std::endl << std::endl;
 				return 1;
@@ -677,7 +682,7 @@ int distanceSubcommand(int argc, char *argv[]){
 	}
 	std::cout << std::endl;
 
-	if (kmerDistance(prefix, distancefile, clusterfile, args, maxsnps, minid)){return 1;}
+	if (kmerDistance(prefix, distancefile, clusterfile, args, maxsnps, minid, includesingletons)){return 1;}
 
 	return 0;
 }
