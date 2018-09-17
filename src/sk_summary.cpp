@@ -13,6 +13,7 @@ int summariseKmerFiles(const std::vector < std::string > & kmerfiles)
 	std::vector < std::string > fileSampleNames;
 	std::ifstream fileStream;
 	
+	std::vector < char > baseorder = { 'A', 'C', 'G', 'T', 'N', 'O'};
 	std::cout << "Sample\tKmer size\tTotal kmers\tAs\tCs\tGs\tTs\tNs\tOthers\tGC Content" << std::endl;
 	for (int s = 0; s < kmerfiles.size(); ++s){
 		
@@ -57,8 +58,8 @@ int summariseKmerFiles(const std::vector < std::string > & kmerfiles)
 		
 		for (int i=0; i<fileSampleNames.size(); ++i){ //print the results	
 			std::cout << fileSampleNames[i] << "\t" << kmersize << "\t" << kmers[i] << "\t";
-			for (std::map < char, std::vector < int > >::iterator it=basecounts.begin(); it!=basecounts.end(); ++it){
-				std::cout << it->second[i] << "\t";
+			for (std::vector < char >::iterator it=baseorder.begin(); it!=baseorder.end(); ++it){
+				std::cout << basecounts[*it][i] << "\t";
 			}
 			float gccontent=(float(basecounts['C'][i])+float(basecounts['G'][i]))/(float(basecounts['A'][i])+float(basecounts['C'][i])+float(basecounts['G'][i])+float(basecounts['T'][i]));
 			std::cout << gccontent << std::endl;
