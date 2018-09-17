@@ -55,7 +55,7 @@ int weedHelp(void);
 int weedSubcommand(int argc, char *argv[]);
 
 int MinKmer=3;
-int MaxKmer=30;
+int MaxKmer=60;
 int MinQual=0;
 int MaxQual=60;
 int MinCov=0;
