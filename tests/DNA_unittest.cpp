@@ -142,8 +142,8 @@ namespace {
 
   TEST(lowqualitytoNTest, belowMinQuality){
 
-    string sequence="AAAAAAAAAAAAAAAAAA";
-    string quality="HHHHHHH4H>HHHHHHHH";
+    std::string sequence="AAAAAAAAAAAAAAAAAA";
+    std::string quality="HHHHHHH4H>HHHHHHHH";
     int minqual=20;
     EXPECT_EQ(0, lowqualitytoN(sequence, quality, minqual));
     EXPECT_STREQ("AAAAAAANAAAAAAAAAA", sequence.c_str());
@@ -158,8 +158,8 @@ namespace {
 
   TEST(lowqualitytoNTest, aboveMinQuality){
 
-    string sequence="AAAAAAAAAAAAAAAAAA";
-    string quality="IIIIIII5I?IIIIIIII";
+    std::string sequence="AAAAAAAAAAAAAAAAAA";
+    std::string quality="IIIIIII5I?IIIIIIII";
     int minqual=20;
     EXPECT_EQ(0, lowqualitytoN(sequence, quality, minqual));
     EXPECT_STREQ("AAAAAAAAAAAAAAAAAA", sequence.c_str());
@@ -174,8 +174,8 @@ namespace {
 
   TEST(lowqualitytoNTest, noLowQuality){
 
-    string sequence="AAAAAAAAAAAAAAAAAA";
-    string quality="ZZZZZZZZZZZZZZZZZZ";
+    std::string sequence="AAAAAAAAAAAAAAAAAA";
+    std::string quality="ZZZZZZZZZZZZZZZZZZ";
     int minqual=20;
     EXPECT_EQ(0, lowqualitytoN(sequence, quality, minqual));
     EXPECT_STREQ("AAAAAAAAAAAAAAAAAA", sequence.c_str());
@@ -192,7 +192,7 @@ namespace {
 
   TEST(IUPACToNTest, allACGT){
 
-    string sequence="ACGT";
+    std::string sequence="ACGT";
     EXPECT_EQ(0, IUPACToN(sequence));
     EXPECT_STREQ("ACGT", sequence.c_str());
 
@@ -200,7 +200,7 @@ namespace {
 
   TEST(IUPACToNTest, withN){
 
-    string sequence="ACNGT";
+    std::string sequence="ACNGT";
     EXPECT_EQ(0, IUPACToN(sequence));
     EXPECT_STREQ("ACNGT", sequence.c_str());
 
@@ -208,7 +208,7 @@ namespace {
 
   TEST(IUPACToNTest, withIUPAC){
 
-    string sequence="ACRYSWKMBDHVNGT";
+    std::string sequence="ACRYSWKMBDHVNGT";
     EXPECT_EQ(0, IUPACToN(sequence));
     EXPECT_STREQ("ACNNNNNNNNNNNGT", sequence.c_str());
 
@@ -216,7 +216,7 @@ namespace {
 
   TEST(IUPACToNTest, nonIUPAC){
 
-    string sequence="AC-GT";
+    std::string sequence="AC-GT";
     EXPECT_EQ(1, IUPACToN(sequence));
     sequence="AC.GT";
     EXPECT_EQ(1, IUPACToN(sequence));
@@ -235,7 +235,7 @@ namespace {
 
   TEST(ascii_codonsTest, codonsToAscii){
 
-    string sequence="ACTTGCTACTTTAAGCGA";
+    std::string sequence="ACTTGCTACTTTAAGCGA";
     ascii_codons(sequence);
     EXPECT_STREQ("sZR~_H", sequence.c_str());
 
@@ -247,9 +247,19 @@ namespace {
 
   TEST(codons_from_asciiTest, codonsFromAscii){
 
-    string asciisequence="sZR~_H";
+    std::string asciisequence="sZR~_H";
     codons_from_ascii(asciisequence);
-    EXPECT_STREQ("sZR~_H", sequence.c_str());
+    EXPECT_STREQ("sZR~_H", asciisequence.c_str());
+
+  }
+
+  // Test circulariseSequence
+
+  TEST(circulariseSequenceTest, circulariseSequence){
+
+    std::string sequence="AAACCCCCCCCTTT";
+    circulariseSequence(sequence, 3);
+    EXPECT_STREQ("TTTAAACCCCCCCCTTTAAA", sequence.c_str());
 
   }
 

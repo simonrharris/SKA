@@ -38,7 +38,7 @@ namespace {
 
   TEST(ascii_bitstringTest, divisibleBy6){
 
-    string bitstring= "000000";
+    std::string bitstring= "000000";
     ascii_bitstring(bitstring);
     EXPECT_STREQ("!", bitstring.c_str());
     bitstring= "111111";
@@ -55,7 +55,7 @@ namespace {
 
   TEST(ascii_bitstringTest, notDivisibleBy6){
 
-    string bitstring= "00000000000";
+    std::string bitstring= "00000000000";
     ascii_bitstring(bitstring);
     EXPECT_STREQ("!!", bitstring.c_str());
     bitstring= "0000000000";
@@ -108,18 +108,18 @@ namespace {
 
   TEST(vectorbool_from_asciiTest, allFalse){
 
-    vector < bool > myvectorbool;
-    string asciistring= "!";
+    std::vector < bool > myvectorbool;
+    std::string asciistring= "!";
     vectorbool_from_ascii(asciistring, myvectorbool);
     EXPECT_EQ(6, myvectorbool.size());
-    for (vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){//There is probably a better way to test euqlity of this
+    for (std::vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){//There is probably a better way to test euqlity of this
       EXPECT_EQ(false, *it);
     }
     myvectorbool.clear();
     asciistring= "!!";
     vectorbool_from_ascii(asciistring, myvectorbool);
     EXPECT_EQ(12, myvectorbool.size());
-    for (vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){
+    for (std::vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){
       EXPECT_EQ(false, *it);
     }
 
@@ -127,18 +127,18 @@ namespace {
 
     TEST(vectorbool_from_asciiTest, allTrue){
 
-    vector < bool > myvectorbool;
-    string asciistring= "`";
+    std::vector < bool > myvectorbool;
+    std::string asciistring= "`";
     vectorbool_from_ascii(asciistring, myvectorbool);
     EXPECT_EQ(6, myvectorbool.size());
-    for (vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){
+    for (std::vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){
       EXPECT_EQ(true, *it);
     }
     myvectorbool.clear();
     asciistring= "``";
     vectorbool_from_ascii(asciistring, myvectorbool);
     EXPECT_EQ(12, myvectorbool.size());
-    for (vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){
+    for (std::vector < bool >::iterator it=myvectorbool.begin(); it!=myvectorbool.end(); ++it){
       EXPECT_EQ(true, *it);
     }
 
@@ -148,7 +148,7 @@ namespace {
 
   TEST(extractMiddleBaseTest, oddBases){
     char testbase;
-    string teststring="TCTATCT";
+    std::string teststring="TCTATCT";
     EXPECT_EQ(0, extractMiddleBase(teststring, testbase));
     EXPECT_EQ('A', testbase);
     teststring="TCTGTCTCT";
@@ -159,7 +159,7 @@ namespace {
 
  TEST(extractMiddleBaseTest, evenBases){
     char testbase;
-    string teststring="TCATCT";
+    std::string teststring="TCATCT";
     EXPECT_EQ(1, extractMiddleBase(teststring, testbase));
     teststring="TCAGGTCT";
     EXPECT_EQ(1, extractMiddleBase(teststring, testbase));

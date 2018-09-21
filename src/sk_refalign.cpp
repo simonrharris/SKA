@@ -79,7 +79,7 @@ void printVariantSites(std::ofstream & myOutfile, const int totalbases, const st
 }
 
 
-int alignKmersToReference(const std::string & reference, const std::string & outputfile, const std::vector < std::string > & kmerfiles, const int & kmerlen, const bool & includeref, const bool & maprepeats, const bool & fillall, const bool & variantonly, const std::vector <std::string> & sample)
+int alignKmersToReference(const std::string & reference, const std::string & outputfile, const std::vector < std::string > & kmerfiles, const int & kmerlen, const bool & includeref, const bool & maprepeats, const bool & fillall, const bool & variantonly, const std::vector <std::string> & sample, const bool circularContigs)
 {
 
 	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -94,6 +94,7 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 	int basenum=0;
 	std::string refseq;
 	char base;
+	std::vector < int > referenceContigLengths;
 	
 	igzstream gzfileStream;
 
@@ -104,14 +105,28 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 		std::string name;
 
 		if(readNextFastaSequence(gzfileStream, reference, name, sequence)){return 1;}//read the next sequence from the file
-
+		int seqlen=sequence.length();
+		referenceContigLengths.push_back(seqlen);
 		refseq.append(sequence);
+		if (seqlen<substringlength){
+			basenum+=seqlen;
+			continue;
+		}
+
+		int baseposition=basenum;
+
+		if (circularContigs){
+			if(circulariseSequence(sequence, kmerlen)){return 1;}//if the contigs are circular, add an extra kmer length of sequence from the opposite end to each end
+		}
+		else {
+			baseposition+=kmerlen;
+		}
 		
 		int i=0;
 		
-		for (std::string::iterator iti = sequence.begin(), end = sequence.end()-(substringlength-1); iti != end; ++iti, ++i){
+		
+		for (std::string::iterator iti = sequence.begin(), end = sequence.end()-(substringlength-1); iti != end; ++iti, ++i, ++baseposition){
 			std::string kmer=sequence.substr(i,substringlength);
-			int baseposition=basenum+i+kmerlen;
 			
 			if (reverseComplementIfMin(kmer)){
 				revSet.insert(baseposition);
@@ -122,7 +137,7 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 			addKmerToBasePositionMap(kmerMap, kmer, baseposition);
 
 		}
-		basenum+=sequence.length();
+		basenum+=seqlen;
 			
     }
     gzfileStream.close();
@@ -210,16 +225,6 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 							for (int j=0; j<fileInclude.size(); ++j){ //add the base to all samples that are true in the bitset
 								if (mybits[fileInclude[j]]){
 									sequences[includedSampleNum+j][*itb]=mybase;//set the base of the sequence at the site matching the reference
-									if (fillall || mybase!=refseq[*itb]){//if the match is a SNP or if the user has asked to map all sites in the kmer
-										for (int i=*itb-kmerlen; i<=*itb+kmerlen; ++i){//for kmer sites either site of the middle base
-											if (i==*itb){
-												continue;//skip the middle base as we've already set that
-											}
-											if (sequences[includedSampleNum+j][i]=='-'){//if the base is a gap in the sample set it to the reference base in lower case
-												sequences[includedSampleNum+j][i]=std::tolower(refseq[i]);
-											}
-										}
-									}
 								}
 							}
 						}
@@ -230,6 +235,25 @@ int alignKmersToReference(const std::string & reference, const std::string & out
     	}
 
     	for (int i=0; i<fileInclude.size(); ++i){//print the percentage of mapped bases for each sample in a file
+
+    		int contigStart=0;
+    		int filledto=0;
+
+    		for (std::vector <int >::iterator rclit=referenceContigLengths.begin(); rclit!=referenceContigLengths.end(); ++rclit){//Fill bases around mapped bases or SNPs
+    			for (int j=kmerlen; j<(*rclit-kmerlen); ++j){
+    				if (base_score[sequences[includedSampleNum+i][contigStart+j]]<4 && ( fillall || sequences[includedSampleNum+i][contigStart+j] != refseq[contigStart+j])){
+    					int fillfrom=std::max(std::max(contigStart+j-kmerlen, contigStart), filledto);
+		    			filledto=std::min(contigStart+j+kmerlen, contigStart+*rclit);
+		    			for (int k=fillfrom; k<filledto; ++k){
+		    				if (sequences[includedSampleNum+i][k]=='-'){//if the base is a gap in the sample set it to the reference base in lower case
+								sequences[includedSampleNum+i][k]=std::tolower(refseq[k]);//this needs fixing when the contigs are circular to stop it running into the next contig
+							}
+		    			}
+    				}
+    			}
+    			contigStart+=*rclit;
+    		}
+
 	    	int mappedbases=basenum;
 	    	int mappedNs=0;
 	    	int snps=0;

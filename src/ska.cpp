@@ -691,6 +691,7 @@ int fastaHelp(void){
 	std::cout << std::endl << "Usage:" << std::endl;
 	std::cout << "ska fasta [options] <fasta files>" << std::endl << std::endl;
 	std::cout << "Options:" << std::endl;
+	std::cout << "-c\t\tTreat all contigs as circular." << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]" << std::endl;
@@ -703,6 +704,7 @@ int fastaSubcommand(int argc, char *argv[]){
 
 	std::string outfile="fasta.skf";
 	long int kmersize=15;
+	bool circular=false;
 	std::vector < std::string > args;
 
 	for (int i=2; i<argc; ++i){
@@ -712,6 +714,9 @@ int fastaSubcommand(int argc, char *argv[]){
 		if (arg=="-h" || arg=="--help"){
 			fastaHelp();
 			return 0;
+		}
+		else if (arg=="-c"){
+			circular=true;
 		}
 		else if (arg == "-k"){
 			i++;
@@ -780,11 +785,17 @@ int fastaSubcommand(int argc, char *argv[]){
 		}
 	}
 	std::cout << std::endl;
+	if (circular){
+		std::cout << "Contigs will be treated as circular" << std::endl;
+	}
+	else {
+		std::cout << "Contigs will be treated as linear" << std::endl;
+	}
 	std::cout << "Output will be written to " << outfile << std::endl;
 
 	std::cout << std::endl;
 
-	if (fastaToKmers(args, outfile, kmersize)){return 1;}
+	if (fastaToKmers(args, outfile, kmersize, circular)){return 1;}
 
 	return 0;
 }
@@ -1038,6 +1049,7 @@ int mapHelp(void){
 	std::cout << "ska map [options] <split kmer files>" << std::endl << std::endl;
 	std::cout << "Options:" << std::endl;
 	std::cout << "-a <file>\tMap all bases of kmers (Default = just map middle base)." << std::endl;
+	//std::cout << "-c\t\tTreat all contigs as circular." << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\tMust be the same value used to create the kmer files. \n\t\t[Default = 15]" << std::endl;
@@ -1060,6 +1072,7 @@ int mapSubcommand(int argc, char *argv[]){
 	bool maprepeats=false;
 	bool fillall=false;
 	bool variantonly=false;
+	bool circular=false;
 	std::vector < std::string > sample;
 	std::vector < std::string > args;
 
@@ -1070,6 +1083,9 @@ int mapSubcommand(int argc, char *argv[]){
 		if (arg=="-h" || arg=="--help"){
 			mapHelp();
 			return 0;
+		}
+		else if (arg=="-c"){
+			circular=true;
 		}
 		else if (arg == "-k"){
 			i++;
@@ -1199,9 +1215,15 @@ int mapSubcommand(int argc, char *argv[]){
 	if (fillall){
 		std::cout << "All bases in kmers will be mapped as lower case" << std::endl;
 	}
+	if (circular){
+		std::cout << "Reference contigs will be treated as circular" << std::endl;
+	}
+	else {
+		std::cout << "Reference contigs will be treated as linear" << std::endl;
+	}
 	std::cout << "Output will be written to " << outprefix << std::endl << std::endl;
 
-	if (alignKmersToReference(reference, outprefix, args, kmersize, includeref, maprepeats, fillall, variantonly, sample)){return 1;}
+	if (alignKmersToReference(reference, outprefix, args, kmersize, includeref, maprepeats, fillall, variantonly, sample, circular)){return 1;}
 
 	return 0;
 }

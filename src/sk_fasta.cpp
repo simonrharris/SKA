@@ -12,7 +12,7 @@
 #include "DNA.hpp"
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
 
-int fastaToKmers(const std::vector < std::string > & fastas, const std::string & outfilename, const long & kmerlen)
+int fastaToKmers(const std::vector < std::string > & fastas, const std::string & outfilename, const long & kmerlen, const bool circularContigs)
 {
 
 	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();//start the clock
@@ -41,6 +41,10 @@ int fastaToKmers(const std::vector < std::string > & fastas, const std::string &
 			if(readNextFastaSequence(gzfileStream, filename, name, sequence)){return 1;}//read the next sequence from the file
 
 			if(IUPACToN(sequence)){return 1;}//convert any IUPAC characters to N and reject any unrecognised characters
+
+			if (circularContigs){
+				if(circulariseSequence(sequence, kmerlen)){return 1;}//if the contigs are circular, add an extra kmer lenght of sequence from the opposite end to each end
+			}
 
 			numseqs++;
 			numreadbases += sequence.length();

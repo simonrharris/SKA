@@ -37,3 +37,5 @@ int readNextFastqSequence(igzstream & gzfileStream, const std::string & filename
 
 int countSequencesinFasta(const std::string & filename, int & sequenceCount);
 
+int circulariseSequence(std::string & mySequence, const int myKmerLength);
+

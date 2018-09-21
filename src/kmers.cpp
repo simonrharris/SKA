@@ -238,11 +238,11 @@ void addKmerToBaseArrayMap(std::unordered_map < std::string, std::array < int, 8
 
 	std::unordered_map < std::string, std::array < int, 8 > >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 	if ( it != kmerMap.end() ){//if the kmer is in the hash
-		it->second[base_score[base]]++;//increment the count of the base for the kmer
+		it->second[base_score[int(base)]]++;//increment the count of the base for the kmer
 	}
 	else if (firstFile) {//if the kmers isn't in the hash and we are adding from the first fastq file
 		std::pair < std::unordered_map < std::string, std::array < int, 8 > >::iterator,bool>  ret = kmerMap.insert(std::make_pair(kmer, std::array < int, 8 > ()));//insert the kmer into the hash
-		ret.first->second[base_score[base]]=1;//increment the count of the base for the kmer
+		ret.first->second[base_score[int(base)]]=1;//increment the count of the base for the kmer
 	}
 	return;
 }

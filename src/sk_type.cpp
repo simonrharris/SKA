@@ -126,17 +126,18 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
 					for (int k=0; k<querySampleNames.size(); ++k){
 						if (it->second[k]!='-'){
+							char querybase;
+							if (isrev){
+								querybase=complement(it->second[k]);
+							}
+							else {
+								querybase=it->second[k];
+							}
 							for (int j=i; j<i+substringlength; ++j){
 								alleleCoverage[k][j]=true;
 
 								if (j==(i+querykmersize)){
-									char querybase;
-									if (isrev){
-										querybase=complement(it->second[k]);
-									}
-									else {
-										querybase=it->second[k];
-									}
+									
 									if (alleleSequence[k][j]=='-' or islower(alleleSequence[k][j])){
 										alleleSequence[k][j]=querybase;
 									}
@@ -149,7 +150,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 										alleleSequence[k][j]='N';
 									}
 								}
-								else if (alleleSequence[k][j]=='-'){
+								else if ((j<=querykmersize || j>=(sequence.length()-querykmersize) || ( querybase!=sequence[i+querykmersize] && base_score[querybase]<4) ) && alleleSequence[k][j]=='-'){
 									alleleSequence[k][j]=tolower(sequence[j]);
 								}
 							}

@@ -20,7 +20,9 @@ GTEST_DIR = googletest
 USER_TEST_DIR = .
 
 # Where to find user code.
-USER_DIR = ../src
+USER_DIR = ../src/
+
+CXX = g++ -std=c++0x
 
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
@@ -77,14 +79,14 @@ gtest_main.a : gtest-all.o gtest_main.o
 # function.
 
 general.o : $(USER_DIR)/general.cpp $(USER_DIR)/general.hpp $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/general.cpp
+	 $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/general.cpp
 
 general_unittest.o : $(USER_TEST_DIR)/general_unittest.cpp \
                      $(USER_DIR)/general.hpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_TEST_DIR)/general_unittest.cpp
 
-general_unittest : general.o general_unittest.cpp gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+general_unittest : general.o general_unittest.cpp gtest_main.a 
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@ -lz
 
 
 DNA.o : $(USER_DIR)/DNA.cpp $(USER_DIR)/DNA.hpp $(GTEST_HEADERS)
@@ -95,7 +97,7 @@ DNA_unittest.o : $(USER_TEST_DIR)/DNA_unittest.cpp \
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_TEST_DIR)/DNA_unittest.cpp
 
 DNA_unittest : DNA.o DNA_unittest.cpp gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@  -lz
 
 
 kmers.o : $(USER_DIR)/kmers.cpp $(USER_DIR)/kmers.hpp $(GTEST_HEADERS)
@@ -105,5 +107,5 @@ kmers_unittest.o : $(USER_TEST_DIR)/kmers_unittest.cpp \
                      $(USER_DIR)/kmers.hpp $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_TEST_DIR)/kmers_unittest.cpp
 
-kmers_unittest : kmers.o DNA.o kmers_unittest.cpp gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@\
+kmers_unittest : kmers.o DNA.o general.o kmers_unittest.cpp gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@ -lz

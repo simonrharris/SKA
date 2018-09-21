@@ -181,3 +181,20 @@ int countSequencesinFasta(const std::string & filename, int & sequenceCount){
 	gzfileStream.close();
 	return 0;
 }
+
+int circulariseSequence(std::string & mySequence, const int myKmerLength){
+
+	if (mySequence.length()<myKmerLength*2){
+		return 1;
+	}
+
+	std::string myNewEnd=mySequence.substr(0,myKmerLength);
+	std::string myNewStart=mySequence.substr(mySequence.length()-myKmerLength,myKmerLength);
+	mySequence.reserve(mySequence.length()+(myKmerLength*2));
+	mySequence.insert(mySequence.length(), myNewEnd);
+	mySequence.insert(0, myNewStart);
+
+	return 0;
+
+}
+
