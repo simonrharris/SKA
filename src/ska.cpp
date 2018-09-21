@@ -1049,7 +1049,7 @@ int mapHelp(void){
 	std::cout << "ska map [options] <split kmer files>" << std::endl << std::endl;
 	std::cout << "Options:" << std::endl;
 	std::cout << "-a <file>\tMap all bases of kmers (Default = just map middle base)." << std::endl;
-	//std::cout << "-c\t\tTreat all contigs as circular." << std::endl;
+	std::cout << "-c\t\tTreat all contigs as circular." << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\tMust be the same value used to create the kmer files. \n\t\t[Default = 15]" << std::endl;
