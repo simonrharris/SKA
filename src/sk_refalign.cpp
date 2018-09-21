@@ -243,7 +243,7 @@ int alignKmersToReference(const std::string & reference, const std::string & out
     			for (int j=kmerlen; j<(*rclit-kmerlen); ++j){
     				if (base_score[sequences[includedSampleNum+i][contigStart+j]]<4 && ( fillall || sequences[includedSampleNum+i][contigStart+j] != refseq[contigStart+j])){
     					int fillfrom=std::max(std::max(contigStart+j-kmerlen, contigStart), filledto);
-		    			filledto=std::min(contigStart+j+kmerlen, contigStart+*rclit);
+		    			filledto=std::min(contigStart+j+kmerlen+1, contigStart+*rclit);
 		    			for (int k=fillfrom; k<filledto; ++k){
 		    				if (sequences[includedSampleNum+i][k]=='-'){//if the base is a gap in the sample set it to the reference base in lower case
 								sequences[includedSampleNum+i][k]=std::tolower(refseq[k]);//this needs fixing when the contigs are circular to stop it running into the next contig
