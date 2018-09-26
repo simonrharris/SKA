@@ -256,13 +256,19 @@ int kmerDistance(const std::string & prefix, const bool distancefile, const bool
 		std::cout << "Printing distances to " << distancefilename << std::endl;
 		
 		std::ofstream distanceout(distancefilename);
-		distanceout << "File 1\tFile 2\tMatches\tMismatches\tIdentity\tMash-like distance\tSNPs\tSNP distance" <<std::endl;
+		distanceout << "File 1\tFile 2\tMatches\tMismatches\tJaccard Index\tMash-like distance\tSNPs\tSNP distance" <<std::endl;
 		for (int i=0; i<numSamples; ++i){
 			for (int j=i+1; j<numSamples; ++j){
 				float matches=pairwiseMatches[i][j] ;
 				float mismatches=(kmerCounts[i]-pairwiseMatches[i][j]+kmerCounts[j]-pairwiseMatches[i][j]);
 				float myID=matches/(mismatches+matches);
-				float mashlike=(-1.0/((oldkmersize*2)+1))*log((2*myID)/(1+myID));
+				float mashlike;
+				if (myID==0){
+					mashlike=1.0;
+				}
+				else{
+					mashlike=(-1.0/((oldkmersize*2)+1))*log((2*myID)/(1+myID));
+				}
 				distanceout << sampleNames[i] << "\t" << sampleNames[j] << "\t" << int(matches) << "\t" << int(mismatches) << "\t" << myID << "\t" << mashlike << "\t" << pairwiseSNPs[i][j] << "\t" << pairwiseSNPs[i][j]/matches << std::endl;
 			}
 		}
