@@ -256,7 +256,7 @@ int kmerDistance(const std::string & prefix, const bool distancefile, const bool
 		std::cout << "Printing distances to " << distancefilename << std::endl;
 		
 		std::ofstream distanceout(distancefilename);
-		distanceout << "File 1\tFile 2\tMatches\tMismatches\tMash-like distance\tIdentity\tSNPs\tSNP distance" <<std::endl;
+		distanceout << "File 1\tFile 2\tMatches\tMismatches\tIdentity\tMash-like distance\tSNPs\tSNP distance" <<std::endl;
 		for (int i=0; i<numSamples; ++i){
 			for (int j=i+1; j<numSamples; ++j){
 				float matches=pairwiseMatches[i][j] ;
