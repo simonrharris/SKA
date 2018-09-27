@@ -242,8 +242,9 @@ int alignKmersToReference(const std::string & reference, const std::string & out
     		int filledto=0;
 
     		for (std::vector <int >::iterator rclit=referenceContigLengths.begin(); rclit!=referenceContigLengths.end(); ++rclit){//Fill bases around mapped bases or SNPs
+    			filledto=contigStart;
     			for (int j=kmerlen; j<(*rclit-kmerlen); ++j){
-    				if (base_score[sequences[includedSampleNum+i][contigStart+j]]<4 && ( fillall || sequences[includedSampleNum+i][contigStart+j] != refseq[contigStart+j])){
+    				if ((base_score[sequences[includedSampleNum+i][contigStart+j]]<4 && std::isupper(sequences[includedSampleNum+i][contigStart+j])) && ( fillall || sequences[includedSampleNum+i][contigStart+j] != refseq[contigStart+j])){
     					int fillfrom=std::max(std::max(contigStart+j-kmerlen, contigStart), filledto);
 		    			filledto=std::min(contigStart+j+kmerlen+1, contigStart+*rclit);
 		    			for (int k=fillfrom; k<filledto; ++k){
