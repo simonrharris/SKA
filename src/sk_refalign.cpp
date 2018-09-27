@@ -24,7 +24,7 @@ void addKmerToBasePositionMap(std::unordered_map < std::string, std::vector <int
 }
 
 
-void printVariantSites(std::ofstream & myOutfile, const int totalbases, const std::vector < std::string > & sampleNames, const std::vector < std::string > & mySequences, const bool includeReference, const std::string & myReferenceSequence){
+void printVariantSites(std::ofstream & myOutfile, const int totalbases, const std::vector < std::string > & sampleNames, const std::vector < std::string > & mySequences){
 	std::vector < int > sitestoprint;
 	sitestoprint.reserve(10000);
 	std::vector < int > constantBases (4, 0);
@@ -47,24 +47,16 @@ void printVariantSites(std::ofstream & myOutfile, const int totalbases, const st
 			}
 		}
 
-		if (acgtCount<2){
+		if (acgtCount==1){
 			constantBases[constbase]++;
 		}
-		else {
+		else if (acgtCount>1) {
 			sitestoprint.push_back(i);
 		}
 		
 	}
 
 	std::cout << "Printing alignment of " << sitestoprint.size() << " variant sites" << std::endl;
-
-	if (includeReference){
-		std::string mySequence (sitestoprint.size(), '-');
-		for (int j=0; j<sitestoprint.size(); ++j){
-			mySequence[j]=myReferenceSequence[sitestoprint[j]];
-		}
-		myOutfile << mySequence << std::endl;
-	}
 
 	for (int i=0; i<sampleNames.size(); ++i){
 		std::string mySequence (sitestoprint.size(), '-');
@@ -153,13 +145,18 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 	getSubsample(sample, sampleNames, include);//get a vector of bools representing which samples to include based on a provided sample file. This also removed duplicate samples in the input files
 
 	std::vector < std::string > includedSampleNames;
+
+	if (includeref){
+		includedSampleNames.push_back(filename);
+	}
+
 	for (std::vector < bool >::iterator it=include.begin(); it!=include.end(); ++it){//make a vector of all included sample names to help printing output files later
 		if (*it){
 			includedSampleNames.push_back(sampleNames[distance(include.begin(), it)]);
 		}
 	}
 
-	std::cout << includedSampleNames.size() << " samples will be aligned to " << reference << std::endl;
+	std::cout << includedSampleNames.size()-int(includeref) << " samples will be aligned to " << reference << std::endl;
 
 	std::vector < std::string > sequences(includedSampleNames.size(), std::string (basenum , '-'));//create a vector to store the new sequences;
 
@@ -168,6 +165,11 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 	char kmerbuffer[kmerlen*2/3];
 	int sampleNum=0;
 	int includedSampleNum=0;
+	if (includeref){
+		sequences[0]=refseq;
+		includedSampleNum=1;
+	}
+	
 	std::vector < std::string > names;
 	
 	for (int s = 0; s < kmerfiles.size(); ++s){
@@ -269,7 +271,7 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 			if(calculateMissedSNPs(basenum, snps, kmersize)){return 1;};
     	}
     	sampleNum+=int(names.size()); //add the number of samples in the file to the count of total samples
-    	includedSampleNum+=fileInclude.size();
+    	includedSampleNum+=int(fileInclude.size());
     	names.clear();
 		fileStream.close();
 	}
@@ -280,20 +282,12 @@ int alignKmersToReference(const std::string & reference, const std::string & out
 		std::cerr << std::endl << "Error: Failed to open " << outputfile << std::endl << std::endl;
 		return 1;
 	}
-
-	if (includeref){
-		std::cout << "Printing reference sequence to file" << std::endl;
-		alignfile << ">" << filename << std::endl; 
-	}
 	
 	if (variantonly){
-		printVariantSites(alignfile, basenum, includedSampleNames, sequences, includeref, refseq);
+		printVariantSites(alignfile, basenum, includedSampleNames, sequences);
 	}
 	else{
 		std::cout << "Printing alignment" << std::endl;
-		if (includeref){
-			alignfile << refseq << std::endl;
-		}
 		for (int i=0; i<includedSampleNames.size(); ++i){
 			alignfile << ">" << includedSampleNames[i] << std::endl << sequences[i] << std::endl;
 		}
