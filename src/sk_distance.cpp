@@ -186,7 +186,7 @@ int kmerDistance(const std::string & prefix, const bool distancefile, const bool
 					else {
 						similarity=1.0;
 					}
-					dotout << "\t" << sampleNames[i] << " -- " << sampleNames[j] << " [weight=" << similarity << "] ;" << std::endl;
+					dotout << "\t" << sampleNames[i] << " -- " << sampleNames[j] << " [label=" << pairwiseSNPs[i][j] << " weight=" << similarity << "] ;" << std::endl;
 				}
 			}
 			if (matchcount==0 && includeSingletons){
