@@ -58,7 +58,8 @@ int MinKmer=3;
 int MaxKmer=60;
 int MinQual=0;
 int MaxQual=60;
-int MinCov=0;
+int MinCov=1;
+int MinFileCov=0;
 int maxNamesToPrint=10;
 
 
@@ -870,8 +871,8 @@ int fastqSubcommand(int argc, char *argv[]){
 				std::cerr << std::endl << "Expecting positive integer after -C flag" << std::endl << std::endl;
 				return 1;
 			}
-			if (filecovcutoff <= MinCov){
-				std::cerr << std::endl << "File coverage cutoff must be a positive integer greater than or equal to " << MinCov << std::endl << std::endl;
+			if (filecovcutoff < MinFileCov){
+				std::cerr << std::endl << "File coverage cutoff must be a positive integer greater than or equal to " << MinFileCov << std::endl << std::endl;
 				return 1;
 			}
 		}
