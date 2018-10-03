@@ -82,6 +82,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 	for (int s = 0; s < subjectfiles.size(); ++s){
 
 		std::vector < std::string > alleleNames;
+		std::vector < float > bestsimilarity (querySampleNames.size(), 0);
 		std::vector < float > bestid (querySampleNames.size(), 0);
 		std::vector < int > Ncount (querySampleNames.size(), 0);
 		std::vector < int > gapcount (querySampleNames.size(), 0);
@@ -114,7 +115,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 			int i=0;
 
 			for (std::string::iterator iti = sequence.begin(), end = sequence.end()-(substringlength-1); iti != end; ++iti, ++i){
-				
+
 				std::string kmer=sequence.substr(i,substringlength);
 				
 				bool isrev=reverseComplementIfMin(kmer);
@@ -161,17 +162,21 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 		
     		}
 
-    		for (int k=0; k<querySampleNames.size(); ++k){
+    		for (std::vector < std::string >::size_type k=0; k<querySampleNames.size(); ++k){
 
     			float matches=0.0;
+    			float covered=0.0;
     			float Ns=0.0;
     			float gaps=0.0;
     			char base;
     			for (int i=0; i<sequence.length(); ++i){
+    				//std::cout << i << " " << alleleSequence[k][i] << " " << sequence[i] << std::endl;
     				base=std::toupper(alleleSequence[k][i]);
-    				//std::cout << i << " " << base << " " << sequence[i] << std::endl;
-    				if (base==sequence[i]){
+    				if (alleleSequence[k][i]==sequence[i]){
     					matches++;
+    				}
+    				if (base==sequence[i]){
+    					covered++;
     				}
     				else if (base=='N'){
     					Ns++;
@@ -180,16 +185,18 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
     					gaps++;
     				}
     			}
-    			float sampleid=(Ns+matches)/sequence.length();
-    			//std::cout  << alleleNumber << " " << sequence.length() << " " << matches << " " << sampleid << " " << Ns << " " << gaps << " " << bestid[k] << std::endl;
+    			float sampleid=(matches)/sequence.length();
+    			float similarity=(Ns+covered)/sequence.length();
+    			//std::cout  << alleleNumber << " " << sequence.length() << " " << matches << " " << covered << " " << sampleid << " " << Ns << " " << gaps << " " << bestid[k] << std::endl;
 
-				if (sampleid>bestid[k]){
+				if (sampleid>bestid[k] || (sampleid==bestid[k] && similarity>bestsimilarity[k])){
 					bestMatches[k].clear();
 					bestid[k]=sampleid;
+					bestsimilarity[k]=similarity;
 					Ncount[k]=Ns;
 					gapcount[k]=gaps;
 				}
-				if (sampleid>0 && sampleid==bestid[k]){
+				if (sampleid>0 && sampleid==bestid[k] && similarity==bestsimilarity[k]){
 					bestMatches[k].push_back(alleleNumber);
 					bestSequences[k]=alleleSequence[k];
 				}
@@ -224,8 +231,8 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 				}
 			}
 
-			if ((bestid[k]!=1.0 || Ncount[k]>0) && bestid[k]>0){//if the allele sequence of the sample has Ns or isn't a perfect match to an allele in the file, print the allele sequence to a file
-				if (bestid[k]!=1.0){
+			if ((bestsimilarity[k]!=1.0 || Ncount[k]>0) && bestid[k]>0){//if the allele sequence of the sample has Ns or isn't a perfect match to an allele in the file, print the allele sequence to a file
+				if (bestsimilarity[k]!=1.0){
 					novel[k].insert(locus);
 				}
 				if (Ncount[k]>0){
@@ -359,15 +366,15 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 			std::cout << querySampleNames[k] << "\t";
 			for (std::map < std::string, int >::iterator it=alleles.begin(); it!=alleles.end(); ++it){
 				std::string suffix="";
-				std::set < std::string >::iterator it2 = novel[k].find(it->first);//check if the kmer is in the set
+				std::set < std::string >::iterator it2 = novel[k].find(it->first);
 				if ( it2 != novel[k].end() ){
 					suffix="*";
 				}
-				it2 = hasNs[k].find(it->first);//check if the kmer is in the set
+				it2 = hasNs[k].find(it->first);
 				if ( it2 != hasNs[k].end() ){
 					suffix+="N";
 				}
-				it2 = hasgaps[k].find(it->first);//check if the kmer is in the set
+				it2 = hasgaps[k].find(it->first);
 				if ( it2 != hasgaps[k].end() ){
 					suffix+="-";
 				}
