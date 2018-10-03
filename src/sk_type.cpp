@@ -150,7 +150,8 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 										alleleSequence[k][j]='N';
 									}
 								}
-								else if ((j<=querykmersize || j>=(sequence.length()-querykmersize) || ( querybase!=sequence[i+querykmersize] && base_score[querybase]<4) ) && alleleSequence[k][j]=='-'){
+								//else if ((j<=querykmersize || j>=(sequence.length()-querykmersize) || ( querybase!=sequence[i+querykmersize] && base_score[querybase]<4) ) && alleleSequence[k][j]=='-'){
+								else if (alleleSequence[k][j]=='-'){
 									alleleSequence[k][j]=tolower(sequence[j]);
 								}
 							}
@@ -161,12 +162,14 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
     		}
 
     		for (int k=0; k<querySampleNames.size(); ++k){
+
     			float matches=0.0;
     			float Ns=0.0;
     			float gaps=0.0;
     			char base;
     			for (int i=0; i<sequence.length(); ++i){
     				base=std::toupper(alleleSequence[k][i]);
+    				//std::cout << i << " " << base << " " << sequence[i] << std::endl;
     				if (base==sequence[i]){
     					matches++;
     				}
@@ -178,7 +181,8 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
     				}
     			}
     			float sampleid=(Ns+matches)/sequence.length();
-    			//cout  << alleleNumber << " " << sequence.length() << " " << matches << " " << sampleid << " " << Ns << " " << gaps << std::endl;
+    			//std::cout  << alleleNumber << " " << sequence.length() << " " << matches << " " << sampleid << " " << Ns << " " << gaps << " " << bestid[k] << std::endl;
+
 				if (sampleid>bestid[k]){
 					bestMatches[k].clear();
 					bestid[k]=sampleid;
