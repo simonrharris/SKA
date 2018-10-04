@@ -16,7 +16,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 	std::unordered_map < std::string, std::string > kmerMap;
 
 	std::vector < std::string > sampleNames;
-	if (collectSampleNames(subjectfiles, sampleNames)!=0){return 1;}
+	if (collectSampleNames(subjectfiles, sampleNames, false)!=0){return 1;}
 	int numSamples=sampleNames.size();
 	std::string emptySequence (numSamples , '-');
 	std::vector < int > queryKmers (numSamples, 0);

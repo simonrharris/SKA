@@ -341,7 +341,7 @@ int annotateHelp(void){
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-f <file>\tFile of split kmer file names. These will be added to or \n\t\tused as an alternative input to the list provided on the \n\t\tcommand line." << std::endl;
 	std::cout << "-i\t\tInclude kmers in repetitive reference regions." << std::endl;
-	std::cout << "-o <file>\tPrefix for output files. [Default = found]" << std::endl;
+	std::cout << "-o <file>\tPrefix for output files. [Default = annotation]" << std::endl;
 	std::cout << "-p\t\tInclude product in output." << std::endl;
 	std::cout << "-r <file>\tReference fasta/gff file name. [Required]" << std::endl;
 	std::cout << "-v\t\tOnly output variant sites." << std::endl << std::endl;

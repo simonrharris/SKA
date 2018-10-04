@@ -154,8 +154,10 @@ int readKmerHeader(std::ifstream & fileStream, int & kmersize, std::vector < std
 }
 
 
-int collectSampleNames(const std::vector < std::string > & files, std::vector < std::string > & names){
-	std::cout << "Collecting number of samples " << std::endl;
+int collectSampleNames(const std::vector < std::string > & files, std::vector < std::string > & names, bool verbose){
+	if (verbose){
+		std::cout << "Collecting number of samples " << std::endl;
+	}
 	int kmersize;
 	std::ifstream fileStream;
 	for (std::string::size_type s = 0; s < files.size(); ++s){
@@ -181,8 +183,9 @@ int collectSampleNames(const std::vector < std::string > & files, std::vector < 
 	}
 
 	int numSamples=names.size();
-
-	std::cout << "Found " << numSamples << " samples in " << files.size() << " files" << std::endl;
+	if (verbose){
+		std::cout << "Found " << numSamples << " samples in " << files.size() << " files" << std::endl;
+	}
 	return 0;
 }
 

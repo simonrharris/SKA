@@ -262,7 +262,7 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 			}
 		}
 
-		if(openFileStream(profileFile, fileStream)){return 1;}
+		if(openFileStream(profileFile, fileStream, false)){return 1;}
 
 		std::string header;
 		std::getline(fileStream, header);

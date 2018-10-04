@@ -26,7 +26,7 @@ int printMergedKmerFile(const std::unordered_map < std::vector < bool >, std::ve
 
 int readKmerHeader(std::ifstream & fileStream, int & kmersize, std::vector < std::string > & names);
 
-int collectSampleNames(const std::vector < std::string > & files, std::vector < std::string > & names);
+int collectSampleNames(const std::vector < std::string > & files, std::vector < std::string > & names, bool verbose=true);
 
 int getSubsample(const std::vector < std::string > & sample, const std::vector < std::string > & names, std::vector < bool > & include);
 
