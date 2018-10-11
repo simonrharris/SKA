@@ -100,42 +100,25 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 
 				std::unordered_map < std::string, char >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
-					if (it->second=='N' && base=='N'){
-						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-							if (mybits[i]){
+					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+						if (mybits[i]){
+							if (it->second=='N' && base=='N'){
 								ninboth[i]++;
 							}
-						}
-					}
-					else if (it->second=='N'){
-						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-							if (mybits[i]){
+							else if (it->second=='N'){
 								ninquery[i]++;
 							}
-						}
-					}
-					else if (base=='N'){
-						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-							if (mybits[i]){
+							else if (base=='N'){
 								ninsubject[i]++;
 							}
-						}
-					}
-					else if (it->second==base){
-						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-							if (mybits[i]){
+							else if (it->second==base){
 								matches[i]++;
 							}
-						}
-					}
-					else {
-						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-							if (mybits[i]){
+							else {
 								snps[i]++;
 							}
 						}
 					}
-					
 				}
 				else {
 					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
@@ -158,7 +141,9 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 			float percentidofquery=(percentidofmatches*percentmatchquery)/100;
 			float percentidofsubject=(percentidofmatches*percentmatchsubject)/100;
 			
-			std::cout << subjectSampleNames[i] << "\t" << kmerjustinquery << "\t" << kmerjustinsubject[i] << "\t" << (matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]) << "\t" << percentmatchquery << "\t" << percentmatchsubject << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << ninquery[i] << "\t" << ninsubject[i] << "\t" << ninboth[i] << std::endl;
+			if (matches[i]>0){
+				std::cout << subjectSampleNames[i] << "\t" << kmerjustinquery << "\t" << kmerjustinsubject[i] << "\t" << (matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]) << "\t" << percentmatchquery << "\t" << percentmatchsubject << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << ninquery[i] << "\t" << ninsubject[i] << "\t" << ninboth[i] << std::endl;
+			}
 
 		}
 	}
