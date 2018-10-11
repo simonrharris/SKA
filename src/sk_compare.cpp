@@ -77,24 +77,23 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 			return 1;
 		}
 
+		
+		std::vector < int > kmerjustinsubject (subjectSampleNames.size(), 0);
 		std::vector < int > snps (subjectSampleNames.size(), 0);
 		std::vector < int > ninsubject (subjectSampleNames.size(), 0);
 		std::vector < int > ninquery (subjectSampleNames.size(), 0);
 		std::vector < int > ninboth (subjectSampleNames.size(), 0);
 		std::vector < int > matches (subjectSampleNames.size(), 0);
-		std::vector < int > nonmatches (subjectSampleNames.size(), 0);
 
 		char base;
 		char kmerbuffer[querykmersize*2/3];
 		char asciibuffer[int(ceil(float(subjectSampleNames.size())/6))];
-		int totalkmers=0;
 
 		while (fileStream.read(asciibuffer, sizeof(asciibuffer))){//read the ascii representation of the taxa
 			std::string asciibits (asciibuffer, sizeof(asciibuffer));
 			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
 			while (fileStream.peek()!='\n' && fileStream.get(base)){
-				totalkmers++;
 				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
 				std::string kmer (kmerbuffer, querykmersize*2/3);
@@ -119,8 +118,12 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 								snps[i]++;
 							}
 						}
-						else {
-							nonmatches[i]++;
+					}
+				}
+				else {
+					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+						if (mybits[i]){
+							kmerjustinsubject[i]++;
 						}
 					}
 				}
@@ -132,14 +135,13 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 		for (int i=0; i<subjectSampleNames.size(); ++i){
 
 			int kmerjustinquery=kmerMap.size()-(matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]);
-			int kmerjustinsubject=totalkmers-(nonmatches[i]+matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]);
 			float percentmatchquery=float(matches[i]+snps[i]+ninquery[i]+ninboth[i])/(kmerjustinquery+matches[i]+snps[i]+ninquery[i]+ninboth[i])*100;
-			float percentmatchsubject=float(matches[i]+snps[i]+ninsubject[i]+ninboth[i])/(kmerjustinsubject+matches[i]+snps[i]+ninsubject[i]+ninboth[i])*100;
+			float percentmatchsubject=float(matches[i]+snps[i]+ninsubject[i]+ninboth[i])/(kmerjustinsubject[i]+matches[i]+snps[i]+ninsubject[i]+ninboth[i])*100;
 			float percentidofmatches=float(matches[i])/(matches[i]+snps[i])*100;
 			float percentidofquery=(percentidofmatches*percentmatchquery)/100;
 			float percentidofsubject=(percentidofmatches*percentmatchsubject)/100;
 			
-			std::cout << subjectSampleNames[i] << "\t" << kmerjustinquery << "\t" << kmerjustinsubject << "\t" << (matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]) << "\t" << percentmatchquery << "\t" << percentmatchsubject << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << ninquery[i] << "\t" << ninsubject[i] << "\t" << ninboth[i] << std::endl;
+			std::cout << subjectSampleNames[i] << "\t" << kmerjustinquery << "\t" << kmerjustinsubject[i] << "\t" << (matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]) << "\t" << percentmatchquery << "\t" << percentmatchsubject << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << ninquery[i] << "\t" << ninsubject[i] << "\t" << ninboth[i] << std::endl;
 
 		}
 	}
