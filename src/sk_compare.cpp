@@ -132,7 +132,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 		for (int i=0; i<subjectSampleNames.size(); ++i){
 
 			int kmerjustinquery=kmerMap.size()-(matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]);
-			int kmerjustinsubject=totalkmers-nonmatches[i];
+			int kmerjustinsubject=totalkmers-(nonmatches[i]+matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]);
 			float percentmatchquery=float(matches[i]+snps[i]+ninquery[i]+ninboth[i])/(kmerjustinquery+matches[i]+snps[i]+ninquery[i]+ninboth[i])*100;
 			float percentmatchsubject=float(matches[i]+snps[i]+ninsubject[i]+ninboth[i])/(kmerjustinsubject+matches[i]+snps[i]+ninsubject[i]+ninboth[i])*100;
 			float percentidofmatches=float(matches[i])/(matches[i]+snps[i])*100;
