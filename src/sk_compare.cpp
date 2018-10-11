@@ -82,6 +82,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 		std::vector < int > ninquery (subjectSampleNames.size(), 0);
 		std::vector < int > ninboth (subjectSampleNames.size(), 0);
 		std::vector < int > matches (subjectSampleNames.size(), 0);
+		std::vector < int > nonmatches (subjectSampleNames.size(), 0);
 
 		char base;
 		char kmerbuffer[querykmersize*2/3];
@@ -118,6 +119,9 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 								snps[i]++;
 							}
 						}
+						else {
+							nonmatches[i]++;
+						}
 					}
 				}
 	    	}
@@ -128,7 +132,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 		for (int i=0; i<subjectSampleNames.size(); ++i){
 
 			int kmerjustinquery=kmerMap.size()-(matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]);
-			int kmerjustinsubject=totalkmers-(matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]);
+			int kmerjustinsubject=totalkmers-nonmatches[i];
 			float percentmatchquery=float(matches[i]+snps[i]+ninquery[i]+ninboth[i])/(kmerjustinquery+matches[i]+snps[i]+ninquery[i]+ninboth[i])*100;
 			float percentmatchsubject=float(matches[i]+snps[i]+ninsubject[i]+ninboth[i])/(kmerjustinsubject+matches[i]+snps[i]+ninsubject[i]+ninboth[i])*100;
 			float percentidofmatches=float(matches[i])/(matches[i]+snps[i])*100;
