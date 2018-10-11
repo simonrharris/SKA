@@ -141,9 +141,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 			float percentidofquery=(percentidofmatches*percentmatchquery)/100;
 			float percentidofsubject=(percentidofmatches*percentmatchsubject)/100;
 			
-			if (matches[i]>0){
-				std::cout << subjectSampleNames[i] << "\t" << kmerjustinquery << "\t" << kmerjustinsubject[i] << "\t" << (matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]) << "\t" << percentmatchquery << "\t" << percentmatchsubject << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << ninquery[i] << "\t" << ninsubject[i] << "\t" << ninboth[i] << std::endl;
-			}
+			std::cout << subjectSampleNames[i] << "\t" << kmerjustinquery << "\t" << kmerjustinsubject[i] << "\t" << (matches[i]+snps[i]+ninquery[i]+ninboth[i]+ninsubject[i]) << "\t" << percentmatchquery << "\t" << percentmatchsubject << "\t" << snps[i] << "\t" << percentidofmatches << "\t" << percentidofquery << "\t" << percentidofsubject << "\t" << ninquery[i] << "\t" << ninsubject[i] << "\t" << ninboth[i] << std::endl;
 
 		}
 	}
