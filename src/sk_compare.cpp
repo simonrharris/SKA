@@ -100,25 +100,42 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 
 				std::unordered_map < std::string, char >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
-					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-						if (mybits[i]){
-							if (it->second=='N' && base=='N'){
+					if (it->second=='N' && base=='N'){
+						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+							if (mybits[i]){
 								ninboth[i]++;
 							}
-							else if (it->second=='N'){
+						}
+					}
+					else if (it->second=='N'){
+						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+							if (mybits[i]){
 								ninquery[i]++;
 							}
-							else if (base=='N'){
+						}
+					}
+					else if (base=='N'){
+						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+							if (mybits[i]){
 								ninsubject[i]++;
 							}
-							else if (it->second==base){
+						}
+					}
+					else if (it->second==base){
+						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+							if (mybits[i]){
 								matches[i]++;
 							}
-							else {
+						}
+					}
+					else {
+						for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+							if (mybits[i]){
 								snps[i]++;
 							}
 						}
 					}
+					
 				}
 				else {
 					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
