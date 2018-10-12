@@ -94,12 +94,12 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
 
-			int nb;
-			int nq;
-			int ns;
-			int m;
-			int sn;
-			int js;
+			int nb=0;
+			int nq=0;
+			int ns=0;
+			int m=0;
+			int sn=0;
+			int js=0;
 
 			while (fileStream.peek()!='\n' && fileStream.get(base)){
 				base=toupper(base);
