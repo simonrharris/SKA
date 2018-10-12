@@ -93,6 +93,14 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 			std::string asciibits (asciibuffer, sizeof(asciibuffer));
 			std::vector < bool > mybits;
 			vectorbool_from_ascii(asciibits, mybits);//read the ascii representation of the taxa to a verctor of bools
+
+			int nb;
+			int nq;
+			int ns;
+			int m;
+			int sn;
+			int js;
+
 			while (fileStream.peek()!='\n' && fileStream.get(base)){
 				base=toupper(base);
 				fileStream.read(kmerbuffer, sizeof(kmerbuffer));
@@ -100,34 +108,38 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 
 				std::unordered_map < std::string, char >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
 				if ( it != kmerMap.end() ){//if the kmer is in the hash
-					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-						if (mybits[i]){
-							if (it->second=='N' && base=='N'){
-								ninboth[i]++;
-							}
-							else if (it->second=='N'){
-								ninquery[i]++;
-							}
-							else if (base=='N'){
-								ninsubject[i]++;
-							}
-							else if (it->second==base){
-								matches[i]++;
-							}
-							else {
-								snps[i]++;
-							}
-						}
+					if (it->second=='N' && base=='N'){
+						nb++;
+					}
+					else if (it->second=='N'){
+						nq++;
+					}
+					else if (base=='N'){
+						ns++;
+					}
+					else if (it->second==base){
+						m++;
+					}
+					else {
+						s++;
 					}
 				}
 				else {
-					for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
-						if (mybits[i]){
-							kmerjustinsubject[i]++;
-						}
-					}
+					js++;
 				}
 	    	}
+	    	for (int i=0; i<subjectSampleNames.size(); ++i){ //add the base to all samples that are true in the bitset
+				if (mybits[i]){
+					ninboth[i]+=nb;
+					ninquery[i]+=nq;
+					ninsubject[i]+=ns;
+					matches[i]+=m;
+					snps[i]+=sn;
+					kmerjustinsubject[i]+=js;
+				}
+			}
+
+
 	    	fileStream.ignore(256,'\n');//skip the end ofline character
 	    }
 		fileStream.close();

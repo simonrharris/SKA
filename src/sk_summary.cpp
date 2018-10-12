@@ -40,7 +40,7 @@ int summariseKmerFiles(const std::vector < std::string > & kmerfiles)
 				std::string kmer (kmerbuffer, kmersize*2/3);
 				
 				for (int i=0; i<fileSampleNames.size(); ++i){ //add the kmer count to all samples that are true in the bitset
-					if (mybits[i]==1){
+					if (mybits[i]){
 						kmers[i]++;
 						std::map < char, std::vector < int > >::iterator it = basecounts.find(base);//check if the kmer is in the map
 						if ( it != basecounts.end() ){//if the kmer is in the map
