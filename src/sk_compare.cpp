@@ -121,7 +121,7 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 						m++;
 					}
 					else {
-						s++;
+						sn++;
 					}
 				}
 				else {
@@ -138,8 +138,6 @@ int compareKmerFiles(const std::string & queryfile, const std::vector < std::str
 					kmerjustinsubject[i]+=js;
 				}
 			}
-
-
 	    	fileStream.ignore(256,'\n');//skip the end ofline character
 	    }
 		fileStream.close();
