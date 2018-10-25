@@ -46,6 +46,7 @@ distance	Pairwise distance calculation and clustering from split kmer
 		files
 fasta		Create a split kmer file from fasta file(s)
 fastq		Create a split kmer file from fastq file(s)
+humanise	Print kmers from a split kmer file in human readable format
 info		Print some information about one or more kmer files
 map		Align split kmer file(s) against a reference fasta file
 merge		Merge split kmer file(s) into one file
