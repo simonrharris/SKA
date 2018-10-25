@@ -6,12 +6,6 @@
 #include <string> //std::string
 #include <array> //std::array
 
-extern char complement_table[128];
-
-extern char base_score[128];
-
-extern char bases[4];
-
 void ascii_bitstring(std::string & mybits);
 
 void vectorbool_from_ascii(std::string & myascii, std::vector < bool > & mybits);

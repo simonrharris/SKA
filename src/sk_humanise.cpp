@@ -57,11 +57,11 @@ int humaniseKmers(const std::string & kmerfile, const std::string & outputfile){
     for (std::unordered_map < std::string, std::string >::iterator it=kmerMap.begin(); it!=kmerMap.end(); ++it){
     	std::string asciikmer=it->first;
 		std::string kmer=codons_from_ascii(asciikmer);
-		std::string bases=it->second;
+		std::string allbases=it->second;
 		humanfile << kmer;
 
-		for (int i=0; i<bases.length(); ++i){
-			humanfile << "\t" << bases[i];
+		for (int i=0; i<allbases.length(); ++i){
+			humanfile << "\t" << allbases[i];
 		}
 		humanfile << std::endl;
 

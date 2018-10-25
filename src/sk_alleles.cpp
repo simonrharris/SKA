@@ -18,13 +18,13 @@ int reverseKmerMap(std::unordered_map < std::string, std::string > & myKmerMap, 
 	for (; kmit!=endKmit; ){
 		std::string kmer=kmit->first;
 		if(ascii_codons(kmer)){return 1;}
-		std::set < char > bases;
+		std::set < char > mybases;
 		for (std::string::iterator it2=kmit->second.begin(); it2!=kmit->second.end(); ++it2){
 			if (*it2!='-'){
-				bases.insert(*it2);
+				mybases.insert(*it2);
 			}
 		}
-		for (std::set < char >::iterator it2=bases.begin(); it2!=bases.end(); ++it2){
+		for (std::set < char >::iterator it2=mybases.begin(); it2!=mybases.end(); ++it2){
 			kmercount++;
 			std::vector < bool > baseBitString(alleleCount, false);
 			int i=0;

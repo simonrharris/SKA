@@ -13,7 +13,7 @@ extern char base_score[128];
 
 extern char complement_base_score[5];
 
-extern char bases[4];
+extern char bases[5];
 
 extern char complement_bases[5];
 
