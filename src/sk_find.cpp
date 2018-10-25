@@ -255,7 +255,7 @@ int findKmersInFasta(const std::vector < std::string > & queryfiles, const std::
 		if (gzfileStream.peek()=='#'){
 			std::string gffline;
 			while (std::getline(gzfileStream,gffline)){
-				if ((gffline.length()==0) ||  (gffline[0]=='#' && (gffline.length()==1 || gffline[0]!='#'))){
+				if ((gffline.length()==0) ||  ((gffline[0]=='#' && gffline.length()==1) || gffline[0]!='#')){
 					continue;
 				}
 				if (gffline.length()>1 && gffline[0]=='#' && gffline[1]=='#'){

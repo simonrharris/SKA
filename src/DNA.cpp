@@ -70,7 +70,7 @@ bool reverseComplementIfMin(std::string & mystring){
 int lowqualitytoN(std::string & mysequence,const std::string & myquality, const int & userminquality, int adjustment){
 	int minquality=userminquality+adjustment;
 	for (std::string::size_type i = 0; i<mysequence.length(); ++i){
-		if (myquality[i]<minquality){
+		if (int(myquality[i])<minquality){
 			mysequence[i]='N';
 		}
 	}

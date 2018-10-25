@@ -14,7 +14,7 @@
 //#include <string_view>//Bear in mind for future that string_view allows 'in place' substrings!
 
 
-int fastqToKmers(const std::vector < std::string > & fastqs, const std::string & outfilename, const int & kmerlen, const int & userminquality, const int & userfilecutoff, const int & usercovcutoff, const float & userminmaf)
+int fastqToKmers(const std::vector < std::string > & fastqs, const std::string & outfilename, const int & kmerlen, const int & userminquality, const int & userfilecutoff, const int & usercovcutoff, const float & userminmaf, const bool printAlleles)
 {
 
 	const std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();//start the clock
@@ -85,13 +85,17 @@ int fastqToKmers(const std::vector < std::string > & fastqs, const std::string &
 		std::cout << "Added " << numbases << " kmers from " << numseqs << " sequences" << std::endl;
 		std::cout << kmerMap.size() << " unique kmers in map" << std::endl;
 
-		applyFileKmerArrayMapFilters(kmerMap, userfilecutoff, userminmaf);//Filter file kmers to remove those below the maf and file cov cutoff thresholds
+		applyFileKmerArrayMapFilters(kmerMap, userfilecutoff);//Filter file kmers to remove those below the maf and file cov cutoff thresholds
 		
 	}
 
-	applyFinalKmerArrayMapFilters(kmerMap, usercovcutoff, userminmaf);//Filter the kmers to remove those below the maf and cov cutoff thresholds
+	applyFinalKmerArrayMapFilters(kmerMap, usercovcutoff);//Filter the kmers to remove those below the maf and cov cutoff thresholds
 	
-	if(printKmerFile(kmerMap, outfilename, kmerlen)){return 1;}//print the kmers to file
+	if(printAlleles){
+		if(printKmerAlleleFrequencies(kmerMap, outfilename+"_alleles.txt")){return 1;}//print the kmers to file
+	}
+
+	if(printKmerFile(kmerMap, outfilename+".skf", kmerlen, userminmaf)){return 1;}//print the kmers to file
 
 	printDuration(start);//stop the clock
 	

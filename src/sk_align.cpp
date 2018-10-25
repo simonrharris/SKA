@@ -84,28 +84,6 @@ void printAlignment(const std::string & outputfilename, const std::unordered_map
 }
 
 
-void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmerMap, const std::string & myKmer, const char myBase, const std::vector < bool > & myBits, const std::vector < int > & mySamples, int currentSampleNumber, int totalSamples, int maxMissing){
-	std::unordered_map < std::string, std::string >::iterator kmit = myKmerMap.find(myKmer);//check if the kmer is in the map
-	if ( kmit != myKmerMap.end() ){//if the kmer is in the map
-		for (int i=0; i<mySamples.size(); ++i){ //add the base to all samples that are true in the bitset
-			if (myBits[mySamples[i]]){
-				kmit->second[i+currentSampleNumber]=myBase;
-			}
-		}
-	}
-	else {//if the kmer isn't in the map
-		if ((currentSampleNumber)<=maxMissing){
-			std::pair < std::unordered_map < std::string, std::string >::iterator, bool > ret = myKmerMap.insert(std::make_pair(myKmer, std::string (totalSamples,'-')));
-			for (int i=0; i<mySamples.size(); ++i){
-				if (myBits[mySamples[i]]){
-					ret.first->second[i+currentSampleNumber]=myBase;
-				}
-			}
-		}
-	}
-}
-
-
 int alignKmers(const float & minproportion, const std::string & outputprefix, const std::vector < std::string > & kmerfiles, const bool & variantonly, const bool & printkmers, const std::vector < std::string > & sample)
 {
 
@@ -204,13 +182,13 @@ int alignKmers(const float & minproportion, const std::string & outputprefix, co
 	std::cout << kmerMap.size() << " kmers identified from " << numSamples << " samples in " << numfiles << " files" << std::endl;
 	
 	std::vector < int > constantBases (4,0);
-
-	float totalsites=0;
+	
+	float filteredsites=0;
 	float variantsites=0;
 
-	filterAlignment(kmerMap, constantBases, numSamples, minrequired, variantonly, totalsites, variantsites);
+	filterAlignment(kmerMap, constantBases, numSamples, minrequired, variantonly, filteredsites, variantsites);
 
-	if(calculateMissedSNPs(totalsites, variantsites, kmersize)){return 1;};
+	if(calculateMissedSNPs(filteredsites, variantsites, kmersize)){return 1;};
 	
 	printAlignment(outputprefix+".aln", kmerMap, constantBases, includedSampleNames, variantonly);
 

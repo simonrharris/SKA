@@ -50,7 +50,7 @@ int extractMiddleBase(std::string & myString, char & myChar){
 	return 0;
 }
 
-int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > > & mymap, const std::string outputfile, const int kmersize){
+int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > > & mymap, const std::string outputfile, const int kmersize, float userminmaf){
 	
 	std::cout << "Writing split kmers to " << outputfile << std::endl;
 
@@ -69,30 +69,52 @@ int printKmerFile(const std::unordered_map < std::string, std::array < int, 8 > 
 		char base;
 		bool basefound=false;
 		int i=0;
-		for (std::array < int, 8 >::const_iterator it2=it->second.begin(); it2!=it->second.end()-4; ++it2, ++i){
-		
-			if (*it2>0){
-				if (basefound){
-					base='N';
-					break;
-				}
-				else{
-					base=bases[i];
-					basefound=true;
-				}
+
+		int filebasecoverage=0;
+		int maxfilebasecoverage=0;
+		char maxbase;
+		for (std::array < int, 8 >::const_iterator it2=it->second.begin(); it2!=it->second.begin()+4; ++it2, ++i){
+			filebasecoverage+=*it2;
+			if (*it2>maxfilebasecoverage){
+				maxfilebasecoverage=*it2;
+				base=bases[i];
 			}
-		
 		}
-		if (basefound){
-			if (ascii_codons(kmer)){return 1;}
+
+		float covcutoff=(1.0-userminmaf)*filebasecoverage;
+
+		if (ascii_codons(kmer)){return 1;}
+		if (maxfilebasecoverage>=covcutoff){	
 			kmerfile << base << kmer;
 		}
 		else {
-			std::cout << "Error: Failed to print kmer with no middle base" << std::endl;
-			return 1;
+			kmerfile << "N" << kmer;
 		}
 	}
 	kmerfile.close();
+	return 0;
+}
+
+int printKmerAlleleFrequencies(const std::unordered_map < std::string, std::array < int, 8 > > & mymap, const std::string outputfile){
+	
+	std::cout << "Writing kmer allele frequencies to " << outputfile << std::endl;
+
+	std::ofstream allelefile(outputfile);
+	if (allelefile.fail()){
+		std::cerr << std::endl << "Error: Failed to open " << outputfile << std::endl << std::endl;
+		return 1;
+	}
+	for (std::unordered_map < std::string, std::array < int, 8 > >::const_iterator it=mymap.begin(); it!=mymap.end(); ++it){
+		std::string kmer=it->first;
+		allelefile << kmer;
+		for (std::array < int, 8 >::const_iterator it2=it->second.begin(); it2!=it->second.end()-4; ++it2){
+		
+			allelefile << " " << *it2;
+		
+		}
+		allelefile << std::endl;
+	}
+	allelefile.close();
 	return 0;
 }
 
@@ -237,6 +259,28 @@ int getSubsample(const std::vector < std::string > & sample, const std::vector <
 }
 
 
+void addKmerToStringMap(std::unordered_map < std::string, std::string > & myKmerMap, const std::string & myKmer, const char myBase, const std::vector < bool > & myBits, const std::vector < int > & mySamples, int currentSampleNumber, int totalSamples, int maxMissing){
+	std::unordered_map < std::string, std::string >::iterator kmit = myKmerMap.find(myKmer);//check if the kmer is in the map
+	if ( kmit != myKmerMap.end() ){//if the kmer is in the map
+		for (int i=0; i<mySamples.size(); ++i){ //add the base to all samples that are true in the bitset
+			if (myBits[mySamples[i]]){
+				kmit->second[i+currentSampleNumber]=myBase;
+			}
+		}
+	}
+	else {//if the kmer isn't in the map
+		if ((currentSampleNumber)<=maxMissing){
+			std::pair < std::unordered_map < std::string, std::string >::iterator, bool > ret = myKmerMap.insert(std::make_pair(myKmer, std::string (totalSamples,'-')));
+			for (int i=0; i<mySamples.size(); ++i){
+				if (myBits[mySamples[i]]){
+					ret.first->second[i+currentSampleNumber]=myBase;
+				}
+			}
+		}
+	}
+}
+
+
 void addKmerToBaseArrayMap(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const std::string & kmer, const char base, const bool firstFile){
 
 	std::unordered_map < std::string, std::array < int, 8 > >::iterator it = kmerMap.find(kmer);//check if the kmer is in the hash
@@ -251,7 +295,7 @@ void addKmerToBaseArrayMap(std::unordered_map < std::string, std::array < int, 8
 }
 
 
-void applyFileKmerArrayMapFilters(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const int & userfilecutoff, const float & userminmaf){
+void applyFileKmerArrayMapFilters(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const int & userfilecutoff){
 
 	std::cout << "Filtering kmers for file coverage" << std::endl;
 
@@ -273,9 +317,7 @@ void applyFileKmerArrayMapFilters(std::unordered_map < std::string, std::array <
 			}
 		}
 
-		filecovcutoff=float(filebasecoverage)*userminmaf;
-
-		if (maxfilebasecoverage<filecovcutoff || filebasecoverage<userfilecutoff){
+		if (filebasecoverage<userfilecutoff){
 			kmerMap.erase(it++);
 		}
 		else {
@@ -293,13 +335,13 @@ void applyFileKmerArrayMapFilters(std::unordered_map < std::string, std::array <
 }
 
 
-void applyFinalKmerArrayMapFilters(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const int & usercovcutoff, const float & userminmaf){
+void applyFinalKmerArrayMapFilters(std::unordered_map < std::string, std::array < int, 8 > > & kmerMap, const int & usercovcutoff){
 
 	std::cout << "Filtering kmers for total coverage" << std::endl;
 
 	int basecoverage;
 	int maxbasecoverage;
-	float covcutoff;
+	//float covcutoff;
 	float totalcoverage=0;
 
 	std::unordered_map < std::string, std::array < int, 8 > >::iterator it = kmerMap.begin();
@@ -315,19 +357,18 @@ void applyFinalKmerArrayMapFilters(std::unordered_map < std::string, std::array 
 			}
 		}
 
-		covcutoff=float(basecoverage)*userminmaf;
-
 		//remove kmers with coverage lower than the user defined cutoff
-		if (maxbasecoverage<covcutoff || basecoverage<usercovcutoff){
+		if (basecoverage<usercovcutoff){
 			kmerMap.erase(it++);
 		}
 		else{
-			//filter bases that don't meet the coverage cutoff
+			//filter bases that don't meet the coverage cutoff - don't do this any more
 			int j=0;
 			for (int i=4; i<8; ++i, ++j){
-				if (it->second[i]>=covcutoff){
+				/*if (it->second[i]>=covcutoff){
 					it->second[j]=it->second[i];
-				}
+				}*/
+				it->second[j]=it->second[i];
 				it->second[i]=0;
 			}
 			totalcoverage+=basecoverage;

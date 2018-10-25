@@ -13,6 +13,7 @@
 #include "sk_fastq.hpp"
 #include "sk_find.hpp"
 #include "sk_merge.hpp"
+#include "sk_humanise.hpp"
 #include "sk_info.hpp"
 #include "sk_refalign.hpp"
 #include "sk_summary.hpp"
@@ -39,6 +40,8 @@ int fastaHelp(void);
 int fastaSubcommand(int argc, char *argv[]);
 int fastqHelp(void);
 int fastqSubcommand(int argc, char *argv[]);
+int humaniseHelp(void);
+int humaniseSubcommand(int argc, char *argv[]);
 int infoHelp(void);
 int infoSubcommand(int argc, char *argv[]);
 int mapHelp(void);
@@ -96,8 +99,9 @@ int skaHelp(void){
 	std::cout << "distance\tPairwise distance calculation and clustering from split kmer" << std::endl << "\t\tfiles" << std::endl;
 	std::cout << "fasta\t\tCreate a split kmer file from fasta file(s)" << std::endl;
 	std::cout << "fastq\t\tCreate a split kmer file from fastq file(s)" << std::endl;
+	std::cout << "humanise\tPrint kmers from a split kmer file in human readable format" << std::endl;
 	std::cout << "info\t\tPrint some information about one or more kmer files" << std::endl;
-				        //123456789012345678901234567890123456789012345678901234567890
+				          //123456789012345678901234567890123456789012345678901234567890
 	std::cout << "map\t\tAlign split kmer file(s) against a reference fasta file" << std::endl;
 	std::cout << "merge\t\tMerge split kmer file(s) into one file" << std::endl;
 	std::cout << "summary\t\tPrint split kmer file summary statistics" << std::endl;
@@ -808,6 +812,7 @@ int fastqHelp(void){
 	std::cout << "ska fastq [options] <fastq files>" << std::endl << std::endl;
 	std::cout << "Options:" << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
+	std::cout << "-a\t\tPrint allele frequencies of split kmers to file [Default = false]" << std::endl;
 	std::cout << "-c <int>\tCoverage cutoff. Kmers with coverage below this value will \n\t\tbe discarded. [Default = 4]" << std::endl;
 	std::cout << "-C <int>\tFile coverage cutoff. Kmers with coverage below this value \n\t\tin any of the fastq files will be discarded. [Default = 2]" << std::endl;
 	std::cout << "-k <int>\tSplit Kmer size. The kmer used for searches will be twice \n\t\tthis length, with the variable base in the middle. e.g. a \n\t\tkmer of 15 will search for 31 base matches with the middle \n\t\tbase being allowed to vary. Must be divisible by 3. \n\t\t[Default = 15]" << std::endl;
@@ -820,11 +825,12 @@ int fastqHelp(void){
 
 int fastqSubcommand(int argc, char *argv[]){
 
-	std::string outfile="fastq.skf";
+	std::string outfile="fastq";
 	long int covcutoff=4;
 	long int filecovcutoff=2;
 	long int kmersize=15;
 	long int minquality=20;
+	bool printalleles=false;
 	float minmaf=0.2;
 	std::vector < std::string > args;
 
@@ -835,6 +841,9 @@ int fastqSubcommand(int argc, char *argv[]){
 		if (arg=="-h" || arg=="--help"){
 			fastqHelp();
 			return 0;
+		}
+		else if (arg=="-a"){
+			printalleles=true;
 		}
 		else if (arg == "-c"){
 			i++;
@@ -919,7 +928,7 @@ int fastqSubcommand(int argc, char *argv[]){
 		else if (arg == "-o"){
 			i++;
 			if (i<argc){
-				outfile = std::string(argv[i])+".skf";
+				outfile = std::string(argv[i]);
 			}
 			else {
 				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
@@ -978,11 +987,82 @@ int fastqSubcommand(int argc, char *argv[]){
 	std::cout << "\tPer file coverage cutoff = " << filecovcutoff << std::endl;
 	std::cout << "\tMinimum minor allele frequency = " << minmaf << std::endl;
 	std::cout << "\tMinimum base quality = " << minquality << std::endl;
-	std::cout << "Output will be written to " << outfile << std::endl;
+	std::cout << "Output will be written to " << outfile << ".skf" << std::endl;
+	if (printalleles){
+		std::cout << "Allele frequencies will be written to " << outfile << "_alleles.txt" << std::endl;
+	}
 
 	std::cout << std::endl;
 
-	if (fastqToKmers(args, outfile, kmersize, minquality, filecovcutoff, covcutoff, minmaf)){return 1;}
+	if (fastqToKmers(args, outfile, kmersize, minquality, filecovcutoff, covcutoff, minmaf, printalleles)){return 1;}
+
+	return 0;
+}
+
+
+int humaniseHelp(void){
+	std::cout << std::endl << "Usage:" << std::endl;
+	std::cout << "ska info [options]" << std::endl << std::endl;
+	std::cout << "Options:" << std::endl;
+	std::cout << "-h\t\tPrint this help." << std::endl;
+	std::cout << "-i <file>\tInput split kmer file." << std::endl;
+	std::cout << "-o <file>\tOutput prefix. [Default = fastq]" << std::endl;
+	std::cout << "-t\t\tPrint tabulated output." << std::endl << std::endl;
+	return 0;
+}
+
+
+int humaniseSubcommand(int argc, char *argv[]){
+
+	std::string inputfile="";
+	std::string outfile="humanised_kmers.tsv";
+
+	for (int i=2; i<argc; ++i){
+
+		std::string arg=(argv[i]);
+
+		if (arg=="-h" || arg=="--help"){
+			infoHelp();
+			return 0;
+		}
+		else if (arg == "-i"){
+			i++;
+			if (i<argc){
+				inputfile = argv[i];
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -i flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg == "-o"){
+			i++;
+			if (i<argc){
+				outfile = std::string(argv[i])+".tsv";
+			}
+			else {
+				std::cerr << std::endl << "Expecting file name after -o flag" << std::endl << std::endl;
+				return 1;
+			}
+		}
+		else if (arg[0]=='-'){
+			std::cerr << std::endl << "Unrecognised flag " << arg << std::endl << std::endl;
+			return 1;
+		}
+		else {
+			std::cerr << std::endl << "Unrecognised argument " << arg << std::endl << std::endl;
+			return 1;
+		}
+	}
+
+
+	if (inputfile==""){
+		std::cerr << std::endl << "Input kmer file is required" << std::endl;
+		humaniseHelp();
+		return 1;
+	}
+
+	if (humaniseKmers(inputfile, outfile)){return 1;}
 
 	return 0;
 }
@@ -1799,6 +1879,9 @@ int main(int argc, char *argv[])
 		}
 	else if (subcommand == "annotate"){
 			if(annotateSubcommand(argc, argv)){return 1;}
+		}
+	else if (subcommand == "humanise"){
+			if(humaniseSubcommand(argc, argv)){return 1;}
 		}
 	else if (subcommand == "info"){
 			if(infoSubcommand(argc, argv)){return 1;}
