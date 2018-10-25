@@ -989,7 +989,7 @@ int fastqSubcommand(int argc, char *argv[]){
 	std::cout << "\tMinimum base quality = " << minquality << std::endl;
 	std::cout << "Output will be written to " << outfile << ".skf" << std::endl;
 	if (printalleles){
-		std::cout << "Allele frequencies will be written to " << outfile << "_alleles.txt" << std::endl;
+		std::cout << "Allele frequencies will be written to " << outfile << "_alleles.tsv" << std::endl;
 	}
 
 	std::cout << std::endl;
@@ -1002,11 +1002,11 @@ int fastqSubcommand(int argc, char *argv[]){
 
 int humaniseHelp(void){
 	std::cout << std::endl << "Usage:" << std::endl;
-	std::cout << "ska info [options]" << std::endl << std::endl;
+	std::cout << "ska humanise [options]" << std::endl << std::endl;
 	std::cout << "Options:" << std::endl;
 	std::cout << "-h\t\tPrint this help." << std::endl;
 	std::cout << "-i <file>\tInput split kmer file." << std::endl;
-	std::cout << "-o <file>\tOutput prefix. [Default = fastq]" << std::endl;
+	std::cout << "-o <file>\tOutput prefix. [Default = humanised_kmers]" << std::endl;
 	std::cout << "-t\t\tPrint tabulated output." << std::endl << std::endl;
 	return 0;
 }

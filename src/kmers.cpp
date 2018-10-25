@@ -109,7 +109,7 @@ int printKmerAlleleFrequencies(const std::unordered_map < std::string, std::arra
 		allelefile << kmer;
 		for (std::array < int, 8 >::const_iterator it2=it->second.begin(); it2!=it->second.end()-4; ++it2){
 		
-			allelefile << " " << *it2;
+			allelefile << "\t" << *it2;
 		
 		}
 		allelefile << std::endl;

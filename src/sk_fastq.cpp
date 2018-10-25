@@ -92,7 +92,7 @@ int fastqToKmers(const std::vector < std::string > & fastqs, const std::string &
 	applyFinalKmerArrayMapFilters(kmerMap, usercovcutoff);//Filter the kmers to remove those below the maf and cov cutoff thresholds
 	
 	if(printAlleles){
-		if(printKmerAlleleFrequencies(kmerMap, outfilename+"_alleles.txt")){return 1;}//print the kmers to file
+		if(printKmerAlleleFrequencies(kmerMap, outfilename+"_alleles.tsv")){return 1;}//print the kmers to file
 	}
 
 	if(printKmerFile(kmerMap, outfilename+".skf", kmerlen, userminmaf)){return 1;}//print the kmers to file
