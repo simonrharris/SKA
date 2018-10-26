@@ -5,8 +5,10 @@ RM = rm -f
 MKDIR = mkdir
 ECHO = echo
 CP = cp
+INSTALL = install
 dir_guard=@mkdir -p $(@D)
 
+PREFIX = /usr/local
 SOURCEDIR = src
 HEADERDIR = src
 BUILDDIR = build
@@ -30,8 +32,10 @@ $(BUILDDIR)/%.o: $(SOURCEDIR)/%.cpp
 	$(dir_guard)
 	$(CXX) $(CXXFLAGS) -I$(HEADERDIR) -I$(SOURCEDIR) -c $< -o $@
 
-install:
-	$(CP) $(BINARYDIR)/$(BINARY) /usr/local/bin/
+.phony: install
+install: all
+	$(INSTALL) -d $(PREFIX)/bin
+	$(INSTALL) $(BINARYDIR)/$(BINARY) $(PREFIX)/bin
 
 .phony: clean
 clean:
@@ -44,5 +48,6 @@ distclean: clean
 help:
 	@$(ECHO) "Targets:"
 	@$(ECHO) "all     - build and compile what is necessary"
+	@$(ECHO) "install   - install binary"
 	@$(ECHO) "clean   - cleanup old .o files"
 	@$(ECHO) "distclean   - cleanup old binary"
