@@ -46,6 +46,7 @@ distance	Pairwise distance calculation and clustering from split kmer
 		files
 fasta		Create a split kmer file from fasta file(s)
 fastq		Create a split kmer file from fastq file(s)
+humanise	Print kmers from a split kmer file in human readable format
 info		Print some information about one or more kmer files
 map		Align split kmer file(s) against a reference fasta file
 merge		Merge split kmer file(s) into one file
@@ -56,5 +57,10 @@ version		Print the version and citation for ska
 weed		Weed kmers from a split kmer file
 ```
 Please read the [SKA wiki page](https://github.com/simonrharris/SKA/wiki) for full usage instructions.
+
 ## License
 SKA is free software, licensed under [GPLv3](https://github.com/simonrharris/SKA/blob/master/LICENSE).
+
+## Citation
+SKA is current only available as a preprint, so for now, if you use it, please cite:
+[Harris SR. 2018. SKA: Split Kmer Analysis Toolkit for Bacterial Genomic Epidemiology. bioRxiv 453142 doi: https://doi.org/10.1101/453142](https://www.biorxiv.org/content/early/2018/10/25/453142)
