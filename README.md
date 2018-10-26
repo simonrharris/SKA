@@ -62,5 +62,5 @@ Please read the [SKA wiki page](https://github.com/simonrharris/SKA/wiki) for fu
 SKA is free software, licensed under [GPLv3](https://github.com/simonrharris/SKA/blob/master/LICENSE).
 
 ## Citation
-SKA is current only availble as a preprint, so for now, if you use it, please cite:
+SKA is current only available as a preprint, so for now, if you use it, please cite:
 [Harris SR. 2018. SKA: Split Kmer Analysis Toolkit for Bacterial Genomic Epidemiology. bioRxiv 453142 doi: https://doi.org/10.1101/453142](https://www.biorxiv.org/content/early/2018/10/25/453142)
