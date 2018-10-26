@@ -66,7 +66,7 @@ int MinFileCov=0;
 int maxNamesToPrint=10;
 
 
-std::string citation = "SKA is current only available as a preprint, so for now, if you use it, please cite:\n\t\tHarris SR. 2018. SKA: Split Kmer Analysis Toolkit for Bacterial\n\t\tGenomic Epidemiology. bioRxiv 453142 doi: https://doi.org/10.1101/453142";
+std::string citation = "SKA is currently only available as a preprint, so for now, if you use it, please cite:\n\t\tHarris SR. 2018. SKA: Split Kmer Analysis Toolkit for Bacterial\n\t\tGenomic Epidemiology. bioRxiv 453142 doi: https://doi.org/10.1101/453142";
 
 long int getint(char * arg){
 	long int i;
