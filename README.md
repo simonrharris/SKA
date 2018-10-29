@@ -22,7 +22,7 @@ Many thanks to John Lees for creating this Conda recipe!
 
 brew install brewsci/bio/ska
 
-Many thanks to Torsten Seemann for creating this Brew recipe!
+Many thanks to Torsten Seemann for creating this Brew formula!
 
 ### Installation from source
 
