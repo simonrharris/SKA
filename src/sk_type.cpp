@@ -103,6 +103,16 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 
 			if(readNextFastaSequence(gzfileStream, subjectfiles[s], alleleName, sequence)){return 1;}
 
+			std::string::size_type found=alleleName.find_last_of("_");
+			try {
+			    stoi(alleleName.substr(found+1));
+			}
+			catch (...) {
+				std::cout << "Error in " << subjectfiles[s] << std::endl;
+			    std::cout << "Malformed alleles fasta file!" << std::endl << "Expecting an allele integer after the last underscore in the name. Got " << alleleName << std::endl;
+			    return 1;
+			}
+
 			alleleNames.push_back(alleleName);
 
 			std::vector < std::string > alleleSequence ( querySampleNames.size() , std::string ( sequence.length() , '-' ) );
@@ -310,10 +320,11 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 		}
 
 		std::cout << "Sample" << "\t";
+		std::cout << "ST";
 		for (std::map < std::string, int >::iterator it=alleles.begin(); it!=alleles.end(); ++it){
-			std::cout << it->first << "\t";
+			std::cout << "\t" << it->first;
 		}
-		std::cout << "ST" << std::endl;
+		std::cout << std::endl;
 
 		std::string line;
 		int linenumber=0;
@@ -364,6 +375,12 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 
 		for (int k=0; k<querySampleNames.size(); ++k){
 			std::cout << querySampleNames[k] << "\t";
+			if (profileMap[k]["ST"].size()==1){
+				std::cout << profileMap[k]["ST"][0];
+			}
+			else {
+				std::cout << "-";
+			}
 			for (std::map < std::string, int >::iterator it=alleles.begin(); it!=alleles.end(); ++it){
 				std::string suffix="";
 				std::set < std::string >::iterator it2 = novel[k].find(it->first);
@@ -380,24 +397,20 @@ int typeKmerFile(const std::string & queryfile, const std::string & profileFile,
 				}
 
 				if (profileMap[k][it->first].size()==0){
-					std::cout << "-" << "\t";
+					std::cout << "\t" << "-";
 				}
 				else if (profileMap[k][it->first].size()==1){
-					std::cout << profileMap[k][it->first][0] << suffix << "\t";
+					std::cout << "\t" << profileMap[k][it->first][0] << suffix;
 				}
 				else {
+					std::cout << "\t";
 					for (int i=0; i<profileMap[k][it->first].size()-1; ++i){
 						std::cout << profileMap[k][it->first][i] << "/";
 					}
-					std::cout << profileMap[k][it->first][profileMap[k][it->first].size()-1] << suffix << "\t";
+					std::cout << profileMap[k][it->first][profileMap[k][it->first].size()-1] << suffix;
 				}
 			}
-			if (profileMap[k]["ST"].size()==1){
-				std::cout << profileMap[k]["ST"][0] << std::endl;
-			}
-			else {
-				std::cout << "-" << std::endl;
-			}
+			std::cout << std::endl;
 		}
 
 	}
