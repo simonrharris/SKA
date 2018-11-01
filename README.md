@@ -1,4 +1,7 @@
 ![SKA](https://github.com/simonrharris/SKA/blob/master/images/ska.png)
+ 
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-brightgreen.svg)](https://github.com/simonrharris/SKA/blob/master/LICENSE) 
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](https://bioconda.github.io/recipes/ska/README.html)
 
 ## Contents
 * [Introduction](#introduction)
