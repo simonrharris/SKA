@@ -77,7 +77,7 @@ weed		Weed kmers from a split kmer file
 Please read the [SKA wiki page](https://github.com/simonrharris/SKA/wiki) for full usage instructions.
 
 ## License
-SKA is free software, licensed under [GPLv3](https://github.com/simonrharris/SKA/blob/master/LICENSE).
+SKA is free software, licensed under [MIT](https://github.com/simonrharris/SKA/blob/master/LICENSE).
 
 ## Citation
 SKA is currently only available as a preprint, so for now, if you use it, please cite:
