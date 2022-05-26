@@ -1,0 +1,25 @@
+name: pp_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - r
+dependencies:
+  - python
+  - pip
+  - numpy
+  - scipy
+  - docopt
+  - cmake >= 3.12
+  - pybind11
+  - zlib
+  - eigen
+  - highfive
+  - hdf5
+  - h5py
+  - nlohmann_json
+  - openblas
+  - armadillo
+  - libgfortran-ng
+  - nvcc_linux-64
+  - cudatoolkit==11.2 # This is pinned due to version install on azure, see azure-pipelines.yml
